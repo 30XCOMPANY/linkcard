@@ -96,8 +96,12 @@ export function clearProfileCache() {
 // Based on the actual API configuration from RapidAPI test interface
 // Host: fresh-linkedin-profile-data.p.rapidapi.com
 // Endpoint: /enrich-lead
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '36c966f48dmsha8650f45eb36fcfp146802jsn3fc53a80afc1';
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_LINKEDIN_HOST || 'fresh-linkedin-profile-data.p.rapidapi.com';
+
+if (!RAPIDAPI_KEY) {
+  throw new Error('RAPIDAPI_KEY environment variable is required. Please set it in api/.env file.');
+}
 
 /**
  * Parse a LinkedIn profile using RapidAPI
