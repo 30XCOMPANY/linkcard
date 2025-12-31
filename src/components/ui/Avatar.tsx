@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { radius, spacing, shadows } from '@/src/constants/theme';
 
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | number;
 
 interface AvatarProps {
   source?: string | null;
@@ -15,7 +15,7 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-const sizeMap: Record<AvatarSize, number> = {
+const sizeMap: Record<string, number> = {
   sm: 32,
   md: 48,
   lg: 64,
@@ -23,7 +23,7 @@ const sizeMap: Record<AvatarSize, number> = {
   '2xl': 128,
 };
 
-const fontSizeMap: Record<AvatarSize, number> = {
+const fontSizeMap: Record<string, number> = {
   sm: 12,
   md: 16,
   lg: 24,
@@ -39,8 +39,9 @@ export const Avatar: React.FC<AvatarProps> = ({
   showBorder = false,
   style,
 }) => {
-  const dimension = sizeMap[size];
-  const fontSize = fontSizeMap[size];
+  // Support both preset sizes and custom numeric sizes
+  const dimension = typeof size === 'number' ? size : sizeMap[size] || 48;
+  const fontSize = typeof size === 'number' ? Math.round(size * 0.375) : fontSizeMap[size as string] || 16;
 
   // Get initials from name
   const getInitials = (name: string): string => {
@@ -133,5 +134,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+
 
 

@@ -27,6 +27,24 @@ export interface LinkedInProfile {
 // Card template types
 export type CardTemplate = 'classic' | 'modern' | 'minimal' | 'bento';
 
+// Field-level typography styles
+export interface FieldStyle {
+  fontFamily?: 'System' | 'Inter' | 'Roboto' | 'Poppins' | 'Montserrat' | 'Playfair' | 'Georgia' | 'Lora';
+  fontSize?: number;
+  lineHeight?: number;
+  fontWeight?: 'regular' | 'medium' | 'bold';
+  textAlign?: 'left' | 'center' | 'right';
+  color?: string;
+  backgroundColor?: string;
+  // Position and dimensions for draggable elements (relative to card, 0-100%)
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  borderRadius?: number;
+  opacity?: number;
+}
+
 // Card version - different configurations for different contexts
 export interface CardVersion {
   id: string;
@@ -35,7 +53,10 @@ export interface CardVersion {
   visibleFields: (keyof LinkedInProfile | 'qrCode')[];
   template: CardTemplate;
   accentColor: string;
+  layout?: 'portrait' | 'landscape' | 'square';
   isDefault: boolean;
+  // Field-level style overrides
+  fieldStyles?: Record<string, FieldStyle>;
 }
 
 // The main business card
