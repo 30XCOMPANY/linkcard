@@ -15,15 +15,15 @@ import {
   TextInput,
   Modal,
   Text as RNText,
-  Image,
   PanResponder,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Redirect } from 'expo-router';
 import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 // Design System
 import {
@@ -66,11 +66,10 @@ interface FontOption {
 }
 
 const AVAILABLE_FONTS: FontOption[] = [
-  { id: 'System', name: 'System', stack: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', category: 'System' },
-  { id: 'Inter', name: 'Inter', stack: '"Inter", sans-serif', category: 'Sans Serif' },
-  { id: 'Roboto', name: 'Roboto', stack: '"Roboto", sans-serif', category: 'Sans Serif' },
-  { id: 'Poppins', name: 'Poppins', stack: '"Poppins", sans-serif', category: 'Sans Serif' },
-  { id: 'Playfair', name: 'Playfair', stack: '"Playfair Display", serif', category: 'Serif' },
+  { id: 'System', name: 'System', stack: 'System', category: 'System' },
+  { id: 'DMSans', name: 'DM Sans', stack: 'DMSans_400Regular', category: 'Sans Serif' },
+  { id: 'CormorantGaramond', name: 'Garamond', stack: 'CormorantGaramond_400Regular', category: 'Serif' },
+  { id: 'JetBrainsMono', name: 'Mono', stack: 'JetBrainsMono_400Regular', category: 'Monospace' },
 ];
 
 const CARD_LAYOUTS = {
@@ -83,7 +82,7 @@ const CARD_BASE_WIDTH = 320; // Fallback
 const CARD_BASE_HEIGHT = 520; // Fallback
 const getFontStack = (fontId: string): string => {
   const font = AVAILABLE_FONTS.find(f => f.id === fontId || f.name === fontId);
-  return font?.stack || '-apple-system, BlinkMacSystemFont, sans-serif';
+  return font?.stack || 'System';
 };
 
 // Template styles - each template has a unique visual identity
@@ -114,12 +113,11 @@ const TEMPLATE_STYLES: Record<string, any> = {
   modern: {
     // "Swiss Clean" - Editorial, precise, timeless.
     background: '#FFFFFF', // Pure white background
-    borderRadius: 0,
-    shadowColor: 'rgba(0,0,0,0.04)',
-    shadowBlur: 16,
-    shadowOffset: { width: 0, height: 2 },
-    accentPosition: 'left',
-    accentWidth: 0,
+    borderRadius: 24, // Rounded for a softer look
+    shadowColor: 'rgba(0,0,0,0.06)',
+    shadowBlur: 20,
+    shadowOffset: { width: 0, height: 4 },
+    accentPosition: 'none', // EXPLICITLY REMOVE ACCENT
     borderWidth: 0,
     borderColor: 'transparent',
     defaultTextColor: '#1A1A1A',
@@ -150,106 +148,91 @@ const TEMPLATE_STYLES: Record<string, any> = {
     defaultTextColor: '#1A1A1A',
   },
 
-  // ==========================================
-  // 风格1: Aurora - 蓝紫渐变 + 毛玻璃白边框 + 科技光晕
-  // ==========================================
-  aurora: {
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #533483 100%)',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: 'rgba(83, 52, 131, 0.6)',
-    shadowBlur: 40,
-    shadowOffset: { width: 0, height: 15 },
-    hasGlassOverlay: true,
-    glassOpacity: 0.08,
-    glassBlur: 20,
-    defaultTextColor: '#FFFFFF',
-    secondaryTextColor: 'rgba(255, 255, 255, 0.7)',
-    accentColor: '#a855f7',
-    layout: 'aurora',
-  },
+  // Aurora removed - not in final 4
 
   // ==========================================
-  // 风格2: Sunset - 粉紫橙渐变 + 左侧毛玻璃白条
+  // SUNSET - Warm Gradient Paradise
   // ==========================================
   sunset: {
-    background: 'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 50%, #a18cd1 100%)',
-    borderRadius: 24,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'rgba(238, 156, 167, 0.5)',
-    shadowBlur: 35,
-    shadowOffset: { width: 0, height: 12 },
-    accentPosition: 'left',
-    accentWidth: 60,
-    accentColor: 'rgba(255, 255, 255, 0.25)',
-    accentBlur: 15,
-    accentBorderRadius: 24,
-    hasGlassOverlay: false,
+    background: 'linear-gradient(135deg, #ff6b9d 0%, #ffa06b 40%, #ff9a76 70%, #c471ed 100%)',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    shadowColor: 'rgba(255, 107, 157, 0.4)',
+    shadowBlur: 40,
+    shadowOffset: { width: 0, height: 16 },
+    hasGlassOverlay: true,
+    glassOpacity: 0.12,
+    glassBlur: 30,
     defaultTextColor: '#FFFFFF',
-    secondaryTextColor: 'rgba(255, 255, 255, 0.8)',
+    secondaryTextColor: 'rgba(255, 255, 255, 0.85)',
+    accentColor: '#ff6b9d',
+    accentPosition: 'none',
     layout: 'sunset',
   },
 
   // ==========================================
-  // 风格3: Midnight - 深蓝黑 + 全卡片毛玻璃 + 橙色强调
+  // MIDNIGHT - Deep Space Elegance
   // ==========================================
   midnight: {
-    background: 'linear-gradient(160deg, #0c0c1e 0%, #1a1a3e 40%, #2d1b4e 70%, #1a0a2e 100%)',
-    borderRadius: 20,
+    background: 'linear-gradient(160deg, #0a0a14 0%, #1a1a2e 30%, #16213e 60%, #0f3460 100%)',
+    borderRadius: 32,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: 'rgba(0, 0, 0, 0.7)',
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+    shadowColor: 'rgba(99, 102, 241, 0.3)',
     shadowBlur: 50,
     shadowOffset: { width: 0, height: 20 },
     hasGlassOverlay: true,
-    glassOpacity: 0.05,
-    glassBlur: 30,
-    innerGlow: 'rgba(138, 43, 226, 0.15)',
+    glassOpacity: 0.08,
+    glassBlur: 40,
+    innerGlow: 'rgba(99, 102, 241, 0.1)',
     defaultTextColor: '#FFFFFF',
-    secondaryTextColor: 'rgba(255, 255, 255, 0.6)',
-    accentColor: '#ff6b35',
+    secondaryTextColor: 'rgba(255, 255, 255, 0.7)',
+    accentColor: '#6366f1',
+    accentPosition: 'none',
     layout: 'midnight',
   },
 
+  // Cream removed - not in final 4
+
   // ==========================================
-  // 风格4: Cream - 温暖米色渐变 + 柔和阴影 + 优雅感
+  // OCEAN - Apple Frosted Glass (Flagship)
   // ==========================================
-  cream: {
-    background: 'linear-gradient(145deg, #fef9f3 0%, #fbe8d3 40%, #f5d7b2 100%)',
-    borderRadius: 28,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    shadowColor: 'rgba(200, 150, 100, 0.25)',
-    shadowBlur: 30,
-    shadowOffset: { width: 0, height: 15 },
-    innerShadow: 'inset 0 2px 10px rgba(255,255,255,0.5)',
-    hasGlassOverlay: false,
-    defaultTextColor: '#4a3728',
-    secondaryTextColor: '#8b7355',
-    accentColor: '#c4956a',
-    layout: 'cream',
+  ocean: {
+    background: 'rgba(255, 255, 255, 0.40)',
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: 'rgba(0, 0, 0, 0.08)',
+    shadowBlur: 35,
+    shadowOffset: { width: 0, height: 12 },
+    hasGlassOverlay: true,
+    glassOpacity: 0.12,
+    glassBlur: 45,
+    defaultTextColor: '#1a1a1a',
+    secondaryTextColor: '#6b7280',
+    accentTextColor: '#0066CC',
+    accentPosition: 'none',
+    layout: 'ocean',
   },
 
   // ==========================================
-  // 风格5: Ocean - Apple-style Frosted Glass (FINAL VERSION)
+  // SLEEK - Modern Minimal White
   // ==========================================
-  ocean: {
-    background: 'rgba(255, 255, 255, 0.65)',
-    borderRadius: 32,
+  sleek: {
+    background: '#FFFFFF',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    shadowColor: 'rgba(0, 0, 0, 0.05)',
-    shadowBlur: 15,
-    shadowOffset: { width: 0, height: 2 },
-    hasGlassOverlay: true,
-    glassOpacity: 0.1,
-    glassBlur: 30,
-    defaultTextColor: '#1a1a1a',
-    secondaryTextColor: '#4b5563',
-    accentTextColor: '#0066CC',
-    layout: 'ocean',
+    borderColor: '#e5e7eb',
+    shadowColor: 'rgba(0, 0, 0, 0.06)',
+    shadowBlur: 25,
+    shadowOffset: { width: 0, height: 8 },
+    hasGlassOverlay: false,
+    defaultTextColor: '#111827',
+    secondaryTextColor: '#6b7280',
+    accentColor: '#6366f1',
+    accentPosition: 'none',
+    layout: 'modern',
   },
 };
 
@@ -428,6 +411,11 @@ export default function EditorScreen() {
   // Canvas elements state
   const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([]);
 
+  // Undo/Redo history
+  const [history, setHistory] = useState<CanvasElement[][]>([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const isUndoRedoRef = useRef(false); // Prevent adding to history during undo/redo
+
   // Selected element for editing
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
@@ -514,7 +502,7 @@ export default function EditorScreen() {
             el.fieldKey === 'divider' ||
             el.fieldKey.startsWith('custom-') ||
             el.type === 'divider' ||
-            ['location', 'city', 'email', 'phone', 'website', 'qrCode', 'company', 'headline'].includes(el.fieldKey)
+            ['location', 'city', 'email', 'phone', 'website', 'qrCode', 'company', 'headline', 'photoUrl'].includes(el.fieldKey)
           );
 
           // We will MERGE these with newDefaults. 
@@ -530,18 +518,33 @@ export default function EditorScreen() {
 
           // Now, for elements that ARE in both (e.g. Name), we want the NEW position/style from newElements.
           // So: Result = NewDefaults + Extras.
-          return [...newElements, ...extras];
+          const merged = [...newElements, ...extras];
+          // Initialize history with the merged state (skip history for theme merges)
+          isUndoRedoRef.current = true;
+          setTimeout(() => {
+            setHistory([JSON.parse(JSON.stringify(merged))]);
+            setHistoryIndex(0);
+            isUndoRedoRef.current = false;
+          }, 0);
+          return merged;
         });
       } else {
+        // Initialize history with the initial state
+        isUndoRedoRef.current = true;
         setCanvasElements(newElements);
         setIsInitialized(true);
+        setTimeout(() => {
+          setHistory([JSON.parse(JSON.stringify(newElements))]);
+          setHistoryIndex(0);
+          isUndoRedoRef.current = false;
+        }, 0);
       }
 
       // Force deduplication safe-guard (checking visibleFields vs generated)
       // If we have both, remove 'location' from state immediately if 'city' exists
       if (newElements.some(e => e.fieldKey === 'city') && newElements.some(e => e.fieldKey === 'location')) {
         // This shouldn't happen with current getDefaultElements, but for safety:
-        setCanvasElements(prev => prev.filter(el => el.fieldKey !== 'location'));
+        updateCanvasElements(prev => prev.filter(el => el.fieldKey !== 'location'));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -549,19 +552,149 @@ export default function EditorScreen() {
 
   // Emergency Cleanup Effect to fix specific bug where both location and city appear
   useEffect(() => {
-    const hasCity = canvasElements.some(el => el.fieldKey === 'city');
-    const hasLocation = canvasElements.some(el => el.fieldKey === 'location');
+    let hasChanges = false;
+    let newElements = [...canvasElements];
+
+    // Fix 1: Deduplicate Location/City
+    const hasCity = newElements.some(el => el.fieldKey === 'city');
+    const hasLocation = newElements.some(el => el.fieldKey === 'location');
 
     if (hasCity && hasLocation) {
-      console.log('[Editor] Force removing duplicate location element');
-      setCanvasElements(prev => prev.filter(el => el.fieldKey !== 'location'));
+      newElements = newElements.filter(el => el.fieldKey !== 'location');
+      hasChanges = true;
     }
-  }, [canvasElements]);
+
+    // Fix 2: Force PhotoUrl to be Avatar type (Aggressive)
+    newElements = newElements.map(el => {
+      let shouldBeAvatar = false;
+
+      // Check 1: Key matches known photo keys
+      if (el.fieldKey === 'photo' || el.fieldKey === 'photoUrl') shouldBeAvatar = true;
+
+      // Check 2: ID matches known photo IDs
+      if (el.id === 'photo-element' || el.id.includes('avatar')) shouldBeAvatar = true;
+
+      // Check 3: Content looks like a URL but is being rendered as text
+      if (el.type === 'text') {
+        const content = card?.profile?.[el.fieldKey as keyof typeof card.profile] as string;
+        if (typeof content === 'string' && content.startsWith('http') && (content.includes('/image/') || content.includes('licdn.com'))) {
+          shouldBeAvatar = true;
+        }
+      }
+
+      if (shouldBeAvatar && el.type !== 'avatar') {
+        console.log('[Editor] Fixing corrupted Photo element type (text -> avatar)', el.id);
+        hasChanges = true;
+        // Force mapping to 'photoUrl' if we detected it's a photo
+        const newFieldKey = 'photoUrl';
+
+        return {
+          ...el,
+          fieldKey: newFieldKey,
+          type: 'avatar' as const,
+          width: 20,
+          height: 0,
+          style: { ...el.style, borderRadius: 100 }
+        };
+      }
+      return el;
+    });
+
+    if (hasChanges) {
+      console.log('[Editor] Applying auto-fixes to canvas elements');
+      // Don't add auto-fixes to history, they're internal corrections
+      isUndoRedoRef.current = true;
+      setCanvasElements(newElements);
+      setTimeout(() => {
+        isUndoRedoRef.current = false;
+      }, 0);
+    }
+  }, [canvasElements, selectedVersion?.id, card?.profile]);
 
   // ============== Handlers (must be before conditional return) ==============
 
+  // Add state to history (called whenever canvasElements changes, except during undo/redo)
+  const addToHistory = useCallback((newElements: CanvasElement[]) => {
+    if (isUndoRedoRef.current) return; // Skip if we're in the middle of undo/redo
+
+    setHistory(prev => {
+      // Remove any future history if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
+      newHistory.push(JSON.parse(JSON.stringify(newElements))); // Deep clone
+      // Limit history size to 50
+      if (newHistory.length > 50) {
+        newHistory.shift();
+      } else {
+        setHistoryIndex(prevIdx => prevIdx + 1);
+      }
+      return newHistory;
+    });
+  }, [historyIndex]);
+
+  // Update canvasElements and add to history
+  const updateCanvasElements = useCallback((newElements: CanvasElement[] | ((prev: CanvasElement[]) => CanvasElement[])) => {
+    setCanvasElements(prev => {
+      const updated = typeof newElements === 'function' ? newElements(prev) : newElements;
+      // Add to history after state update (in next tick)
+      setTimeout(() => addToHistory(updated), 0);
+      return updated;
+    });
+  }, [addToHistory]);
+
+  // Undo function
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0 && Platform.OS === 'web') {
+      isUndoRedoRef.current = true;
+      const prevState = history[historyIndex - 1];
+      setCanvasElements(JSON.parse(JSON.stringify(prevState))); // Deep clone
+      setHistoryIndex(prev => prev - 1);
+      setTimeout(() => {
+        isUndoRedoRef.current = false;
+      }, 0);
+    }
+  }, [history, historyIndex]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1 && Platform.OS === 'web') {
+      isUndoRedoRef.current = true;
+      const nextState = history[historyIndex + 1];
+      setCanvasElements(JSON.parse(JSON.stringify(nextState))); // Deep clone
+      setHistoryIndex(prev => prev + 1);
+      setTimeout(() => {
+        isUndoRedoRef.current = false;
+      }, 0);
+    }
+  }, [history, historyIndex]);
+
+  // Keyboard shortcuts for undo/redo (web only)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Command+Z (Mac) or Ctrl+Z (Windows/Linux) for undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleUndo();
+      }
+      // Command+Shift+Z (Mac) or Ctrl+Y (Windows/Linux) for redo
+      if ((e.metaKey || e.ctrlKey) && ((e.shiftKey && e.key === 'z') || (!e.shiftKey && e.key === 'y'))) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleRedo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
+
   const handleElementDrag = useCallback((elementId: string, dx: number, dy: number) => {
-    setCanvasElements(prev => prev.map(el => {
+    updateCanvasElements(prev => prev.map(el => {
       if (el.id !== elementId) return el;
       const newX = Math.max(0, Math.min(100 - (el.width || 0), el.x + dx));
       const newY = Math.max(0, Math.min(95, el.y + dy));
@@ -571,7 +704,7 @@ export default function EditorScreen() {
         y: newY,
       };
     }));
-  }, []);
+  }, [updateCanvasElements]);
 
   const handleSave = () => {
     if (!selectedVersion) return;
@@ -649,7 +782,7 @@ export default function EditorScreen() {
 
   const handleElementStyleChange = (property: keyof FieldStyle, value: any) => {
     if (!selectedElementId) return;
-    setCanvasElements(prev => prev.map(el => {
+    updateCanvasElements(prev => prev.map(el => {
       if (el.id !== selectedElementId) return el;
       return {
         ...el,
@@ -659,7 +792,7 @@ export default function EditorScreen() {
   };
 
   const handleElementResize = (elementId: string, dWidth: number) => {
-    setCanvasElements(prev => prev.map(el => {
+    updateCanvasElements(prev => prev.map(el => {
       if (el.id !== elementId) return el;
       // dWidth is in percentage
       return {
@@ -711,10 +844,12 @@ export default function EditorScreen() {
     let elementType: CanvasElement['type'] = 'text';
     let x = 25, y = 40, width = 50, height = 0;
 
-    // Resolve Field Key (Location -> City alias)
+    // Resolve Field Key (Location -> City alias, Photo -> PhotoUrl alias)
     let finalFieldKey = component.id;
     if (component.id === 'location' && (card.profile as any).city) {
       finalFieldKey = 'city';
+    } else if (component.id === 'photo') {
+      finalFieldKey = 'photoUrl';
     }
 
     let style: any = {
@@ -757,7 +892,7 @@ export default function EditorScreen() {
       visible: true,
     };
 
-    setCanvasElements(prev => {
+    updateCanvasElements(prev => {
       console.log('[Editor] Adding element to canvas, new count:', prev.length + 1);
       return [...prev, newElement];
     });
@@ -806,7 +941,7 @@ export default function EditorScreen() {
       visibleFields: selectedVersion.visibleFields.filter(f => !keysToRemove.includes(f)),
     });
 
-    setCanvasElements(prev => prev.filter(el => !keysToRemove.includes(el.fieldKey)));
+    updateCanvasElements(prev => prev.filter(el => !keysToRemove.includes(el.fieldKey)));
     setSelectedElementId(null);
   };
 
@@ -855,20 +990,7 @@ export default function EditorScreen() {
         <Text style={styles.headerTitle}>Card Editor</Text>
 
         <View style={styles.headerActions}>
-          {/* Zoom controls */}
-          <TouchableOpacity
-            style={styles.zoomButton}
-            onPress={() => setCardScale(Math.max(0.5, cardScale - 0.1))}
-          >
-            <Ionicons name="remove" size={18} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.zoomText}>{Math.round(cardScale * 100)}%</Text>
-          <TouchableOpacity
-            style={styles.zoomButton}
-            onPress={() => setCardScale(Math.min(2.0, cardScale + 0.1))}
-          >
-            <Ionicons name="add" size={18} color={colors.text} />
-          </TouchableOpacity>
+          {/* Zoom controls removed */}
         </View>
 
         <Button
@@ -884,13 +1006,13 @@ export default function EditorScreen() {
       {/* Element Toolbar (shown when element selected) */}
       {selectedElement && (
         <View style={styles.elementToolbar}>
-          {/* Delete Button - Always visible for all elements */}
-          <TouchableOpacity
+          {/* Delete Button REMOVED as per user request */}
+          {/* <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => handleElementDelete(selectedElement.id)}
           >
             <Ionicons name="trash-outline" size={20} color="#DC2626" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Text editing controls - Only for text elements */}
           {selectedElement.type === 'text' && (
@@ -975,19 +1097,18 @@ export default function EditorScreen() {
                   <View style={styles.alignButtonsRow}>
                     {(['left', 'center', 'right'] as const).map(align => {
                       const isActive = selectedElement.style.textAlign === align || (!selectedElement.style.textAlign && align === 'left');
-                      const barColor = isActive ? '#FFFFFF' : colors.text;
+                      const iconColor = isActive ? '#FFFFFF' : colors.text;
                       return (
                         <TouchableOpacity
                           key={align}
                           style={[styles.alignBtn, isActive && styles.alignBtnActive]}
                           onPress={() => handleElementStyleChange('textAlign', align)}
                         >
-                          <View style={styles.alignIconContainer}>
-                            {/* Custom align icon using bars */}
-                            <View style={[styles.alignBar, { width: align === 'left' ? 14 : align === 'center' ? 10 : 8, alignSelf: align === 'left' ? 'flex-start' : align === 'center' ? 'center' : 'flex-end', backgroundColor: barColor }]} />
-                            <View style={[styles.alignBar, { width: 14, alignSelf: 'center', backgroundColor: barColor }]} />
-                            <View style={[styles.alignBar, { width: align === 'left' ? 10 : align === 'center' ? 14 : 10, alignSelf: align === 'left' ? 'flex-start' : align === 'center' ? 'center' : 'flex-end', backgroundColor: barColor }]} />
-                          </View>
+                          <MaterialIcons
+                            name={`format-align-${align}` as any}
+                            size={18}
+                            color={iconColor}
+                          />
                         </TouchableOpacity>
                       );
                     })}
@@ -1327,7 +1448,7 @@ export default function EditorScreen() {
                   } else if (type === 'social') {
                     updateProfile({ [customId]: `@${label?.toLowerCase() || 'username'}` } as any);
                   }
-                  setCanvasElements(prev => [...prev, newElement]);
+                  updateCanvasElements(prev => [...prev, newElement]);
                   setSelectedElementId(customId);
                 }}
               />
@@ -1526,7 +1647,14 @@ export default function EditorScreen() {
                       return { ...el, style: baseStyle };
                     });
 
+                    // Template change - reset history
+                    isUndoRedoRef.current = true;
                     setCanvasElements(newElements);
+                    setTimeout(() => {
+                      setHistory([JSON.parse(JSON.stringify(newElements))]);
+                      setHistoryIndex(0);
+                      isUndoRedoRef.current = false;
+                    }, 0);
 
                     const newFieldStyles: Record<string, any> = {};
                     newElements.forEach(el => {
@@ -1596,11 +1724,20 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const elementRef = useRef<any>(null);
 
-  // Determine content
-  let content = element.fieldKey === 'qrCode' ? '' : (profile[element.fieldKey] || '');
+  // Determine content - special handling for avatar
+  let content: any;
+  if (element.type === 'avatar' || element.fieldKey === 'photoUrl') {
+    // For avatar, always use photoUrl from profile
+    content = profile.photoUrl || '';
+    console.log('[Avatar] Loading photo:', content, 'for element:', element.id);
+  } else if (element.fieldKey === 'qrCode') {
+    content = '';
+  } else {
+    content = (profile as any)[element.fieldKey] || '';
+  }
 
   // Placeholder for empty content so it's selectable/visible
-  if (!content && element.type !== 'divider' && element.type !== 'image' && element.fieldKey !== 'qrCode') {
+  if (!content && element.type !== 'divider' && element.type !== 'image' && element.type !== 'avatar' && element.fieldKey !== 'qrCode') {
     content = `[${element.fieldKey}]`;
   }
 
@@ -1670,10 +1807,17 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     fontFamily: getFontStack(element.style.fontFamily || 'System'),
   };
 
+  // VisionOS / Liquid Glass Selection Style
   const selectionStyle = isSelected ? {
-    outline: '2px solid #6366F1',
-    outlineOffset: 4,
-    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)', // Subtle dark boundary for contrast
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glass fill
+    borderRadius: element.type === 'avatar' ? 1000 : 12, // Smooth liquid corners, circular for avatars
+    padding: 6,
+    margin: -6,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.08)', // Inner glow + Soft shadow
+    } : {})
   } : {};
 
   // Setup DOM event listeners for proper double-click handling on web
@@ -1762,15 +1906,41 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
 
   // Render different element types
   if (element.type === 'avatar') {
+    const photoUrl = content;
+    const hasPhoto = photoUrl && photoUrl.startsWith('http');
+
     return (
       <View ref={elementRef} style={[elementStyle, selectionStyle as any]} {...webHandlers}>
-        <View style={{ pointerEvents: 'none' } as any}>
-          <Avatar
-            source={content}
-            name={profile.name || ''}
-            size="lg"
-            accentColor={accentColor}
-          />
+        <View style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: 1000,
+          overflow: 'hidden',
+          backgroundColor: hasPhoto ? 'transparent' : '#F5F5F5'
+        }}>
+          {hasPhoto ? (
+            <Image
+              source={{ uri: photoUrl }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: accentColor || '#6366F1',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <RNText style={{
+                color: '#FFFFFF',
+                fontSize: Math.max(12, (elementStyle.width as number || 60) * scale * 0.3),
+                fontWeight: '700'
+              }}>
+                {profile.name ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'NH'}
+              </RNText>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -1806,7 +1976,7 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   if (element.type === 'image') {
     return (
       <View ref={elementRef} style={[elementStyle, selectionStyle as any]} {...webHandlers}>
-        <View style={{ width: '100%', height: '100%', backgroundColor: '#eee' }} />
+        <View style={{ width: '100%', height: '100%', backgroundColor: '#eee', borderRadius: element.style.borderRadius ? element.style.borderRadius * scale : 0 }} />
       </View>
     );
   }
@@ -1822,17 +1992,29 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           onSubmitEditing={onSaveEdit}
           autoFocus
           multiline
+          // Function to move cursor to end on focus
+          onFocus={(e: any) => {
+            if (Platform.OS === 'web') {
+              const val = e.target.value;
+              e.target.setSelectionRange(val.length, val.length);
+            }
+          }}
           style={[textStyle, {
             minWidth: 50,
-            padding: 4,
-            margin: -4,
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            borderRadius: 4,
+            width: '100%', // Ensure full width usage
+            padding: 8, // More breathing room
+            margin: -8, // Compensate for padding to stay aligned
+            // VisionOS Editing State
+            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            borderRadius: 12,
             outline: 'none',
-            border: '2px solid #6366F1',
-            height: 'auto',
+            border: 'none',
+            overflow: 'hidden',
             ...(Platform.OS === 'web' ? {
-              boxShadow: '0 0 0 2px rgba(99, 102, 241, 0.2)',
+              backdropFilter: 'blur(12px)',
+              webkitBackdropFilter: 'blur(12px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.3)',
+              resize: 'none', // Prevent manual resize handle on web
             } : {}),
           } as any]}
           {...(Platform.OS === 'web' ? {
@@ -1844,18 +2026,27 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           } : {})}
         />
       ) : (
-        <Text style={[textStyle, Platform.OS === 'web' ? { whiteSpace: 'nowrap' as any } : {}]}>
+        <Text style={[textStyle, Platform.OS === 'web' ? { whiteSpace: 'pre-wrap' as any } : {}]}>
           {(element.fieldKey === 'location' || element.fieldKey === 'city') && !templateStyle?.hideIcons && '📍 '}
           {(element.fieldKey === 'email') && !templateStyle?.hideIcons && '✉️ '}
           {content}
         </Text>
       )}
 
-      {/* Resize Handle - Show when element is selected */}
+      {/* Resize Handle (Right Side - Width Control Only) */}
       {isSelected && element.type === 'text' && Platform.OS === 'web' && (
         <View
-          style={styles.resizeHandle}
-          onMouseDown={handleResizeMouseDown}
+          style={[styles.resizeHandle, {
+            right: -10,
+            top: '50%',
+            marginTop: -7, // Centered (half of 14px height)
+            cursor: 'e-resize' as any
+          }]}
+          // @ts-ignore - Web-only event
+          onMouseDown={(e: any) => {
+            e.stopPropagation();
+            handleResizeMouseDown(e);
+          }}
         />
       )}
     </View>
@@ -1883,16 +2074,19 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({
   onAddCustom,
 }) => {
   const isOnCanvas = (componentId: string) => {
-    // Handle aliases (e.g. location -> city)
+    // Handle aliases (e.g. location -> city, photo -> photoUrl)
     if (componentId === 'location') {
       return canvasElements.some(el => el.fieldKey === 'location' || el.fieldKey === 'city');
+    }
+    if (componentId === 'photo' || componentId === 'avatar') {
+      return canvasElements.some(el => el.fieldKey === 'photoUrl');
     }
     return canvasElements.some(el => el.fieldKey === componentId);
   };
 
   return (
     <View style={styles.panel}>
-      <Text style={styles.panelTitle}>Drag to Card</Text>
+      <Text style={styles.panelTitle}>Card Elements</Text>
       <Text style={styles.panelSubtitle}>Click to add or remove elements from your card</Text>
 
       <VStack gap="sm" style={{ marginTop: spacing.lg }}>
@@ -1943,27 +2137,37 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({
       </VStack>
 
       {/* Custom blocks */}
-      < Text style={[styles.panelTitle, { marginTop: spacing.xl }]} > Add Custom</Text >
-      <Text style={styles.panelSubtitle}>Add custom elements to personalize your card</Text>
-      <View style={styles.customGrid}>
-        {[
-          { icon: 'text-outline', label: 'Text', type: 'text' as const },
-          { icon: 'image-outline', label: 'Image', type: 'image' as const },
-          { icon: 'link-outline', label: 'Link', type: 'link' as const },
-          { icon: 'logo-github', label: 'GitHub', type: 'social' as const },
-          { icon: 'logo-twitter', label: 'Twitter', type: 'social' as const },
-          { icon: 'logo-linkedin', label: 'LinkedIn', type: 'social' as const },
-        ].map(item => (
-          <TouchableOpacity
-            key={item.label}
-            style={styles.customBtn}
-            onPress={() => onAddCustom(item.type, item.label)}
-          >
-            <Ionicons name={item.icon as any} size={22} color={colors.text} />
-            <Text style={styles.customBtnLabel}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Custom blocks - Horizontal Toolbar Style */}
+      <Text style={[styles.panelTitle, { marginTop: spacing.xl }]}>Extras & Socials</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
+        <View style={styles.customToolbar}>
+          {[
+            { icon: 'text-outline', label: 'Text', type: 'text' as const },
+            { icon: 'image-outline', label: 'Image', type: 'image' as const },
+            { icon: 'link-outline', label: 'Link', type: 'link' as const },
+            { type: 'divider' }, // Visual separator
+            { icon: 'logo-github', label: 'GitHub', type: 'social' as const },
+            { icon: 'logo-twitter', label: 'X', type: 'social' as const },
+            { icon: 'logo-instagram', label: 'Instagram', type: 'social' as const },
+          ].map((item, idx) => {
+            if ('type' in item && item.type === 'divider') {
+              return <View key={idx} style={{ width: 1, height: 24, backgroundColor: colors.border, marginHorizontal: 4 }} />;
+            }
+            // @ts-ignore
+            const { icon, label, type } = item;
+            return (
+              <TouchableOpacity
+                key={label}
+                style={styles.customToolItem}
+                onPress={() => onAddCustom(type, label)}
+              >
+                <Ionicons name={icon as any} size={18} color={colors.text} />
+                <Text style={styles.customToolLabel}>{label}</Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+      </ScrollView>
     </View >
   );
 };
@@ -2082,19 +2286,14 @@ const StylePanel: React.FC<StylePanelProps> = ({
 
       <Text style={[styles.panelTitle, { marginTop: spacing.xl }]}>Template</Text>
       <View style={styles.templateGrid}>
-        {(['ocean', 'aurora', 'sunset', 'midnight', 'cream', 'bento', 'modern', 'minimal', 'classic'] as any[]).map(t => {
+        {(['ocean', 'midnight', 'sunset', 'sleek'] as any[]).map(t => {
           const isActive = template === t;
           let label = '';
           switch (t) {
             case 'ocean': label = 'Ocean'; break;
-            case 'aurora': label = 'Aurora'; break;
-            case 'sunset': label = 'Sunset'; break;
             case 'midnight': label = 'Midnight'; break;
-            case 'cream': label = 'Cream'; break;
-            case 'classic': label = '3D Pop'; break;
-            case 'bento': label = 'Dopamine'; break;
-            case 'minimal': label = 'Liquid'; break;
-            case 'modern': label = 'Sleek'; break;
+            case 'sunset': label = 'Sunset'; break;
+            case 'sleek': label = 'Sleek'; break;
             default: label = (t as string).charAt(0).toUpperCase() + (t as string).slice(1);
           }
 
@@ -2524,27 +2723,32 @@ const styles = StyleSheet.create({
   },
 
   // Custom Grid
-  customGrid: {
+  // Custom Toolbar (New)
+  customToolbar: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  customBtn: {
-    width: '30%',
-    aspectRatio: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderRadius: radii.md,
+    gap: 8,
+    paddingVertical: 4,
+  },
+  customToolItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.white,
+    borderRadius: radii.full,
     borderWidth: 1,
     borderColor: colors.border,
-    borderStyle: 'dashed',
-    gap: spacing.xs,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    // elevation: 1,
   },
-  customBtnLabel: {
-    fontFamily: fontFamily.body,
-    fontSize: fontSize.xs,
+  customToolLabel: {
+    fontFamily: fontFamily.bodyMedium,
+    fontSize: 12, // Compact
     color: colors.text,
   },
 
@@ -2582,8 +2786,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.card, // Ensure background is set
+    // borderWidth: 1, // Removed
+    // borderColor: colors.border, // Removed
     minHeight: 60,
   },
   templateCardActive: {
@@ -2701,13 +2906,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   fontOption: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: 8, // Compact padding
+    paddingVertical: 4,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.white,
-    minWidth: 70,
+    minWidth: 50, // Smaller min width
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2717,7 +2922,7 @@ const styles = StyleSheet.create({
   },
   fontOptionText: {
     fontFamily: fontFamily.body,
-    fontSize: fontSize.sm,
+    fontSize: 11, // Smaller font
     color: colors.text,
   },
   fontOptionTextActive: {
@@ -2728,48 +2933,40 @@ const styles = StyleSheet.create({
   // Align Button Styles
   alignButtonsRow: {
     flexDirection: 'row' as const,
-    gap: 4,
+    gap: 2, // Tighter gap
   },
   alignBtn: {
-    width: 32,
+    width: 28,
     height: 28,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
+    // borderWidth: 1, // Removed border for cleaner look
+    // borderColor: colors.border,
+    backgroundColor: 'transparent', // Transparent by default
   },
   alignBtnActive: {
     backgroundColor: colors.dark,
-    borderColor: colors.dark,
+    // borderColor: colors.dark,
   },
-  alignIconContainer: {
-    width: 16,
-    height: 12,
-    justifyContent: 'space-between' as const,
-  },
-  alignBar: {
-    height: 2,
-    backgroundColor: colors.text,
-    borderRadius: 1,
-  },
+  // alignIconContainer & alignBar removed as they are replaced by MaterialIcons
 
   // Resize Handle
   resizeHandle: {
     position: 'absolute' as const,
-    bottom: -8,
-    right: -8,
-    width: 16,
-    height: 16,
-    backgroundColor: '#6366F1',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    borderRadius: 3,
+    bottom: -6,
+    right: -6,
+    width: 14,
+    height: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Glassy white
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)', // Barely visible border
+    borderRadius: 7,
     cursor: 'nwse-resize' as const,
     zIndex: 200,
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+      backdropFilter: 'blur(4px)',
+      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', // Soft ambient shadow
     } : {}),
   },
 
