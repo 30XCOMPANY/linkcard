@@ -42,6 +42,12 @@ export const gradients = {
 
     /** Soft Pink */
     rose: ['#FECDD3', '#FEE2E2', '#FFFFFF'],
+
+    /** Pure White - Clean and minimal */
+    white: ['#FFFFFF', '#FFFFFF'],
+
+    /** Pure Black - Elegant dark mode */
+    black: ['#000000', '#1A1A1A'],
 } as const;
 
 // ============================================================================

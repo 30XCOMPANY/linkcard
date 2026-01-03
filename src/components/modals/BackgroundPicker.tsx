@@ -38,6 +38,8 @@ const gradientOptions: Array<{ key: GradientKey; name: string }> = [
     { key: 'mint', name: 'Cool Mint' },
     { key: 'purple', name: 'Purple Dream' },
     { key: 'rose', name: 'Soft Pink' },
+    { key: 'white', name: 'Pure White' },
+    { key: 'black', name: 'Pure Black' },
     { key: 'mesh', name: 'V7 Classic' },
 ];
 
@@ -93,7 +95,7 @@ export const BackgroundPicker: React.FC<BackgroundPickerProps> = ({
                                         style={styles.gradientItem}
                                     >
                                         <LinearGradient
-                                            colors={gradients[option.key] as string[]}
+                                            colors={[...gradients[option.key]]}
                                             style={[
                                                 styles.gradientPreview,
                                                 isSelected && styles.selected,
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.md,
     },
     gradientItem: {
-        width: '30%',
+        width: '31%',
         alignItems: 'center',
     },
     gradientPreview: {

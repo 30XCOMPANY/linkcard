@@ -10,7 +10,7 @@
  * 6. Placeholder
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     ScrollView,
     TouchableOpacity,
@@ -19,11 +19,12 @@ import {
     StyleSheet,
     Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp, FadeIn, FadeOut } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import QRCodeSVG from 'react-native-qrcode-svg';
 
 // Design System
@@ -42,6 +43,7 @@ import { useCardStore } from '@/src/stores/cardStore';
 import { ShareMenu } from '@/src/components/modals/ShareMenu';
 import { BackgroundPicker } from '@/src/components/modals/BackgroundPicker';
 import { AddBlockModal } from '@/src/components/modals/AddBlockModal';
+import { AddContactModal } from '@/src/components/modals/AddContactModal';
 
 type ViewMode = 'view' | 'edit';
 type GradientKey = keyof typeof gradients;
@@ -72,6 +74,7 @@ export default function GlassHomeScreen() {
     const [shareMenuVisible, setShareMenuVisible] = useState(false);
     const [bgPickerVisible, setBgPickerVisible] = useState(false);
     const [addBlockVisible, setAddBlockVisible] = useState(false);
+    const [addContactVisible, setAddContactVisible] = useState(false);
     const [currentGradient, setCurrentGradient] = useState<GradientKey>('lightGlass');
     const [showQR, setShowQR] = useState(false);
     const [selectedContact, setSelectedContact] = useState<ContactType>('linkedin');
@@ -80,20 +83,17 @@ export default function GlassHomeScreen() {
     // User-added contact methods
     const [userContacts, setUserContacts] = useState<ContactMethod[]>([]);
 
-    if (!card) {
-        router.replace('/onboarding');
-        return null;
-    }
-
-    const { profile } = card;
+    const profile = card?.profile;
 
     // All contact methods (LinkedIn is always first)
     const allContacts = useMemo<ContactMethod[]>(() => {
+        if (!profile) return [];
+
         const contacts: ContactMethod[] = [
             {
                 id: 'linkedin',
                 type: 'linkedin',
-                icon: '💼',
+                icon: 'logo-linkedin',
                 label: 'LinkedIn',
                 value: profile.url || '',
             },
@@ -104,7 +104,7 @@ export default function GlassHomeScreen() {
             contacts.push({
                 id: 'email',
                 type: 'email',
-                icon: '📧',
+                icon: 'mail',
                 label: 'Email',
                 value: `mailto:${profile.email}`,
             });
@@ -114,7 +114,7 @@ export default function GlassHomeScreen() {
             contacts.push({
                 id: 'phone',
                 type: 'phone',
-                icon: '📱',
+                icon: 'call',
                 label: 'Phone',
                 value: `tel:${profile.phone}`,
             });
@@ -124,7 +124,7 @@ export default function GlassHomeScreen() {
             contacts.push({
                 id: 'website',
                 type: 'website',
-                icon: '🌐',
+                icon: 'globe',
                 label: 'Website',
                 value: profile.website,
             });
@@ -136,6 +136,13 @@ export default function GlassHomeScreen() {
 
     // QR Code value and label based on selected contact
     const qrCodeData = useMemo(() => {
+        if (!profile) {
+            return {
+                value: '',
+                label: 'Scan to connect on LinkedIn',
+            };
+        }
+
         const contact = allContacts.find(c => c.type === selectedContact);
         if (!contact) {
             return {
@@ -158,10 +165,12 @@ export default function GlassHomeScreen() {
             default:
                 return { value: profile.url, label: 'Scan to connect on LinkedIn' };
         }
-    }, [selectedContact, allContacts, profile.url]);
+    }, [selectedContact, allContacts, profile]);
 
     // Auto-generate tags from LinkedIn
     const tags = useMemo(() => {
+        if (!profile) return [];
+
         const result = [];
 
         // AI & Marketing tag (from LinkedIn summary/analysis)
@@ -183,21 +192,27 @@ export default function GlassHomeScreen() {
 
     // Mock LinkedIn highlights
     const linkedInHighlights = useMemo<Highlight[]>(() => {
-        if (profile.publications && profile.publications.length > 0) {
-            return profile.publications.slice(0, 3).map((pub, index) => ({
-                id: `linkedin-${index}`,
-                title: pub.title,
-                summary: pub.description || 'AI-generated summary coming soon...',
-                date: pub.date,
-                source: 'linkedin' as const,
-            }));
+        if (!profile || !profile.publications || profile.publications.length === 0) {
+            return [];
         }
-        return [];
-    }, [profile.publications]);
+
+        return profile.publications.slice(0, 3).map((pub, index) => ({
+            id: `linkedin-${index}`,
+            title: pub.title,
+            summary: pub.description || 'AI-generated summary coming soon...',
+            date: pub.date,
+            source: 'linkedin' as const,
+        }));
+    }, [profile]);
 
     const allHighlights = useMemo(() => {
         return [...linkedInHighlights, ...customHighlights];
     }, [linkedInHighlights, customHighlights]);
+
+    // Redirect to onboarding if no card exists (after all hooks)
+    if (!card || !profile) {
+        return <Redirect href="/onboarding" />;
+    }
 
     // Handlers
     const handleToggleMode = () => {
@@ -262,12 +277,32 @@ export default function GlassHomeScreen() {
         Alert.alert('Deleted', `Removed "${highlight?.title}"`);
     };
 
-    const handleEditAvatar = () => {
-        if (mode !== 'edit') return;
+    const handleEditAvatar = async () => {
         if (Platform.OS !== 'web') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        Alert.alert('Change Avatar', 'Open image picker...');
+
+        // Request permissions
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Please allow access to your photos to change your avatar.');
+            return;
+        }
+
+        // Launch image picker
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            // TODO: Upload image to server and update profile
+            // For now, just show success
+            Alert.alert('Success', 'Avatar updated! (Image upload to be implemented)');
+            console.log('Selected image:', result.assets[0].uri);
+        }
     };
 
     const handleToggleQR = () => {
@@ -281,25 +316,77 @@ export default function GlassHomeScreen() {
         if (Platform.OS !== 'web') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        setSelectedContact(type);
+
+        // If clicking LinkedIn
+        if (type === 'linkedin') {
+            // If already selected, toggle QR code
+            if (selectedContact === 'linkedin') {
+                setShowQR(!showQR);
+            } else {
+                // If selecting for first time, show QR code
+                setSelectedContact(type);
+                setShowQR(true);
+            }
+        } else {
+            // Other contacts just select
+            setSelectedContact(type);
+        }
     };
 
     const handleAddContact = () => {
-        Alert.alert('Add Contact Method', 'Choose a contact method to add');
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        setAddContactVisible(true);
+    };
+
+    const handleSaveContact = (contact: { type: ContactType; icon: string; label: string; value: string }) => {
+        const newContact: ContactMethod = {
+            id: Date.now().toString(),
+            ...contact,
+        };
+        setUserContacts([...userContacts, newContact]);
+        if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        Alert.alert('Success', `Added contact: ${contact.label}`);
+    };
+
+    const handleDeleteContact = (id: string) => {
+        const contact = userContacts.find(c => c.id === id);
+        if (!contact) return;
+
+        Alert.alert(
+            'Delete Contact',
+            `Are you sure you want to delete "${contact.label}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                        setUserContacts(userContacts.filter(c => c.id !== id));
+                        if (Platform.OS !== 'web') {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     return (
         <Box flex={1}>
             {/* Background Gradient */}
             <LinearGradient
-                colors={gradients[currentGradient] as any[]}
+                colors={[...gradients[currentGradient]]}
                 locations={currentGradient === 'lightGlass' ? [0, 0.3, 0.7, 1] : undefined}
                 style={StyleSheet.absoluteFill}
             />
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: spacing['2xl'], paddingBottom: 120 }}
+                contentContainerStyle={{ paddingHorizontal: spacing['3xl'], paddingBottom: 120 }}
             >
                 {/* Header */}
                 <Animated.View entering={FadeInDown.delay(100).springify()}>
@@ -329,7 +416,7 @@ export default function GlassHomeScreen() {
                         {/* Avatar with QR Toggle */}
                         <HStack gap="md" align="center" style={{ justifyContent: 'center' }}>
                             <TouchableOpacity
-                                onPress={mode === 'edit' ? handleEditAvatar : handleToggleQR}
+                                onPress={handleEditAvatar}
                                 activeOpacity={0.8}
                             >
                                 <Box style={{ position: 'relative' }}>
@@ -358,22 +445,17 @@ export default function GlassHomeScreen() {
                                 </Box>
                             </TouchableOpacity>
 
-                            {/* QR Code (toggleable) */}
+                            {/* QR Code (toggleable) - Circular and same size as avatar */}
                             {showQR && mode !== 'edit' && (
-                                <Animated.View entering={FadeIn} exiting={FadeOut}>
-                                    <GlassCard padding="md" borderRadius="xl">
-                                        <VStack gap="xs" align="center">
-                                            <QRCodeSVG
-                                                value={qrCodeData.value}
-                                                size={90}
-                                                backgroundColor="#FFFFFF"
-                                                color="#000000"
-                                            />
-                                            <Text variant="caption" color="textMuted" style={{ fontSize: 10 }}>
-                                                {qrCodeData.label}
-                                            </Text>
-                                        </VStack>
-                                    </GlassCard>
+                                <Animated.View entering={FadeIn.springify()} exiting={FadeOut.springify()}>
+                                    <Box style={styles.qrCodeContainer}>
+                                        <QRCodeSVG
+                                            value={qrCodeData.value}
+                                            size={80}
+                                            backgroundColor="#FFFFFF"
+                                            color="#000000"
+                                        />
+                                    </Box>
                                 </Animated.View>
                             )}
                         </HStack>
@@ -409,7 +491,7 @@ export default function GlassHomeScreen() {
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             gap: spacing.xs,
-                                            ...shadows.xs,
+                                            ...shadows.sm,
                                         }}
                                     >
                                         <Text variant="caption" style={{ fontSize: 10 }}>{tag.icon}</Text>
@@ -450,76 +532,85 @@ export default function GlassHomeScreen() {
                     </VStack>
                 </Animated.View>
 
-                {/* Contact Methods */}
+                {/* Contact Information - Horizontal Tabs */}
                 <Animated.View entering={FadeInUp.delay(250).springify()}>
-                    <VStack gap="sm" style={{ marginBottom: spacing['2xl'], marginTop: spacing.xl }}>
-                        {/* Contact items */}
-                        {allContacts.map((contact) => (
-                            <TouchableOpacity
-                                key={contact.id}
-                                onPress={() => handleSelectContact(contact.type)}
-                                activeOpacity={0.7}
-                            >
-                                <HStack
-                                    gap="md"
-                                    align="center"
-                                    px="md"
-                                    py="sm"
-                                    style={{
-                                        backgroundColor: selectedContact === contact.type
-                                            ? 'rgba(255, 255, 255, 0.95)'
-                                            : 'rgba(255, 255, 255, 0.5)',
-                                        borderRadius: radii.lg,
-                                        borderWidth: 1,
-                                        borderColor: selectedContact === contact.type
-                                            ? colors.dark
-                                            : 'rgba(255, 255, 255, 0.8)',
-                                    }}
+                    <VStack gap="md" style={{ marginBottom: spacing['2xl'], marginTop: spacing.xl }}>
+                        <HStack gap="xs" align="center" style={{ justifyContent: 'space-between' }}>
+                            <Text variant="body" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.3 }}>
+                                Contact Information
+                            </Text>
+                            {mode === 'edit' && (
+                                <TouchableOpacity onPress={handleAddContact} activeOpacity={0.7}>
+                                    <Box
+                                        px="sm"
+                                        py="xs"
+                                        style={{
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            borderRadius: radii.md,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(0, 0, 0, 0.1)',
+                                            ...shadows.sm,
+                                        }}
+                                    >
+                                        <HStack gap="xs" align="center">
+                                            <Ionicons name="add" size={14} color={colors.dark} />
+                                            <Text variant="caption" weight="medium" style={{ color: colors.dark, fontSize: 11 }}>
+                                                Add
+                                            </Text>
+                                        </HStack>
+                                    </Box>
+                                </TouchableOpacity>
+                            )}
+                        </HStack>
+
+                        {/* Horizontal Scrollable Contact Tabs */}
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ gap: spacing.sm }}
+                        >
+                            {allContacts.map((contact) => (
+                                <TouchableOpacity
+                                    key={contact.id}
+                                    onPress={() => handleSelectContact(contact.type)}
+                                    activeOpacity={0.7}
                                 >
-                                    <Text variant="body">{contact.icon}</Text>
-                                    <Box flex={1}>
+                                    <VStack gap="xs" align="center" style={{ minWidth: 70 }}>
+                                        <Box
+                                            style={{
+                                                width: 56,
+                                                height: 56,
+                                                borderRadius: radii.full,
+                                                backgroundColor: selectedContact === contact.type
+                                                    ? colors.white
+                                                    : 'rgba(255, 255, 255, 0.8)',
+                                                borderWidth: selectedContact === contact.type ? 2 : 1,
+                                                borderColor: selectedContact === contact.type
+                                                    ? 'rgba(0, 0, 0, 0.1)'
+                                                    : 'rgba(0, 0, 0, 0.05)',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                ...shadows.sm,
+                                            }}
+                                        >
+                                            <Ionicons name={contact.icon as any} size={24} color={colors.dark} />
+                                        </Box>
                                         <Text
-                                            variant="body"
-                                            weight={selectedContact === contact.type ? 'semibold' : 'regular'}
+                                            variant="caption"
+                                            weight={selectedContact === contact.type ? 'semibold' : 'medium'}
+                                            style={{
+                                                fontSize: 12,
+                                                color: selectedContact === contact.type ? colors.text : colors.textMuted,
+                                            }}
                                         >
                                             {contact.label}
                                         </Text>
-                                    </Box>
-                                    {selectedContact === contact.type && (
-                                        <Ionicons name="checkmark-circle" size={20} color={colors.dark} />
-                                    )}
-                                    {mode === 'edit' && contact.type !== 'linkedin' && (
-                                        <Ionicons name="trash-outline" size={18} color={colors.error} />
-                                    )}
-                                </HStack>
-                            </TouchableOpacity>
-                        ))}
-
-                        {/* Add Contact Button (only in edit mode) */}
-                        {mode === 'edit' && (
-                            <TouchableOpacity onPress={handleAddContact} activeOpacity={0.7}>
-                                <HStack
-                                    gap="md"
-                                    align="center"
-                                    px="md"
-                                    py="sm"
-                                    style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                                        borderRadius: radii.lg,
-                                        borderWidth: 1,
-                                        borderColor: colors.dark,
-                                        borderStyle: 'dashed',
-                                    }}
-                                >
-                                    <Ionicons name="add-circle-outline" size={20} color={colors.dark} />
-                                    <Text variant="body" weight="medium" style={{ color: colors.dark }}>
-                                        Add Contact Method
-                                    </Text>
-                                </HStack>
-                            </TouchableOpacity>
-                        )}
+                                    </VStack>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
                     </VStack>
-                </Animated.View>
+                </Animated.View >
 
                 {/* Highlights Section */}
                 <Animated.View entering={FadeInUp.delay(350).springify()}>
@@ -587,8 +678,7 @@ export default function GlassHomeScreen() {
 
                         {/* Placeholder */}
                         <TouchableOpacity
-                            onPress={mode === 'edit' ? handleAddHighlight : undefined}
-                            disabled={mode !== 'edit'}
+                            onPress={handleAddHighlight}
                             activeOpacity={0.7}
                         >
                             <GlassCard padding="lg" borderRadius="xl">
@@ -606,73 +696,86 @@ export default function GlassHomeScreen() {
                                         <Ionicons name="add-circle-outline" size={24} color={colors.textMuted} />
                                     </Box>
                                     <Text variant="caption" color="textMuted">
-                                        {mode === 'edit' ? 'Tap to add your first highlight' : 'No more highlights'}
+                                        Tap to add your first highlight
                                     </Text>
                                 </VStack>
                             </GlassCard>
                         </TouchableOpacity>
                     </VStack>
-                </Animated.View>
-            </ScrollView>
+                </Animated.View >
+            </ScrollView >
 
-            {/* Floating Action Buttons */}
-            <Box style={styles.floatingActions}>
-                {mode === 'view' ? (
-                    <HStack gap="md">
-                        <Box flex={1}>
-                            <GlassButton
-                                onPress={handleToggleMode}
-                                variant="glass"
-                                size="lg"
-                                fullWidth
-                                icon="create-outline"
-                            >
-                                Edit Home
-                            </GlassButton>
-                        </Box>
-                        <Box flex={1}>
-                            <GlassButton
-                                onPress={handleShare}
-                                variant="glass"
-                                size="lg"
-                                fullWidth
-                                icon="share-social-outline"
-                            >
-                                Share
-                            </GlassButton>
-                        </Box>
-                    </HStack>
-                ) : (
-                    <HStack gap="md">
-                        <Box flex={1}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={handleToggleMode}
-                            >
-                                <Text variant="button" color="text">
-                                    Cancel
-                                </Text>
-                            </TouchableOpacity>
-                        </Box>
-                        <Box flex={2}>
-                            <TouchableOpacity
-                                style={styles.saveButton}
-                                onPress={handleSave}
-                            >
-                                <Ionicons name="checkmark" size={20} color={colors.white} style={{ marginRight: spacing.xs }} />
-                                <Text variant="button" color="white">
-                                    Save
-                                </Text>
-                            </TouchableOpacity>
-                        </Box>
-                    </HStack>
-                )}
-            </Box>
+            {/* Floating Action Menu Bar - Glassmorphic Container */}
+            < Box style={styles.floatingActions} >
+                <Box style={styles.glassMenuBar}>
+                    {mode === 'view' ? (
+                        <HStack gap="md">
+                            <Box flex={1}>
+                                <TouchableOpacity
+                                    style={styles.menuButton}
+                                    onPress={handleToggleMode}
+                                    activeOpacity={0.6}
+                                >
+                                    <HStack gap="xs" align="center" style={{ justifyContent: 'center' }}>
+                                        <Ionicons name="create-outline" size={18} color={colors.text} />
+                                        <Text variant="button" color="text">
+                                            Edit Home
+                                        </Text>
+                                    </HStack>
+                                </TouchableOpacity>
+                            </Box>
+                            <Box flex={1}>
+                                <TouchableOpacity
+                                    style={styles.menuButton}
+                                    onPress={handleShare}
+                                    activeOpacity={0.6}
+                                >
+                                    <HStack gap="xs" align="center" style={{ justifyContent: 'center' }}>
+                                        <Ionicons name="share-social-outline" size={18} color={colors.text} />
+                                        <Text variant="button" color="text">
+                                            Share
+                                        </Text>
+                                    </HStack>
+                                </TouchableOpacity>
+                            </Box>
+                        </HStack>
+                    ) : (
+                        <HStack gap="md">
+                            <Box flex={1}>
+                                <TouchableOpacity
+                                    style={styles.menuButton}
+                                    onPress={handleToggleMode}
+                                    activeOpacity={0.6}
+                                >
+                                    <Text variant="button" color="text">
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+                            </Box>
+                            <Box flex={2}>
+                                <TouchableOpacity
+                                    style={styles.saveButton}
+                                    onPress={handleSave}
+                                    activeOpacity={0.6}
+                                >
+                                    <HStack gap="xs" align="center" style={{ justifyContent: 'center' }}>
+                                        <Ionicons name="checkmark" size={20} color={colors.white} />
+                                        <Text variant="button" color="white">
+                                            Save
+                                        </Text>
+                                    </HStack>
+                                </TouchableOpacity>
+                            </Box>
+                        </HStack>
+                    )}
+                </Box>
+            </Box >
 
             {/* Modals */}
-            <ShareMenu
+            < ShareMenu
                 visible={shareMenuVisible}
-                onClose={() => setShareMenuVisible(false)}
+                onClose={() => setShareMenuVisible(false)
+                }
                 onShareCard={handleShareCard}
                 onDigitalCard={handleDigitalCard}
                 onAppleWallet={handleAppleWallet}
@@ -690,7 +793,13 @@ export default function GlassHomeScreen() {
                 onClose={() => setAddBlockVisible(false)}
                 onSave={handleSaveHighlight}
             />
-        </Box>
+
+            <AddContactModal
+                visible={addContactVisible}
+                onClose={() => setAddContactVisible(false)}
+                onSave={handleSaveContact}
+            />
+        </Box >
     );
 }
 
@@ -737,6 +846,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         ...shadows.md,
     },
+    qrCodeContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: radii.full,
+        backgroundColor: colors.white,
+        borderWidth: 4,
+        borderColor: colors.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...shadows.lg,
+    },
     qrIndicator: {
         position: 'absolute',
         bottom: 0,
@@ -765,25 +885,34 @@ const styles = StyleSheet.create({
     floatingActions: {
         position: 'absolute',
         bottom: Platform.OS === 'ios' ? 40 : spacing['2xl'],
-        left: spacing['2xl'],
-        right: spacing['2xl'],
+        left: spacing['3xl'],
+        right: spacing['3xl'],
     },
-    cancelButton: {
-        height: 52,
+    glassMenuBar: {
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        borderRadius: radii['2xl'],
+        paddingVertical: 6,
+        paddingHorizontal: spacing.md,
+        borderWidth: 0.5,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        ...(Platform.OS === 'web' ? {
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+        } : {}),
+        ...shadows.lg,
+    },
+    menuButton: {
+        height: 36,
         borderRadius: radii.pill,
-        backgroundColor: colors.white,
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
     },
     saveButton: {
-        height: 52,
+        height: 36,
         borderRadius: radii.pill,
         backgroundColor: colors.dark,
-        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        ...shadows.md,
     },
 });

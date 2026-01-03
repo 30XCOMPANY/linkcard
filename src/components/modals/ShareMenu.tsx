@@ -93,9 +93,9 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({
                                         width={48}
                                         height={48}
                                         borderRadius="xl"
-                                        style={{ backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center' }}
+                                        style={{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}
                                     >
-                                        <Ionicons name="share-social" size={24} color={colors.info} />
+                                        <Ionicons name="share-social" size={24} color={colors.text} />
                                     </Box>
                                     <VStack gap="xs" style={{ flex: 1 }}>
                                         <Text variant="body" weight="semibold">
@@ -119,16 +119,16 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({
                                         width={48}
                                         height={48}
                                         borderRadius="xl"
-                                        style={{ backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center' }}
+                                        style={{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}
                                     >
-                                        <Ionicons name="card" size={24} color="#8B5CF6" />
+                                        <Ionicons name="card" size={24} color={colors.text} />
                                     </Box>
                                     <VStack gap="xs" style={{ flex: 1 }}>
                                         <Text variant="body" weight="semibold">
-                                            生成电子名片
+                                            Digital Business Card
                                         </Text>
                                         <Text variant="caption" color="textMuted">
-                                            导出为 vCard 格式，保存到通讯录
+                                            Export as vCard format, save to contacts
                                         </Text>
                                     </VStack>
                                     <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
@@ -145,16 +145,16 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({
                                         width={48}
                                         height={48}
                                         borderRadius="xl"
-                                        style={{ backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' }}
+                                        style={{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}
                                     >
-                                        <Ionicons name="wallet" size={24} color="#F59E0B" />
+                                        <Ionicons name="wallet" size={24} color={colors.text} />
                                     </Box>
                                     <VStack gap="xs" style={{ flex: 1 }}>
                                         <Text variant="body" weight="semibold">
-                                            加入 Apple Wallet
+                                            Add to Apple Wallet
                                         </Text>
                                         <Text variant="caption" color="textMuted">
-                                            添加到钱包，快速展示你的名片
+                                            Add to wallet, quickly show your card
                                         </Text>
                                     </VStack>
                                     <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
