@@ -71,6 +71,9 @@ export default function HomeScreen() {
     return <Redirect href="/onboarding" />;
   }
 
+  // Redirect to new glass home UI
+  return <Redirect href="/glass-home" />;
+
   const defaultVersion = card.versions.find((v: CardVersion) => v.isDefault) || card.versions[0];
 
   const handleExportImage = async () => {

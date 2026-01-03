@@ -1,86 +1,90 @@
 /**
- * LinkCard Design System - Glass Card (V7 Labs Style)
+ * LinkCard Design System - Glass Card Pattern
  * 
- * Frosted glass card with blur backdrop.
+ * Glassmorphism card with blur effect, using design system tokens.
  */
 
 import React from 'react';
 import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { colors } from '../tokens/colors';
-import { spacing } from '../tokens/spacing';
 import { radii } from '../tokens/radii';
+import { shadows } from '../tokens/shadows';
+import { spacing } from '../tokens/spacing';
 
-interface GlassCardProps {
+type RadiiToken = keyof typeof radii;
+type ShadowToken = keyof typeof shadows;
+type SpacingToken = keyof typeof spacing;
+
+export interface GlassCardProps {
     children: React.ReactNode;
-    variant?: 'light' | 'dark';
-    padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-    borderRadius?: 'md' | 'lg' | 'xl' | '2xl';
+    intensity?: number;
+    tint?: 'light' | 'dark' | 'default';
+    padding?: SpacingToken;
+    borderRadius?: RadiiToken;
+    shadow?: ShadowToken;
     style?: ViewStyle;
 }
-
-const paddingMap = {
-    none: 0,
-    sm: spacing.md,
-    md: spacing.lg,
-    lg: spacing.xl,
-    xl: spacing['2xl'],
-};
 
 export const GlassCard: React.FC<GlassCardProps> = ({
     children,
-    variant = 'light',
+    intensity = 20,
+    tint = 'light',
     padding = 'lg',
-    borderRadius = '2xl',
+    borderRadius = 'xl',
+    shadow = 'sm',
     style,
 }) => {
-    const isLight = variant === 'light';
-
-    const cardStyle: ViewStyle = {
-        padding: paddingMap[padding],
+    const containerStyle: ViewStyle = {
         borderRadius: radii[borderRadius],
-        backgroundColor: isLight ? colors.glass : 'rgba(28, 28, 28, 0.8)',
+        ...shadows[shadow],
         borderWidth: 1,
-        borderColor: isLight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-        // Web-only backdrop blur
-        ...(Platform.OS === 'web' ? {
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-        } as any : {}),
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        overflow: 'hidden',
     };
 
-    return <View style={[cardStyle, style]}>{children}</View>;
-};
+    // Use BlurView on native platforms
+    if (Platform.OS !== 'web') {
+        return (
+            <View style={[containerStyle, style]}>
+                <BlurView
+                    intensity={intensity}
+                    tint={tint}
+                    style={[styles.blurView, { borderRadius: radii[borderRadius], padding: spacing[padding] }]}
+                >
+                    {children}
+                </BlurView>
+            </View>
+        );
+    }
 
-// Glass Navigation Bar
-interface GlassNavProps {
-    children: React.ReactNode;
-    style?: ViewStyle;
-}
-
-export const GlassNav: React.FC<GlassNavProps> = ({ children, style }) => {
+    // Web fallback with CSS backdrop-filter
     return (
-        <View style={[styles.nav, style]}>
+        <View
+            style={[
+                containerStyle,
+                styles.webGlass,
+                { padding: spacing[padding] },
+                style,
+            ]}
+        >
             {children}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    nav: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: spacing['2xl'],
-        paddingVertical: spacing.lg,
-        backgroundColor: colors.glass,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0, 0, 0, 0.05)',
-        ...(Platform.OS === 'web' ? {
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 100,
-        } as any : {}),
+    blurView: {
+        flex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    webGlass: {
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        ...(Platform.OS === 'web'
+            ? {
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+            }
+            : {}),
     },
 });

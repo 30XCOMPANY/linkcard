@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { radius, spacing, shadows } from '@/src/constants/theme';
 
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | number;
+type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 interface AvatarProps {
   source?: string | null;
@@ -15,7 +15,7 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-const sizeMap: Record<string, number> = {
+const sizeMap: Record<AvatarSize, number> = {
   sm: 32,
   md: 48,
   lg: 64,
@@ -23,7 +23,7 @@ const sizeMap: Record<string, number> = {
   '2xl': 128,
 };
 
-const fontSizeMap: Record<string, number> = {
+const fontSizeMap: Record<AvatarSize, number> = {
   sm: 12,
   md: 16,
   lg: 24,
@@ -39,9 +39,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   showBorder = false,
   style,
 }) => {
-  // Support both preset sizes and custom numeric sizes
-  const dimension = typeof size === 'number' ? size : sizeMap[size] || 48;
-  const fontSize = typeof size === 'number' ? Math.round(size * 0.375) : fontSizeMap[size as string] || 16;
+  const dimension = sizeMap[size];
+  const fontSize = fontSizeMap[size];
 
   // Get initials from name
   const getInitials = (name: string): string => {
@@ -59,7 +58,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   if (source) {
-    console.log('[Avatar] Loading image from:', source);
     return (
       <View
         style={[
@@ -75,8 +73,6 @@ export const Avatar: React.FC<AvatarProps> = ({
           style={styles.image}
           contentFit="cover"
           transition={300}
-          onLoad={() => console.log('[Avatar] Image loaded successfully')}
-          onError={(error) => console.error('[Avatar] Image load error:', error)}
         />
       </View>
     );
@@ -137,6 +133,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-
-
 

@@ -27,6 +27,21 @@ export const gradients = {
 
     /** Cyan glow */
     glow: ['rgba(100, 180, 255, 0.3)', 'rgba(100, 180, 255, 0)'],
+
+    /** Figma Light Glass - Blue to White */
+    lightGlass: ['#DBEAFE', '#EFF6FF', '#F9FAFB', '#FFFFFF'],
+
+    /** Warm Peachy */
+    peach: ['#FED7AA', '#FEE2E2', '#FFFFFF'],
+
+    /** Cool Mint */
+    mint: ['#D1FAE5', '#E0F2FE', '#FFFFFF'],
+
+    /** Purple Dream */
+    purple: ['#E9D5FF', '#FAE8FF', '#FFFFFF'],
+
+    /** Soft Pink */
+    rose: ['#FECDD3', '#FEE2E2', '#FFFFFF'],
 } as const;
 
 // ============================================================================
