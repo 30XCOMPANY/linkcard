@@ -189,18 +189,18 @@ export default function GlassHomeScreen() {
 
         const result = [];
 
-        // AI & Marketing tag (from LinkedIn summary/analysis)
-        if (profile.headline?.toLowerCase().includes('ai') ||
-            profile.headline?.toLowerCase().includes('marketing')) {
-            result.push({ id: 'industry', icon: '🚀', label: 'AI & Marketing' });
+        // Character tag (keywords from LinkedIn profile)
+        if (profile.character) {
+            result.push({ id: 'character', icon: '🚀', label: profile.character });
         }
 
         if (profile.company) {
             result.push({ id: 'company', icon: '💼', label: profile.company });
         }
 
-        if (profile.location) {
-            result.push({ id: 'location', icon: '📍', label: profile.location });
+        if (profile.city || profile.location) {
+            const locationLabel = profile.city || profile.location;
+            result.push({ id: 'location', icon: '📍', label: locationLabel });
         }
 
         return [...result, ...customTags];
