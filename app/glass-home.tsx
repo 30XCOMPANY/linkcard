@@ -194,7 +194,7 @@ export default function GlassHomeScreen() {
 
         // Business & Strategy
         if (lowerKeyword.match(/strateg|business|entrepreneur|leader|executive/)) return '💼';
-        if (lowerKeyword.match(/market|sales|revenue|growth/)) return '📈';
+        if (lowerKeyword.match(/market|sales|revenue/)) return '📈';
         if (lowerKeyword.match(/finance|invest|money|capital/)) return '💰';
 
         // Skills & Mindset
@@ -210,6 +210,16 @@ export default function GlassHomeScreen() {
         // Product & Building
         if (lowerKeyword.match(/product|build|create|make/)) return '🛠️';
         if (lowerKeyword.match(/brand|identity|image/)) return '✨';
+
+        // Performance & Results
+        if (lowerKeyword.match(/driven|focus|result|achiev/)) return '🎯';
+        if (lowerKeyword.match(/goal|target|objective/)) return '🏆';
+        if (lowerKeyword.match(/passion|enthusia|motiv|energy/)) return '🔥';
+
+        // Quality & Excellence
+        if (lowerKeyword.match(/detail|precise|quality|excellen/)) return '⚡';
+        if (lowerKeyword.match(/dedicate|commit|reliable/)) return '💪';
+        if (lowerKeyword.match(/profession|expert|skilled/)) return '🌟';
 
         // Default fallback
         return '⭐';
