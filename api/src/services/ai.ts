@@ -19,7 +19,7 @@ export async function summarizeToKeywords(text: string): Promise<string | null> 
     console.warn('[AI] OPENAI_API_KEY env var:', OPENAI_API_KEY ? 'SET (hidden)' : 'NOT SET');
     return null;
   }
-  
+
   console.log('[AI] Starting summarization, text length:', text.length);
 
   if (!text || text.trim().length === 0) {
@@ -61,14 +61,14 @@ export async function summarizeToKeywords(text: string): Promise<string | null> 
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const keywords = data.choices?.[0]?.message?.content?.trim();
 
     if (!keywords) {
       console.warn('[AI] No keywords returned from OpenAI, response:', JSON.stringify(data).substring(0, 200));
       return null;
     }
-    
+
     console.log('[AI] Raw keywords from OpenAI:', keywords);
 
     // Clean up the response (remove quotes, extra spaces, etc.)
