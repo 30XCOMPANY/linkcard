@@ -5,20 +5,56 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
-  useColorScheme,
+  Pressable,
+  Platform,
+  LayoutAnimation,
+  UIManager,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useCardStore } from '@/src/stores/cardStore';
-import { spacing, typography, radius, shadows } from '@/src/constants/theme';
+import * as Haptics from 'expo-haptics';
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// Custom Switch - Black & White
+const CustomSwitch = ({ value, onValueChange }: { value: boolean; onValueChange: (val: boolean) => void }) => {
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onValueChange(!value);
+  };
+
+  return (
+    <Pressable
+      onPress={toggle}
+      style={[
+        styles.switchTrack,
+        { backgroundColor: value ? '#000000' : '#E5E5EA' } // Use system gray for off state
+      ]}
+    >
+      <View
+        style={[
+          styles.switchThumb,
+          {
+            transform: [{ translateX: value ? 20 : 0 }],
+          }
+        ]}
+      />
+    </Pressable>
+  );
+};
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { clearCard } = useCardStore();
+  const [autoSync, setAutoSync] = React.useState(true);
 
   const handleResetCard = () => {
     Alert.alert(
@@ -38,19 +74,26 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
-      {/* Header */}
+    <View style={styles.container}>
+      {/* Header - Transparent & Aligned */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: '#F3F4F6' }]}
+          onPress={handleBack}
+          style={styles.backButton}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
           <Ionicons name="arrow-back" size={24} color="#000000" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: '#000000' }]}>
-          Settings
-        </Text>
+        <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -58,84 +101,60 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-
-        {/* Sync Section */}
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <Text style={[styles.sectionTitle, { color: '#000000' }]}>
-            Sync
-          </Text>
-
-          <View style={[styles.card, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#F3F4F6' }]}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: '#000000' }]}>
-                  Auto-sync LinkedIn
-                </Text>
-                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
-                  Automatically check for profile changes
+        {/* Sync Section - Inset Grouped */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeader}>SYNC</Text>
+          <View style={styles.groupContainer}>
+            {/* Auto Sync Row */}
+            <View style={styles.row}>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowLabel}>Auto-sync LinkedIn</Text>
+                <Text style={styles.rowSubtext}>
+                  check for profile changes
                 </Text>
               </View>
-              <Switch
-                value={true}
-                onValueChange={() => { }}
-                trackColor={{ false: '#E5E7EB', true: '#000000' }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor="#E5E7EB"
-              />
+              <CustomSwitch value={autoSync} onValueChange={setAutoSync} />
             </View>
 
-            <View style={[styles.divider, { backgroundColor: '#E5E7EB' }]} />
+            <View style={styles.separator} />
 
-            <TouchableOpacity style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: '#000000' }]}>
-                  Sync Now
-                </Text>
-                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
-                  Manually refresh your LinkedIn data
+            {/* Sync Now Row */}
+            <TouchableOpacity style={styles.row}>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowLabel}>Sync Now</Text>
+                <Text style={styles.rowSubtext}>
+                  refresh data manually
                 </Text>
               </View>
-              <Ionicons name="refresh-outline" size={22} color="#000000" />
+              <Ionicons name="refresh" size={20} color="#8E8E93" />
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
-        {/* Danger Zone */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={[styles.sectionTitle, { color: '#000000' }]}>
-            Data
-          </Text>
-
-          <View style={[styles.card, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#F3F4F6' }]}>
+        {/* Data Section - Inset Grouped */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeader}>DATA</Text>
+          <View style={styles.groupContainer}>
             <TouchableOpacity
-              style={styles.settingRow}
+              style={styles.row}
               onPress={handleResetCard}
             >
-              <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: '#000000' }]}>
-                  Reset Card
-                </Text>
-                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
-                  Delete your card and start fresh
+              <View style={styles.rowContent}>
+                <Text style={[styles.rowLabel, { color: '#FF3B30' }]}>Reset Card</Text>
+                <Text style={styles.rowSubtext}>
+                  delete card and start fresh
                 </Text>
               </View>
-              <Ionicons name="trash-outline" size={22} color="#000000" />
+              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
-        {/* About */}
-        <Animated.View entering={FadeInDown.delay(400).springify()}>
-          <View style={styles.about}>
-            <Text style={[styles.aboutText, { color: '#9CA3AF' }]}>
-              LinkCard v1.0.0
-            </Text>
-            <Text style={[styles.aboutText, { color: '#9CA3AF' }]}>
-              Made with ❤️
-            </Text>
-          </View>
-        </Animated.View>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>LinkCard v1.0.0</Text>
+          <Text style={styles.footerText}>Made with ❤️</Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -144,114 +163,109 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F2F2F7', // iOS Grouped Background Color
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 60,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: 16, // Standard Margin
+    paddingTop: Platform.OS === 'ios' ? 60 : 20,
+    paddingBottom: 12,
+    backgroundColor: '#F2F2F7', // Match background
+    zIndex: 10,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: typography.fontSize.lg,
+    fontSize: 17,
     fontWeight: '600',
+    color: '#000000',
+    letterSpacing: -0.4,
   },
   placeholder: {
     width: 40,
   },
   scrollContent: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
+    paddingBottom: 40,
   },
-  sectionTitle: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: '600',
+  sectionContainer: {
+    marginBottom: 24,
+    marginHorizontal: 16, // Inset Grouped Margin
+  },
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#6D6D72',
+    marginBottom: 8,
+    marginLeft: 16, // Align with text inside group
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
   },
-  card: {
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+  groupContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12, // Rounded corners for the group
+    overflow: 'hidden',
   },
-  label: {
-    fontSize: typography.fontSize.md,
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  themeOptions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  themeOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  themeOptionText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: '500',
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  colorOptionSelected: {
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  settingRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    minHeight: 60, // Ensure touch target
   },
-  settingInfo: {
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#C6C6C8',
+    marginLeft: 16, // Inset separator
+  },
+  rowContent: {
     flex: 1,
-    marginRight: spacing.md,
+    paddingRight: 16,
   },
-  settingLabel: {
-    fontSize: typography.fontSize.md,
-    fontWeight: '500',
+  rowLabel: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: '#000000',
+    marginBottom: 2,
+    letterSpacing: -0.4,
   },
-  settingDescription: {
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.xs,
+  rowSubtext: {
+    fontSize: 14, // Slightly smaller
+    color: '#8E8E93',
+    letterSpacing: -0.2,
   },
-  divider: {
-    height: 1,
-    marginVertical: spacing.md,
-  },
-  about: {
+  footer: {
     alignItems: 'center',
-    marginTop: spacing['2xl'],
-    gap: spacing.xs,
+    marginTop: 8,
+    gap: 4,
   },
-  aboutText: {
-    fontSize: typography.fontSize.sm,
+  footerText: {
+    fontSize: 13,
+    color: '#8E8E93',
+  },
+  // Refined Switch Styles
+  switchTrack: {
+    width: 51,
+    height: 31,
+    borderRadius: 15.5,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchThumb: {
+    width: 27,
+    height: 27,
+    borderRadius: 13.5,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
-
-
