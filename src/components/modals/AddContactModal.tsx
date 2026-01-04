@@ -8,7 +8,7 @@
  * - Custom
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Modal,
     TouchableOpacity,
@@ -20,6 +20,7 @@ import {
     Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 // Design System
@@ -28,13 +29,14 @@ import { colors } from '@/src/design-system/tokens/colors';
 import { spacing } from '@/src/design-system/tokens/spacing';
 import { radii } from '@/src/design-system/tokens/radii';
 import { shadows } from '@/src/design-system/tokens/shadows';
+import { gradients } from '@/src/design-system/tokens/effects';
+import { useCardStore } from '@/src/stores/cardStore';
 
 type ContactType = 'email' | 'phone' | 'website' | 'custom';
 
 interface ContactOption {
     type: ContactType;
     iconName: keyof typeof Ionicons.glyphMap;
-    color: string;
     label: string;
     placeholder: string;
     keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url';
@@ -44,7 +46,6 @@ const CONTACT_OPTIONS: ContactOption[] = [
     {
         type: 'email',
         iconName: 'mail',
-        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Email',
         placeholder: 'your@email.com',
         keyboardType: 'email-address',
@@ -52,7 +53,6 @@ const CONTACT_OPTIONS: ContactOption[] = [
     {
         type: 'phone',
         iconName: 'call',
-        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Phone',
         placeholder: '+1 (555) 123-4567',
         keyboardType: 'phone-pad',
@@ -60,7 +60,6 @@ const CONTACT_OPTIONS: ContactOption[] = [
     {
         type: 'website',
         iconName: 'globe-outline',
-        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Website',
         placeholder: 'https://yourwebsite.com',
         keyboardType: 'url',
@@ -68,7 +67,6 @@ const CONTACT_OPTIONS: ContactOption[] = [
     {
         type: 'custom',
         iconName: 'link',
-        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Custom Link',
         placeholder: 'https://...',
         keyboardType: 'url',
@@ -91,11 +89,24 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
     onClose,
     onSave,
 }) => {
+    const { currentGradient } = useCardStore();
     const [selectedType, setSelectedType] = useState<ContactType>('email');
     const [value, setValue] = useState('');
     const [customLabel, setCustomLabel] = useState('');
 
     const selectedOption = CONTACT_OPTIONS.find(opt => opt.type === selectedType) || CONTACT_OPTIONS[0];
+
+    // Dynamic styles based on background
+    const gradientKey = currentGradient as keyof typeof gradients;
+    const gradientColors = gradients[gradientKey] || gradients.lightGlass;
+
+    const isDarkBackground = useMemo(() => {
+        if (typeof currentGradient === 'string' && currentGradient.includes('/')) return true;
+        return ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient as string);
+    }, [currentGradient]);
+
+    const textColor = isDarkBackground ? colors.white : colors.text;
+    const placeholderColor = isDarkBackground ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)';
 
     const handleSelectType = (type: ContactType) => {
         setSelectedType(type);
@@ -116,7 +127,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
             return;
         }
 
-        // Validate URL format for website and custom
+        // Validate URL format
         if ((selectedType === 'website' || selectedType === 'custom') && !value.startsWith('http')) {
             Alert.alert('Invalid URL', 'URL should start with http:// or https://');
             return;
@@ -124,7 +135,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 
         onSave({
             type: selectedType,
-            icon: selectedOption.iconName, // Store icon name instead of emoji
+            icon: selectedOption.iconName,
             label: selectedType === 'custom' && customLabel.trim()
                 ? customLabel.trim()
                 : selectedOption.label,
@@ -133,7 +144,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                     : value.trim(),
         });
 
-        // Reset form
+        // Reset
         setValue('');
         setCustomLabel('');
         setSelectedType('email');
@@ -146,7 +157,6 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
     };
 
     const handleClose = () => {
-        // Reset form on close
         setValue('');
         setCustomLabel('');
         setSelectedType('email');
@@ -160,6 +170,13 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
+            {/* Background Gradient */}
+            <LinearGradient
+                colors={[...gradientColors]}
+                locations={currentGradient === 'lightGlass' ? [0, 0.3, 0.7, 1] : undefined}
+                style={StyleSheet.absoluteFill}
+            />
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.container}
@@ -167,16 +184,22 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                 {/* Header */}
                 <Box style={styles.header}>
                     <HStack style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={28} color={colors.text} />
+                        <TouchableOpacity
+                            onPress={handleClose}
+                            style={[
+                                styles.closeButton,
+                                { backgroundColor: isDarkBackground ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }
+                            ]}
+                        >
+                            <Ionicons name="close" size={24} color={textColor} />
                         </TouchableOpacity>
                         <VStack align="center" gap="xs">
-                            <Text variant="h3">Add Contact</Text>
-                            <Text variant="caption" color="textMuted" style={{ opacity: 0.6 }}>
+                            <Text variant="h3" style={{ color: textColor }}>Add Contact</Text>
+                            <Text variant="caption" style={{ color: isDarkBackground ? 'rgba(255,255,255,0.7)' : colors.textMuted }}>
                                 QR code will be auto-generated
                             </Text>
                         </VStack>
-                        <Box width={40} />
+                        <Box width={32} />
                     </HStack>
                 </Box>
 
@@ -186,10 +209,10 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    <VStack gap="3xl">
-                        {/* Contact Type Selection */}
+                    <VStack gap="2xl">
+                        {/* Contact Type Selection - Glass Cards */}
                         <VStack gap="md">
-                            <Text variant="body" weight="semibold" color="textMuted">
+                            <Text variant="body" weight="semibold" style={{ color: isDarkBackground ? 'rgba(255,255,255,0.8)' : colors.textMuted }}>
                                 Select Type
                             </Text>
 
@@ -205,39 +228,50 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                             py="md"
                                             style={{
                                                 backgroundColor: selectedType === option.type
-                                                    ? 'rgba(0, 0, 0, 0.05)'
-                                                    : 'transparent',
-                                                borderRadius: radii.lg,
+                                                    ? 'rgba(255, 255, 255, 0.4)'
+                                                    : 'rgba(255, 255, 255, 0.15)',
+                                                borderRadius: radii.xl,
                                                 borderWidth: 1,
                                                 borderColor: selectedType === option.type
-                                                    ? 'rgba(0, 0, 0, 0.1)'
-                                                    : 'transparent',
+                                                    ? 'rgba(255, 255, 255, 0.8)'
+                                                    : 'rgba(255, 255, 255, 0.2)',
+                                                ...shadows.sm,
                                             }}
                                         >
                                             <HStack gap="md" align="center">
                                                 <Box
                                                     width={36}
                                                     height={36}
-                                                    borderRadius="md"
+                                                    borderRadius={radii.md}
                                                     style={{
-                                                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                                        backgroundColor: selectedType === option.type
+                                                            ? colors.dark
+                                                            : 'rgba(255, 255, 255, 0.9)',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
+                                                        borderWidth: selectedType === option.type ? 0 : 1,
+                                                        borderColor: 'rgba(0,0,0,0.1)',
+                                                        ...shadows.sm,
                                                     }}
                                                 >
-                                                    <Ionicons name={option.iconName} size={18} color={colors.text} />
+                                                    <Ionicons
+                                                        name={option.iconName}
+                                                        size={18}
+                                                        color={selectedType === option.type ? colors.white : textColor}
+                                                    />
                                                 </Box>
 
                                                 <Box flex={1}>
                                                     <Text
                                                         variant="body"
-                                                        weight={selectedType === option.type ? 'semibold' : 'regular'}
+                                                        weight={selectedType === option.type ? 'semibold' : 'medium'}
+                                                        style={{ color: textColor }}
                                                     >
                                                         {option.label}
                                                     </Text>
                                                 </Box>
                                                 {selectedType === option.type && (
-                                                    <Ionicons name="checkmark-circle" size={20} color={colors.text} />
+                                                    <Ionicons name="checkmark-circle" size={20} color={textColor} />
                                                 )}
                                             </HStack>
                                         </Box>
@@ -248,29 +282,15 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 
                         {/* Value Input */}
                         <VStack gap="sm">
-                            <HStack gap="sm" align="center">
-                                <Box
-                                    width={24}
-                                    height={24}
-                                    borderRadius="sm"
-                                    style={{
-                                        backgroundColor: selectedOption.color,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    <Ionicons name={selectedOption.iconName} size={14} color={colors.text} />
-                                </Box>
-                                <Text variant="body" weight="semibold">
-                                    {selectedOption.label}
-                                </Text>
-                            </HStack>
+                            <Text variant="body" weight="semibold" style={{ color: textColor }}>
+                                {selectedOption.label}
+                            </Text>
 
                             <Box style={styles.inputContainer}>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { color: colors.dark }]} // Always dark text in inputs for readability
                                     placeholder={selectedOption.placeholder}
-                                    placeholderTextColor={colors.placeholder}
+                                    placeholderTextColor="rgba(0,0,0,0.4)"
                                     value={value}
                                     onChangeText={setValue}
                                     keyboardType={selectedOption.keyboardType}
@@ -283,32 +303,15 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                         {/* Custom Label (only for custom type) */}
                         {selectedType === 'custom' && (
                             <VStack gap="sm">
-                                <HStack gap="sm" align="center">
-                                    <Box
-                                        width={24}
-                                        height={24}
-                                        borderRadius="sm"
-                                        style={{
-                                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <Ionicons name="text-outline" size={14} color={colors.text} />
-                                    </Box>
-                                    <Text variant="body" weight="semibold">
-                                        Custom Label
-                                    </Text>
-                                    <Text variant="caption" color="textMuted">
-                                        (Optional)
-                                    </Text>
-                                </HStack>
+                                <Text variant="body" weight="semibold" style={{ color: textColor }}>
+                                    Custom Label (Optional)
+                                </Text>
 
                                 <Box style={styles.inputContainer}>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: colors.dark }]}
                                         placeholder="e.g. Instagram, Twitter..."
-                                        placeholderTextColor={colors.placeholder}
+                                        placeholderTextColor="rgba(0,0,0,0.4)"
                                         value={customLabel}
                                         onChangeText={setCustomLabel}
                                         maxLength={20}
@@ -322,7 +325,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                 {/* Save Button */}
                 <Box style={styles.footer}>
                     <TouchableOpacity
-                        style={styles.saveButton}
+                        style={[styles.saveButton, { backgroundColor: colors.dark }]}
                         onPress={handleSave}
                         activeOpacity={0.8}
                     >
@@ -342,21 +345,18 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.white,
     },
     header: {
-        paddingTop: Platform.OS === 'ios' ? 60 : spacing['2xl'],
+        paddingTop: Platform.OS === 'ios' ? 20 : spacing['2xl'],
         paddingHorizontal: spacing['2xl'],
         paddingBottom: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
     },
     closeButton: {
-        width: 40,
-        height: 40,
+        width: 32,
+        height: 32,
+        borderRadius: radii.full,
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: -spacing.sm,
     },
     scrollView: {
         flex: 1,
@@ -365,29 +365,33 @@ const styles = StyleSheet.create({
         padding: spacing['2xl'],
     },
     inputContainer: {
-        backgroundColor: colors.card,
-        borderRadius: radii.md,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        borderRadius: radii.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: 'rgba(255, 255, 255, 0.6)',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
+        ...shadows.sm,
     },
     input: {
-        fontSize: 16,
-        color: colors.text,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+        fontSize: 14, // Reduced size for elegance
+        color: colors.dark,
+        fontFamily: Platform.select({
+            ios: 'System',
+            android: 'Roboto',
+            web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            default: 'sans-serif',
+        }),
         padding: 0,
+        fontWeight: '500',
     },
     footer: {
         padding: spacing['2xl'],
-        paddingBottom: Platform.OS === 'ios' ? 34 : spacing['2xl'],
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
+        paddingBottom: Platform.OS === 'ios' ? 40 : spacing['2xl'],
     },
     saveButton: {
         height: 52,
         borderRadius: radii.pill,
-        backgroundColor: colors.dark,
         alignItems: 'center',
         justifyContent: 'center',
         ...shadows.md,

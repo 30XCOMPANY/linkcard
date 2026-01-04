@@ -45,6 +45,7 @@ import { ShareMenu } from '@/src/components/modals/ShareMenu';
 import { BackgroundPicker } from '@/src/components/modals/BackgroundPicker';
 import { AddBlockModal } from '@/src/components/modals/AddBlockModal';
 import { AddContactModal } from '@/src/components/modals/AddContactModal';
+import { AddTagModal } from '@/src/components/modals/AddTagModal';
 
 type ViewMode = 'view' | 'edit';
 type GradientKey = keyof typeof gradients;
@@ -79,6 +80,10 @@ export default function GlassHomeScreen() {
     const [showQR, setShowQR] = useState(false);
     const [selectedContact, setSelectedContact] = useState<ContactType>('linkedin');
     const [customHighlights, setCustomHighlights] = useState<Highlight[]>([]);
+
+    // Custom Tags
+    const [addTagVisible, setAddTagVisible] = useState(false);
+    const [customTags, setCustomTags] = useState<{ id: string, label: string, icon: string }[]>([]);
 
     // User-added contact methods
     const [userContacts, setUserContacts] = useState<ContactMethod[]>([]);
@@ -198,8 +203,8 @@ export default function GlassHomeScreen() {
             result.push({ id: 'location', icon: '📍', label: profile.location });
         }
 
-        return result;
-    }, [profile]);
+        return [...result, ...customTags];
+    }, [profile, customTags]);
 
     // Mock LinkedIn highlights
     const linkedInHighlights = useMemo<Highlight[]>(() => {
@@ -453,7 +458,7 @@ export default function GlassHomeScreen() {
                         {/* Avatar with QR Toggle */}
                         <HStack gap="md" align="center" style={{ justifyContent: 'center' }}>
                             <TouchableOpacity
-                                onPress={handleEditAvatar}
+                                onPress={mode === 'edit' ? handleEditAvatar : handleToggleQR}
                                 activeOpacity={0.8}
                             >
                                 <Box style={{ position: 'relative' }}>
@@ -543,26 +548,13 @@ export default function GlassHomeScreen() {
                             ))}
 
                             {mode === 'edit' && (
-                                <TouchableOpacity>
-                                    <Box
-                                        px="md"
-                                        py="xs"
-                                        borderRadius="pill"
-                                        style={{
-                                            backgroundColor: colors.white,
-                                            borderWidth: 1,
-                                            borderColor: colors.dark,
-                                            borderStyle: 'dashed',
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            gap: spacing.xs,
-                                        }}
-                                    >
-                                        <Ionicons name="add" size={12} color={colors.dark} />
-                                        <Text variant="caption" weight="medium" style={{ color: colors.dark, fontSize: 11 }}>
+                                <TouchableOpacity onPress={() => setAddTagVisible(true)}>
+                                    <HStack gap="xs" align="center">
+                                        <Ionicons name="add-circle" size={20} color={colors.dark} />
+                                        <Text variant="label" weight="semibold" style={{ color: colors.dark }}>
                                             Add Tag
                                         </Text>
-                                    </Box>
+                                    </HStack>
                                 </TouchableOpacity>
                             )}
                         </Box>
@@ -578,24 +570,12 @@ export default function GlassHomeScreen() {
                             </Text>
                             {mode === 'edit' && (
                                 <TouchableOpacity onPress={handleAddContact} activeOpacity={0.7}>
-                                    <Box
-                                        px="sm"
-                                        py="xs"
-                                        style={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                            borderRadius: radii.md,
-                                            borderWidth: 1,
-                                            borderColor: 'rgba(0, 0, 0, 0.1)',
-                                            ...shadows.sm,
-                                        }}
-                                    >
-                                        <HStack gap="xs" align="center">
-                                            <Ionicons name="add" size={14} color={colors.dark} />
-                                            <Text variant="caption" weight="medium" style={{ color: colors.dark, fontSize: 11 }}>
-                                                Add
-                                            </Text>
-                                        </HStack>
-                                    </Box>
+                                    <HStack gap="xs" align="center">
+                                        <Ionicons name="add-circle" size={20} color={colors.dark} />
+                                        <Text variant="label" weight="semibold" style={{ color: colors.dark }}>
+                                            Add
+                                        </Text>
+                                    </HStack>
                                 </TouchableOpacity>
                             )}
                         </HStack>

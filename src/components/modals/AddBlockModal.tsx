@@ -369,12 +369,13 @@ const styles = StyleSheet.create({
     coverImageContainer: {
         width: '100%',
         height: 200,
-        borderRadius: radii.lg,
-        backgroundColor: colors.card,
+        borderRadius: radii.xl,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: 'rgba(255, 255, 255, 0.6)',
         position: 'relative',
+        ...shadows.sm,
     },
     coverImage: {
         width: '100%',

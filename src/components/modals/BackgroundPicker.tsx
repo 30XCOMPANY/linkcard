@@ -130,6 +130,9 @@ export const BackgroundPicker: React.FC<BackgroundPickerProps> = ({
                                                 <Ionicons name="image-outline" size={24} color={colors.text} />
                                             </Box>
                                             <Text variant="body" weight="medium">Upload Image</Text>
+                                            <Text variant="caption" color="textMuted" style={{ fontSize: 12 }}>
+                                                Recommended: 1080 x 1920 px
+                                            </Text>
                                         </VStack>
                                     </TouchableOpacity>
                                 </VStack>

@@ -36,7 +36,7 @@ export const GlassScreenLayout: React.FC<GlassScreenLayoutProps> = ({
     title,
     children,
     showBackButton = true,
-    backIcon = 'arrow-back',
+    backIcon = 'chevron-back',
     onBack,
     rightElement,
     scrollable = true,
@@ -52,7 +52,16 @@ export const GlassScreenLayout: React.FC<GlassScreenLayoutProps> = ({
         return ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient);
     }, [currentGradient]);
 
-    const textColor = isDarkBackground ? colors.white : colors.text;
+    const textColor = shouldForceDarkIcon() ? colors.dark : (isDarkBackground ? colors.white : colors.text);
+
+    // Helper to determine if we should force dark icon (e.g. for light glass backgrounds)
+    function shouldForceDarkIcon() {
+        return !isDarkBackground; // Simple heuristic for now, can be refined
+    }
+
+    const buttonBackgroundColor = isDarkBackground
+        ? 'rgba(255, 255, 255, 0.2)'
+        : 'rgba(255, 255, 255, 0.4)';
 
     const handleBack = () => {
         if (Platform.OS !== 'web') {
@@ -79,8 +88,8 @@ export const GlassScreenLayout: React.FC<GlassScreenLayoutProps> = ({
                         {showBackButton ? (
                             <TouchableOpacity
                                 onPress={handleBack}
-                                style={styles.headerButton}
-                                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                                style={[styles.headerButton, { backgroundColor: buttonBackgroundColor }]}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                             >
                                 <Ionicons name={backIcon as any} size={24} color={textColor} />
                             </TouchableOpacity>
@@ -90,7 +99,15 @@ export const GlassScreenLayout: React.FC<GlassScreenLayoutProps> = ({
                         <Text variant="h2" style={{ color: textColor }}>
                             {title}
                         </Text>
-                        {rightElement ? rightElement : <Box style={{ width: 40 }} />}
+                        {rightElement ? (
+                            // Determine if rightElement is a button that needs similar styling, 
+                            // but usually it's passed as a custom component. 
+                            // For consistency, we might want to wrap it or let the consumer handle it.
+                            // For now, render as is.
+                            rightElement
+                        ) : (
+                            <Box style={{ width: 40 }} />
+                        )}
                     </HStack>
                 </Box>
             </Animated.View>
@@ -129,7 +146,8 @@ const styles = StyleSheet.create({
     headerButton: {
         width: 40,
         height: 40,
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'center',
+        borderRadius: 20, // Full circle
     },
 });
