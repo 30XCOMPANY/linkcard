@@ -45,7 +45,7 @@ export const GlassToggle: React.FC<GlassToggleProps> = ({
         const backgroundColor = interpolateColor(
             progress.value,
             [0, 1],
-            ['rgba(0, 0, 0, 0.08)', '#34C759'] // iOS green color when active
+            ['rgba(0, 0, 0, 0.06)', colors.dark] // Back to premium dark theme
         );
 
         return {
@@ -54,12 +54,12 @@ export const GlassToggle: React.FC<GlassToggleProps> = ({
     });
 
     const thumbStyle = useAnimatedStyle(() => {
-        const translateX = progress.value * 20; // Adjusted for new size
+        const translateX = progress.value * 24; // 48(width) - 4(padding) - 20(thumb) = 24 travel distance
 
         return {
             transform: [
                 { translateX },
-                { scale: withSpring(value ? 1 : 0.95, { damping: 15, stiffness: 200 }) },
+                { scale: withSpring(1, { damping: 15, stiffness: 200 }) },
             ],
         };
     });
@@ -80,7 +80,7 @@ export const GlassToggle: React.FC<GlassToggleProps> = ({
             disabled={disabled}
             style={({ pressed }) => [
                 {
-                    opacity: pressed ? 0.7 : disabled ? 0.4 : 1,
+                    opacity: pressed ? 0.8 : disabled ? 0.5 : 1,
                 },
             ]}
         >
@@ -90,13 +90,13 @@ export const GlassToggle: React.FC<GlassToggleProps> = ({
                         style={{
                             width: '100%',
                             height: '100%',
-                            borderRadius: 13.5,
+                            borderRadius: 10,
                             backgroundColor: colors.white,
                             shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 3 },
-                            shadowOpacity: 0.15,
-                            shadowRadius: 3,
-                            elevation: 3,
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 1,
+                            elevation: 1,
                         }}
                     />
                 </Animated.View>
@@ -107,15 +107,15 @@ export const GlassToggle: React.FC<GlassToggleProps> = ({
 
 const styles = StyleSheet.create({
     track: {
-        width: 51,
-        height: 31,
-        borderRadius: 15.5,
+        width: 48,
+        height: 24,
+        borderRadius: 12,
         padding: 2,
         justifyContent: 'center',
     },
     thumb: {
-        width: 27,
-        height: 27,
-        borderRadius: 13.5,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
     },
 });
