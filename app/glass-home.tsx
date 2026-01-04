@@ -351,19 +351,11 @@ export default function GlassHomeScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
 
-        // If clicking LinkedIn
-        if (type === 'linkedin') {
-            // If already selected, toggle QR code
-            if (selectedContact === 'linkedin') {
-                setShowQR(!showQR);
-            } else {
-                // If selecting for first time, show QR code
-                setSelectedContact(type);
-                setShowQR(true);
-            }
+        if (selectedContact === type) {
+            setShowQR(!showQR);
         } else {
-            // Other contacts just select
             setSelectedContact(type);
+            setShowQR(true);
         }
     };
 
@@ -390,23 +382,31 @@ export default function GlassHomeScreen() {
         const contact = userContacts.find(c => c.id === id);
         if (!contact) return;
 
-        Alert.alert(
-            'Delete Contact',
-            `Are you sure you want to delete "${contact.label}"?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: () => {
-                        setUserContacts(userContacts.filter(c => c.id !== id));
-                        if (Platform.OS !== 'web') {
-                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                        }
+        const performDelete = () => {
+            setUserContacts(userContacts.filter(c => c.id !== id));
+            if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            if (window.confirm(`Are you sure you want to delete "${contact.label}"?`)) {
+                performDelete();
+            }
+        } else {
+            Alert.alert(
+                'Delete Contact',
+                `Are you sure you want to delete "${contact.label}"?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Delete',
+                        style: 'destructive',
+                        onPress: performDelete,
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const handleSaveTag = (tag: { label: string; icon: string }) => {
@@ -640,18 +640,15 @@ export default function GlassHomeScreen() {
                                                 <Box
                                                     width={48}
                                                     height={48}
+                                                    borderRadius="md"
                                                     style={{
-                                                        borderRadius: 16,
                                                         backgroundColor: isSelected
-                                                            ? 'rgba(255, 255, 255, 0.9)'
-                                                            : 'rgba(255, 255, 255, 0.5)',
-                                                        borderWidth: 1,
-                                                        borderColor: isSelected
                                                             ? 'rgba(255, 255, 255, 1)'
                                                             : 'rgba(255, 255, 255, 0.4)',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         ...shadows.md,
+                                                        position: 'relative',
                                                     }}
                                                 >
                                                     <Ionicons
@@ -659,6 +656,23 @@ export default function GlassHomeScreen() {
                                                         size={24}
                                                         color={colors.dark}
                                                     />
+                                                    {mode === 'edit' && userContacts.some(c => c.id === contact.id) && (
+                                                        <TouchableOpacity
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: -6,
+                                                                right: -6,
+                                                                zIndex: 10,
+                                                            }}
+                                                            onPress={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteContact(contact.id);
+                                                            }}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                        >
+                                                            <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                                                        </TouchableOpacity>
+                                                    )}
                                                 </Box>
                                                 <Text
                                                     variant="caption"
