@@ -31,6 +31,7 @@ import { shadows } from '@/src/design-system/tokens/shadows';
 interface ShareMenuProps {
     visible: boolean;
     onClose: () => void;
+    onShareLink: () => void;
     onShareCard: () => void;
     onDigitalCard: () => void;
     onAppleWallet: () => void;
@@ -39,6 +40,7 @@ interface ShareMenuProps {
 export const ShareMenu: React.FC<ShareMenuProps> = ({
     visible,
     onClose,
+    onShareLink,
     onShareCard,
     onDigitalCard,
     onAppleWallet,
@@ -83,6 +85,32 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({
 
                         {/* Options */}
                         <VStack gap="sm" style={{ marginTop: spacing.md }}>
+                            {/* Share Profile Link - NEW */}
+                            <GlassCard padding="lg" borderRadius="xl">
+                                <TouchableOpacity
+                                    onPress={() => handleAction(onShareLink)}
+                                    style={styles.option}
+                                >
+                                    <Box
+                                        width={48}
+                                        height={48}
+                                        borderRadius="xl"
+                                        style={{ backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        <Ionicons name="link" size={24} color={colors.text} />
+                                    </Box>
+                                    <VStack gap="xs" style={{ flex: 1 }}>
+                                        <Text variant="body" weight="semibold">
+                                            Share Profile Link
+                                        </Text>
+                                        <Text variant="caption" color="textMuted">
+                                            Share your unique link to grow your network
+                                        </Text>
+                                    </VStack>
+                                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                                </TouchableOpacity>
+                            </GlassCard>
+
                             {/* Share Card */}
                             <GlassCard padding="lg" borderRadius="xl">
                                 <TouchableOpacity

@@ -79,7 +79,9 @@ export default function SettingsScreen() {
               <Switch
                 value={true}
                 onValueChange={() => { }}
-                trackColor={{ false: '#E5E7EB', true: '#007AFF' }}
+                trackColor={{ false: '#E5E7EB', true: '#000000' }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor="#E5E7EB"
               />
             </View>
 
@@ -94,7 +96,7 @@ export default function SettingsScreen() {
                   Manually refresh your LinkedIn data
                 </Text>
               </View>
-              <Ionicons name="refresh-outline" size={22} color="#007AFF" />
+              <Ionicons name="refresh-outline" size={22} color="#000000" />
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -111,14 +113,14 @@ export default function SettingsScreen() {
               onPress={handleResetCard}
             >
               <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: '#EF4444' }]}>
+                <Text style={[styles.settingLabel, { color: '#000000' }]}>
                   Reset Card
                 </Text>
                 <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
                   Delete your card and start fresh
                 </Text>
               </View>
-              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              <Ionicons name="trash-outline" size={22} color="#000000" />
             </TouchableOpacity>
           </View>
         </Animated.View>

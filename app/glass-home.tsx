@@ -18,6 +18,7 @@ import {
     Image,
     StyleSheet,
     Alert,
+    Share,
 } from 'react-native';
 import { useRouter, Redirect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -246,6 +247,24 @@ export default function GlassHomeScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
         setShareMenuVisible(true);
+    };
+
+    const handleShareLink = async () => {
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+
+        const username = profile?.username || profile?.name?.replace(/\s+/g, '').toLowerCase() || 'user';
+        const url = `https://linkcard.app/u/${username}`;
+
+        try {
+            await Share.share({
+                message: `Check out my digital business card: ${url}`,
+                url: url, // iOS
+            });
+        } catch (error: any) {
+            Alert.alert(error.message);
+        }
     };
 
     const handleShareCard = () => {
@@ -791,10 +810,10 @@ export default function GlassHomeScreen() {
             </Box >
 
             {/* Modals */}
-            < ShareMenu
+            <ShareMenu
                 visible={shareMenuVisible}
-                onClose={() => setShareMenuVisible(false)
-                }
+                onClose={() => setShareMenuVisible(false)}
+                onShareLink={handleShareLink}
                 onShareCard={handleShareCard}
                 onDigitalCard={handleDigitalCard}
                 onAppleWallet={handleAppleWallet}
