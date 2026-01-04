@@ -549,12 +549,25 @@ export default function GlassHomeScreen() {
 
                             {mode === 'edit' && (
                                 <TouchableOpacity onPress={() => setAddTagVisible(true)}>
-                                    <HStack gap="xs" align="center">
-                                        <Ionicons name="add-circle" size={20} color={colors.dark} />
-                                        <Text variant="label" weight="semibold" style={{ color: colors.dark }}>
+                                    <Box
+                                        px="md"
+                                        py="xs"
+                                        borderRadius="pill"
+                                        style={{
+                                            backgroundColor: colors.white,
+                                            borderWidth: 1,
+                                            borderColor: colors.dark,
+                                            borderStyle: 'dashed',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            gap: spacing.xs,
+                                        }}
+                                    >
+                                        <Ionicons name="add" size={12} color={colors.dark} />
+                                        <Text variant="caption" weight="medium" style={{ color: colors.dark, fontSize: 11 }}>
                                             Add Tag
                                         </Text>
-                                    </HStack>
+                                    </Box>
                                 </TouchableOpacity>
                             )}
                         </Box>
@@ -601,14 +614,14 @@ export default function GlassHomeScreen() {
                                                     style={{
                                                         width: 64,
                                                         height: 64,
-                                                        borderRadius: 32,
+                                                        borderRadius: 24,
                                                         backgroundColor: isSelected
                                                             ? 'rgba(255, 255, 255, 0.9)'
                                                             : 'rgba(255, 255, 255, 0.5)',
-                                                        borderWidth: isSelected ? 2 : 1,
+                                                        borderWidth: 1,
                                                         borderColor: isSelected
                                                             ? 'rgba(255, 255, 255, 1)'
-                                                            : 'rgba(255, 255, 255, 0.7)',
+                                                            : 'rgba(255, 255, 255, 0.4)', // Updated border logic
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         ...shadows.md,
@@ -713,8 +726,8 @@ export default function GlassHomeScreen() {
                                     <Box
                                         width={48}
                                         height={48}
-                                        borderRadius="full"
                                         style={{
+                                            borderRadius: 12,
                                             backgroundColor: colors.card,
                                             alignItems: 'center',
                                             justifyContent: 'center',

@@ -157,11 +157,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
-                                    borderRadius="sm"
                                     style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -214,11 +212,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
-                                    borderRadius="sm"
                                     style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -249,11 +245,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
-                                    borderRadius="sm"
                                     style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -333,7 +327,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                     </TouchableOpacity>
                 </Box>
             </KeyboardAvoidingView>
-        </Modal>
+        </Modal >
     );
 };
 

@@ -240,23 +240,21 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                         >
                                             <HStack gap="md" align="center">
                                                 <Box
-                                                    width={36}
-                                                    height={36}
-                                                    borderRadius={radii.md}
+                                                    width={28}
+                                                    height={28}
                                                     style={{
+                                                        borderRadius: 12,
                                                         backgroundColor: selectedType === option.type
                                                             ? colors.dark
-                                                            : 'rgba(255, 255, 255, 0.9)',
+                                                            : 'rgba(255, 255, 255, 0.6)',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        borderWidth: selectedType === option.type ? 0 : 1,
-                                                        borderColor: 'rgba(0,0,0,0.1)',
                                                         ...shadows.sm,
                                                     }}
                                                 >
                                                     <Ionicons
                                                         name={option.iconName}
-                                                        size={18}
+                                                        size={16}
                                                         color={selectedType === option.type ? colors.white : textColor}
                                                     />
                                                 </Box>
@@ -264,7 +262,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                                 <Box flex={1}>
                                                     <Text
                                                         variant="body"
-                                                        weight={selectedType === option.type ? 'semibold' : 'medium'}
+                                                        weight="semibold"
                                                         style={{ color: textColor }}
                                                     >
                                                         {option.label}
