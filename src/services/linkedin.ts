@@ -1,6 +1,8 @@
 import { LinkedInProfile } from '@/src/types';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+  ? 'http://localhost:3001'
+  : '';
 
 /**
  * Extract LinkedIn username from various URL formats
