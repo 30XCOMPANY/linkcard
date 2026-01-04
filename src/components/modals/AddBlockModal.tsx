@@ -149,12 +149,15 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     height={28}
                                     borderRadius="sm"
                                     style={{
-                                        backgroundColor: '#000000',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(0, 0, 0, 0.1)',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        ...shadows.sm,
                                     }}
                                 >
-                                    <Ionicons name="image" size={16} color="white" />
+                                    <Ionicons name="image" size={16} color={colors.dark} />
                                 </Box>
                                 <Text variant="body" weight="semibold">
                                     Cover
@@ -203,12 +206,15 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     height={28}
                                     borderRadius="sm"
                                     style={{
-                                        backgroundColor: '#000000',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(0, 0, 0, 0.1)',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        ...shadows.sm,
                                     }}
                                 >
-                                    <Ionicons name="text" size={16} color="white" />
+                                    <Ionicons name="text" size={16} color={colors.dark} />
                                 </Box>
                                 <Text variant="body" weight="semibold">
                                     Title
@@ -235,12 +241,15 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     height={28}
                                     borderRadius="sm"
                                     style={{
-                                        backgroundColor: '#000000',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(0, 0, 0, 0.1)',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        ...shadows.sm,
                                     }}
                                 >
-                                    <Ionicons name="document-text" size={16} color="white" />
+                                    <Ionicons name="document-text" size={16} color={colors.dark} />
                                 </Box>
                                 <Text variant="body" weight="semibold">
                                     Description
@@ -270,12 +279,15 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     height={28}
                                     borderRadius="sm"
                                     style={{
-                                        backgroundColor: '#000000',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(0, 0, 0, 0.1)',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        ...shadows.sm,
                                     }}
                                 >
-                                    <Ionicons name="link" size={16} color="white" />
+                                    <Ionicons name="link" size={16} color={colors.dark} />
                                 </Box>
                                 <Text variant="body" weight="semibold">
                                     Link
