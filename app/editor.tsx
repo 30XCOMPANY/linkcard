@@ -1937,7 +1937,7 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 fontSize: Math.max(12, (elementStyle.width as number || 60) * scale * 0.3),
                 fontWeight: '700'
               }}>
-                {profile.name ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'NH'}
+                {profile.name ? profile.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'NH'}
               </RNText>
             </View>
           )}
@@ -2159,7 +2159,7 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({
               <TouchableOpacity
                 key={label}
                 style={styles.customToolItem}
-                onPress={() => onAddCustom(type, label)}
+                onPress={() => onAddCustom(type as any, label)}
               >
                 <Ionicons name={icon as any} size={18} color={colors.text} />
                 <Text style={styles.customToolLabel}>{label}</Text>
@@ -2962,7 +2962,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.05)', // Barely visible border
     borderRadius: 7,
-    cursor: 'nwse-resize' as const,
+    cursor: 'nwse-resize' as any,
     zIndex: 200,
     ...(Platform.OS === 'web' ? {
       backdropFilter: 'blur(4px)',

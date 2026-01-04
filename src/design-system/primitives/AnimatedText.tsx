@@ -43,7 +43,7 @@ export const AnimatedText: React.FC<AnimatedTextProps> = ({
     duration = 2500,
     variant = 'displayMedium',
     color = 'dark',
-    highlightColor = 'accent1',
+    highlightColor = 'blue',
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const opacity = useSharedValue(1);
@@ -132,7 +132,7 @@ export const TypingText: React.FC<TypingTextProps> = ({
         <View style={styles.typingContainer}>
             <DSText variant={variant} color={color}>
                 {displayText}
-                {!isComplete && <DSText variant={variant} color="muted">|</DSText>}
+                {!isComplete && <DSText variant={variant} color="textMuted">|</DSText>}
             </DSText>
         </View>
     );

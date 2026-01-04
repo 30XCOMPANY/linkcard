@@ -19,6 +19,7 @@ import { LinkedInProfile, CardVersion } from '@/src/types';
 // Mock LinkedIn data - in production, this would come from your API
 const mockLinkedInData: LinkedInProfile = {
   name: 'John Doe',
+  username: 'johndoe',
   headline: 'Senior Software Engineer at Tech Corp',
   company: 'Tech Corp',
   location: 'San Francisco, CA',
@@ -26,7 +27,9 @@ const mockLinkedInData: LinkedInProfile = {
   phone: '+1 (555) 123-4567',
   website: 'https://johndoe.com',
   photoUrl: 'https://via.placeholder.com/200',
-  linkedinUrl: 'https://linkedin.com/in/johndoe',
+  url: 'https://linkedin.com/in/johndoe',
+  lastSynced: new Date(),
+  checksum: 'mock-checksum',
 };
 
 const defaultVersion: CardVersion = {
@@ -213,7 +216,7 @@ export default function PreviewScreen() {
           variant="primary"
           size="lg"
           fullWidth
-          icon={<Ionicons name="create-outline" size={20} color={theme.colors.foreground} />}
+          icon={<Ionicons name="create-outline" size={20} color={theme.colors.text} />}
         >
           Customize Your Card
         </Button>

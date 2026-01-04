@@ -23,7 +23,7 @@ import { fontSize, fontFamily } from '../tokens/typography';
 type SpacingToken = keyof typeof spacing;
 
 interface GlassButtonProps {
-    children: string;
+    children: React.ReactNode;
     onPress: () => void;
     icon?: keyof typeof Ionicons.glyphMap;
     variant?: 'glass' | 'primary' | 'outline';
@@ -57,6 +57,23 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         lg: fontSize.base,
     };
 
+    const renderChildren = () => {
+        if (typeof children === 'string') {
+            return (
+                <Text style={[styles.text, { color: textColors[variant], fontSize: fontSizes[size] }, textStyle]}>
+                    {children}
+                </Text>
+            );
+        }
+        return children;
+    };
+
+    const textColors = {
+        glass: colors.text,
+        primary: colors.white,
+        outline: colors.text,
+    };
+
     // For glass variant, use BlurView on iOS/Android, fallback to semi-transparent on web
     if (variant === 'glass' && Platform.OS !== 'web') {
         return (
@@ -85,9 +102,13 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
                             style={{ marginRight: spacing.sm }}
                         />
                     )}
-                    <Text style={[styles.glassText, { fontSize: fontSizes[size] }, textStyle]}>
-                        {children}
-                    </Text>
+                    {typeof children === 'string' ? (
+                        <Text style={[styles.glassText, { fontSize: fontSizes[size] }, textStyle]}>
+                            {children}
+                        </Text>
+                    ) : (
+                        children
+                    )}
                 </BlurView>
             </TouchableOpacity>
         );
@@ -98,12 +119,6 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         glass: styles.glassButton,
         primary: styles.primaryButton,
         outline: styles.outlineButton,
-    };
-
-    const textColors = {
-        glass: colors.text,
-        primary: colors.white,
-        outline: colors.text,
     };
 
     return (
@@ -128,15 +143,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
                     style={{ marginRight: spacing.sm }}
                 />
             )}
-            <Text
-                style={[
-                    styles.text,
-                    { color: textColors[variant], fontSize: fontSizes[size] },
-                    textStyle,
-                ]}
-            >
-                {children}
-            </Text>
+            {renderChildren()}
         </TouchableOpacity>
     );
 };

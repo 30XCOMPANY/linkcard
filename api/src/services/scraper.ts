@@ -113,7 +113,7 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
     console.log(`[CACHE] Returning cached profile for ${username} (age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s)`);
     return cached.data;
   }
-  
+
   console.log(`[CACHE] Cache miss for ${username}, fetching fresh data...`);
   console.log(`[CACHE] Current time: ${new Date().toISOString()}`);
 
@@ -124,7 +124,7 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
 
   try {
     const profileUrl = `https://www.linkedin.com/in/${username}`;
-    
+
     // Use the correct API configuration based on RapidAPI test interface
     // Endpoint: /enrich-lead
     // Enable additional fields that might be useful:
@@ -138,14 +138,14 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
     // - include_courses: Courses
     // - include_organizations: Organizations
     const url = `https://${RAPIDAPI_HOST}/enrich-lead?linkedin_url=${encodeURIComponent(profileUrl)}&include_skills=true&include_certifications=true&include_publications=true&include_honors=true&include_volunteers=true&include_projects=true&include_patents=true&include_courses=true&include_organizations=true&include_profile_status=false&include_company_public_url=false`;
-    
+
     console.log('Calling RapidAPI:', { host: RAPIDAPI_HOST, endpoint: '/enrich-lead' });
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': RAPIDAPI_HOST,
+        'X-RapidAPI-Key': RAPIDAPI_KEY as string,
+        'X-RapidAPI-Host': RAPIDAPI_HOST as string,
       },
     });
 
@@ -154,7 +154,7 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
 
     if (!response.ok) {
       let errorMessage = `Failed to fetch LinkedIn profile: ${response.status}`;
-      
+
       try {
         const errorData = JSON.parse(responseText);
         if (errorData.message) {
@@ -163,12 +163,12 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
       } catch (e) {
         errorMessage = responseText || errorMessage;
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const responseData = JSON.parse(responseText);
-    
+
     // API returns { data: {...} } structure
     if (!responseData.data) {
       throw new Error('Invalid API response format: missing data field');
@@ -192,7 +192,7 @@ export async function parseLinkedInProfile(username: string): Promise<LinkedInPr
  */
 function extractKeywordsFromText(text: string): string | null {
   if (!text || text.trim().length === 0) return null;
-  
+
   // Simple keyword extraction: look for common patterns and extract meaningful words
   // This is a basic fallback - AI summarization is preferred
   const words = text
@@ -201,7 +201,7 @@ function extractKeywordsFromText(text: string): string | null {
     .split(/\s+/)
     .filter((word) => word.length > 3) // Filter short words
     .filter((word) => !['the', 'and', 'for', 'with', 'from', 'that', 'this', 'they', 'their', 'what', 'which'].includes(word)); // Remove common words
-  
+
   // Return first 3 unique meaningful words
   const uniqueWords = [...new Set(words)].slice(0, 3);
   return uniqueWords.length > 0 ? uniqueWords.join(', ') : null;
@@ -224,23 +224,23 @@ async function parseRapidAPIResponse(data: any, username: string): Promise<Linke
   //   phone: "+61234567890",
   //   ...
   // }
-  
+
   // Prefer city over full location for more precise location display
   const city = data.city || (data.location ? data.location.split(',')[0] : '');
   const location = city || data.location || '';
-  
+
   // Extract job title (if separate from headline)
   const jobTitle = data.job_title || data.current_position?.title || data.positions?.[0]?.title || undefined;
-  
+
   // Character/bio - can be from summary, about, or generated from other fields
   // If longer than 100 characters, summarize to 3 keywords using AI
   let character = data.summary || data.about || undefined;
-  
+
   // If no character field exists, generate it from other available information
   if (!character) {
     console.log(`[SCRAPER] No character field found, generating from other profile data...`);
     const profileInfo: string[] = [];
-    
+
     // Collect relevant information
     if (data.headline) profileInfo.push(data.headline);
     if (jobTitle) profileInfo.push(jobTitle);
@@ -250,11 +250,11 @@ async function parseRapidAPIResponse(data: any, username: string): Promise<Linke
       const topSkills = data.skills.slice(0, 5).join(', ');
       profileInfo.push(`Skills: ${topSkills}`);
     }
-    
+
     if (profileInfo.length > 0) {
       const combinedText = profileInfo.join('. ');
       console.log(`[SCRAPER] Generated character text from profile info (length: ${combinedText.length})`);
-      
+
       // Use AI to summarize into 3 keywords
       const startTime = Date.now();
       const summarized = await summarizeToKeywords(combinedText);
@@ -270,7 +270,7 @@ async function parseRapidAPIResponse(data: any, username: string): Promise<Linke
       }
     }
   }
-  
+
   // If character exists and is longer than 100 characters, summarize it
   if (character && character.length > 100) {
     console.log(`[AI] Character text length: ${character.length}, attempting to summarize...`);
@@ -412,16 +412,16 @@ const MAX_REQUESTS_PER_MINUTE = 10;
 export function checkRateLimit(): boolean {
   const now = Date.now();
   const oneMinuteAgo = now - 60000;
-  
+
   // Remove old timestamps
   while (requestTimestamps.length > 0 && requestTimestamps[0] < oneMinuteAgo) {
     requestTimestamps.shift();
   }
-  
+
   if (requestTimestamps.length >= MAX_REQUESTS_PER_MINUTE) {
     return false;
   }
-  
+
   requestTimestamps.push(now);
   return true;
 }

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, ViewStyle, FlexAlignType } from 'react-native';
+import { View, ViewStyle, FlexAlignType, StyleProp } from 'react-native';
 import { Box, BoxProps } from './Box';
 
 export interface FlexProps extends BoxProps {
@@ -13,6 +13,7 @@ export interface FlexProps extends BoxProps {
     align?: FlexAlignType;
     justify?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
     wrap?: 'wrap' | 'nowrap' | 'wrap-reverse';
+    style?: StyleProp<ViewStyle>;
 }
 
 export const Flex: React.FC<FlexProps> = ({

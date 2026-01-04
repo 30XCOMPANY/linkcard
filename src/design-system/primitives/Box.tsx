@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, ViewStyle, StyleSheet } from 'react-native';
+import { View, ViewStyle, StyleSheet, StyleProp } from 'react-native';
 import { colors } from '../tokens/colors';
 import { spacing } from '../tokens/spacing';
 import { radii } from '../tokens/radii';
@@ -53,7 +53,7 @@ export interface BoxProps {
     height?: number | string;
 
     // Custom style
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
 }
 
 export const Box: React.FC<BoxProps> = ({
@@ -106,8 +106,8 @@ export const Box: React.FC<BoxProps> = ({
 
         // Layout
         ...(flex !== undefined && { flex }),
-        ...(width !== undefined && { width }),
-        ...(height !== undefined && { height }),
+        ...(width !== undefined && { width: width as any }),
+        ...(height !== undefined && { height: height as any }),
     };
 
     return <View style={[boxStyle, style]}>{children}</View>;

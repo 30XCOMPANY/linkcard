@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
+import { View, StyleSheet, ViewStyle, Pressable, StyleProp } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -26,7 +26,7 @@ export interface BentoCardProps {
     bg?: ColorToken;
     onPress?: () => void;
     interactive?: boolean;
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -63,11 +63,11 @@ export const BentoCard: React.FC<BentoCardProps> = ({
         '2x2': { aspectRatio: 1 },
     };
 
-    const cardStyle: ViewStyle = {
+    const cardStyle = {
         backgroundColor: colors[bg],
         borderRadius: radii['2xl'],
         padding: spacing['2xl'],
-        overflow: 'hidden',
+        overflow: 'hidden' as const,
         ...shadows.sm,
         ...sizeStyles[size],
     };
@@ -78,7 +78,7 @@ export const BentoCard: React.FC<BentoCardProps> = ({
                 onPress={onPress}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                style={[cardStyle, animatedStyle, style]}
+                style={[cardStyle as any, animatedStyle, style]}
             >
                 {children}
             </AnimatedPressable>
@@ -86,7 +86,7 @@ export const BentoCard: React.FC<BentoCardProps> = ({
     }
 
     return (
-        <Animated.View style={[cardStyle, animatedStyle, style]}>
+        <Animated.View style={[cardStyle as any, animatedStyle, style]}>
             {children}
         </Animated.View>
     );
@@ -94,17 +94,17 @@ export const BentoCard: React.FC<BentoCardProps> = ({
 
 // Pre-styled Bento card variants
 export const BentoCardPrimary: React.FC<Omit<BentoCardProps, 'bg'>> = (props) => (
-    <BentoCard bg="primary" {...props} />
+    <BentoCard bg="dark" {...props} />
 );
 
 export const BentoCardSecondary: React.FC<Omit<BentoCardProps, 'bg'>> = (props) => (
-    <BentoCard bg="secondary" {...props} />
+    <BentoCard bg="card" {...props} />
 );
 
 export const BentoCardAccent: React.FC<Omit<BentoCardProps, 'bg'>> = (props) => (
-    <BentoCard bg="accent" {...props} />
+    <BentoCard bg="blue" {...props} />
 );
 
 export const BentoCardDark: React.FC<Omit<BentoCardProps, 'bg'>> = (props) => (
-    <BentoCard bg="black" {...props} />
+    <BentoCard bg="dark" {...props} />
 );

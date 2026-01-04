@@ -32,7 +32,7 @@ export async function matchEmojis(profile: ProfileData): Promise<string[] | null
   try {
     // Build a prompt for emoji matching
     const characteristics: string[] = [];
-    
+
     if (profile.character) {
       if (profile.character.includes(',')) {
         characteristics.push(...profile.character.split(',').map(c => c.trim()));
@@ -40,7 +40,7 @@ export async function matchEmojis(profile: ProfileData): Promise<string[] | null
         characteristics.push(profile.character);
       }
     }
-    
+
     if (profile.headline) {
       characteristics.push(profile.headline);
     }
@@ -94,7 +94,7 @@ Emojis:`;
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const emojiText = data.choices?.[0]?.message?.content?.trim();
 
     if (!emojiText) {
@@ -112,8 +112,8 @@ Emojis:`;
     // Split by comma and clean up
     const emojis = cleanEmojis
       .split(',')
-      .map(e => e.trim())
-      .filter(e => e.length > 0)
+      .map((e: string) => e.trim())
+      .filter((e: string) => e.length > 0)
       .slice(0, 3); // Take first 3
 
     if (emojis.length < 3) {
