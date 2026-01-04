@@ -1,5 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import fetch from 'node-fetch';
 
 // LinkedIn Profile Data Interface
 interface LinkedInProfileData {
