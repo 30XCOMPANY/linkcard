@@ -14,6 +14,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Request logging for debugging
+app.use((req, res, next) => {
+  console.log(`[API] ${req.method} ${req.path}`);
+  next();
+});
+
 // Routes - Support both with and without /api prefix
 const routes = (path: string, router: express.Router) => {
   app.use(`/api${path}`, router);
