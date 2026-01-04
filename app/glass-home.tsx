@@ -608,20 +608,19 @@ export default function GlassHomeScreen() {
                                             onPress={() => handleSelectContact(contact.type)}
                                             activeOpacity={0.7}
                                         >
-                                            <VStack gap="sm" align="center" style={{ minWidth: 64 }}>
-                                                {/* Glass icon button */}
+                                            <VStack gap="xs" align="center" style={{ minWidth: 56 }}>
                                                 <Box
+                                                    width={48}
+                                                    height={48}
                                                     style={{
-                                                        width: 64,
-                                                        height: 64,
-                                                        borderRadius: 24,
+                                                        borderRadius: 16,
                                                         backgroundColor: isSelected
                                                             ? 'rgba(255, 255, 255, 0.9)'
                                                             : 'rgba(255, 255, 255, 0.5)',
                                                         borderWidth: 1,
                                                         borderColor: isSelected
                                                             ? 'rgba(255, 255, 255, 1)'
-                                                            : 'rgba(255, 255, 255, 0.4)', // Updated border logic
+                                                            : 'rgba(255, 255, 255, 0.4)',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         ...shadows.md,
@@ -629,16 +628,16 @@ export default function GlassHomeScreen() {
                                                 >
                                                     <Ionicons
                                                         name={contact.icon as any}
-                                                        size={28}
-                                                        color={isSelected ? colors.dark : colors.textMuted}
+                                                        size={24}
+                                                        color={colors.dark}
                                                     />
                                                 </Box>
                                                 <Text
                                                     variant="caption"
-                                                    weight={isSelected ? 'semibold' : 'medium'}
                                                     style={{
-                                                        fontSize: 11,
-                                                        color: isSelected ? colors.dark : colors.textMuted,
+                                                        color: colors.dark,
+                                                        fontSize: 10,
+                                                        opacity: 0.8,
                                                     }}
                                                 >
                                                     {contact.label}
