@@ -235,10 +235,25 @@ export default function GlassHomeScreen() {
         if (profile.character) {
             // Split by comma and create individual tags
             const keywords = profile.character.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            const usedEmojis = new Set<string>();
+
+            // Fallback emoji pool (diverse set)
+            const fallbackEmojis = ['🎯', '🔥', '💡', '⚡', '🌟', '💪', '🏆', '✨', '🚀', '💻'];
+
             keywords.forEach((keyword, index) => {
+                let emoji = getEmojiForKeyword(keyword);
+
+                // If emoji is already used, pick a fallback
+                if (usedEmojis.has(emoji)) {
+                    // Find first unused fallback emoji
+                    emoji = fallbackEmojis.find(e => !usedEmojis.has(e)) || fallbackEmojis[index % fallbackEmojis.length];
+                }
+
+                usedEmojis.add(emoji);
+
                 result.push({
                     id: `character-${index}`,
-                    icon: getEmojiForKeyword(keyword),
+                    icon: emoji,
                     label: keyword
                 });
             });
