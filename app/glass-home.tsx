@@ -183,27 +183,59 @@ export default function GlassHomeScreen() {
         }
     }, [selectedContact, allContacts, profile]);
 
+    // Smart emoji selector based on keyword
+    const getEmojiForKeyword = (keyword: string): string => {
+        const lowerKeyword = keyword.toLowerCase();
+
+        // Tech & Innovation
+        if (lowerKeyword.match(/tech|innovation|digital|ai|software|code|data|cyber/)) return '💻';
+        if (lowerKeyword.match(/rocket|growth|scale|fast|speed/)) return '🚀';
+        if (lowerKeyword.match(/creative|design|art|visual/)) return '🎨';
+
+        // Business & Strategy
+        if (lowerKeyword.match(/strateg|business|entrepreneur|leader|executive/)) return '💼';
+        if (lowerKeyword.match(/market|sales|revenue|growth/)) return '📈';
+        if (lowerKeyword.match(/finance|invest|money|capital/)) return '💰';
+
+        // Skills & Mindset
+        if (lowerKeyword.match(/analyt|data|research|science/)) return '🔬';
+        if (lowerKeyword.match(/mindset|think|vision|idea/)) return '💡';
+        if (lowerKeyword.match(/communi|speak|present|write/)) return '💬';
+        if (lowerKeyword.match(/global|world|international/)) return '🌍';
+
+        // People & Team
+        if (lowerKeyword.match(/team|collab|people|social/)) return '👥';
+        if (lowerKeyword.match(/mentor|teach|coach|guide/)) return '🎓';
+
+        // Product & Building
+        if (lowerKeyword.match(/product|build|create|make/)) return '🛠️';
+        if (lowerKeyword.match(/brand|identity|image/)) return '✨';
+
+        // Default fallback
+        return '⭐';
+    };
+
     // Auto-generate tags from LinkedIn
     const tags = useMemo(() => {
         if (!profile) return [];
 
         const result = [];
 
-        // Character tags (split keywords into individual tags)
+        // Character tags (split keywords into individual tags with smart emojis)
         if (profile.character) {
             // Split by comma and create individual tags
             const keywords = profile.character.split(',').map(k => k.trim()).filter(k => k.length > 0);
             keywords.forEach((keyword, index) => {
                 result.push({
                     id: `character-${index}`,
-                    icon: '🚀',
+                    icon: getEmojiForKeyword(keyword),
                     label: keyword
                 });
             });
         }
 
         if (profile.company) {
-            result.push({ id: 'company', icon: '💼', label: profile.company });
+            result.push({ id: 'company', icon: '🏢', label: profile.company });
         }
 
         if (profile.city || profile.location) {
