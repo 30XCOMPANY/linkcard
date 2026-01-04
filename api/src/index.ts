@@ -33,8 +33,13 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 LinkCard API running on http://localhost:${PORT}`);
-});
+// Only listen if this is the main module
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 LinkCard API running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
 
 

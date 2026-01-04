@@ -2,6 +2,9 @@
   "name": "linkcard",
   "version": "1.0.0",
   "main": "expo-router/entry",
+  "workspaces": [
+    "api"
+  ],
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
