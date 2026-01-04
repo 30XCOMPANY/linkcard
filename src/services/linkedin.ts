@@ -39,7 +39,7 @@ export const fetchLinkedInProfile = async (
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/linkedin/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/linkedin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
