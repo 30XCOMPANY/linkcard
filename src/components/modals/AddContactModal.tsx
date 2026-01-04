@@ -193,10 +193,10 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                         >
                             <Ionicons name="close" size={24} color={textColor} />
                         </TouchableOpacity>
-                        <VStack align="center" gap="xs">
+                        <VStack align="center" gap="xs" style={{ flex: 1 }}>
                             <Text variant="h3" style={{ color: textColor }}>Add Contact</Text>
                             <Text variant="caption" style={{ color: isDarkBackground ? 'rgba(255,255,255,0.7)' : colors.textMuted }}>
-                                QR code will be auto-generated
+                                Add your social links or contact info
                             </Text>
                         </VStack>
                         <Box width={32} />
@@ -242,8 +242,8 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                                 <Box
                                                     width={28}
                                                     height={28}
+                                                    borderRadius="md"
                                                     style={{
-                                                        borderRadius: 12,
                                                         backgroundColor: selectedType === option.type
                                                             ? colors.dark
                                                             : 'rgba(255, 255, 255, 0.6)',
@@ -286,7 +286,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 
                             <Box style={styles.inputContainer}>
                                 <TextInput
-                                    style={[styles.input, { color: colors.dark }]} // Always dark text in inputs for readability
+                                    style={styles.input}
                                     placeholder={selectedOption.placeholder}
                                     placeholderTextColor="rgba(0,0,0,0.4)"
                                     value={value}
@@ -294,6 +294,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                     keyboardType={selectedOption.keyboardType}
                                     autoCapitalize={selectedType === 'email' ? 'none' : 'sentences'}
                                     autoCorrect={false}
+                                    selectionColor={colors.dark}
                                 />
                             </Box>
                         </VStack>
@@ -307,12 +308,13 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 
                                 <Box style={styles.inputContainer}>
                                     <TextInput
-                                        style={[styles.input, { color: colors.dark }]}
+                                        style={styles.input}
                                         placeholder="e.g. Instagram, Twitter..."
-                                        placeholderTextColor="rgba(0,0,0,0.4)"
+                                        placeholderTextColor={isDarkBackground ? 'rgba(255, 255, 255, 0.4)' : colors.placeholder}
                                         value={customLabel}
                                         onChangeText={setCustomLabel}
                                         maxLength={20}
+                                        selectionColor={colors.dark}
                                     />
                                 </Box>
                             </VStack>
@@ -382,6 +384,8 @@ const styles = StyleSheet.create({
         }),
         padding: 0,
         fontWeight: '500',
+        // @ts-ignore - web only
+        outlineStyle: 'none',
     },
     footer: {
         padding: spacing['2xl'],

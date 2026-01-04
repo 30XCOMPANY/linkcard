@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Animated, { 
-  FadeIn, 
-  FadeInDown, 
+import Animated, {
+  FadeIn,
+  FadeInDown,
   FadeInUp,
   FadeOut,
   useSharedValue,
@@ -43,6 +43,7 @@ import {
   spacing,
   radii,
   gradients,
+  shadows,
 } from '@/src/design-system/tokens';
 import { Text, VStack } from '@/src/design-system/primitives';
 import { Button, Input } from '@/src/design-system/patterns';
@@ -92,7 +93,7 @@ const CapturingTransitionView: React.FC<{
   const allComponents = React.useMemo(() => {
     return extractComponentsFromProfile(profile);
   }, [profile]);
-  
+
   const components = React.useMemo(() => {
     return allComponents.filter(c => {
       if (c.type === 'divider') return false;
@@ -102,20 +103,20 @@ const CapturingTransitionView: React.FC<{
       return false;
     });
   }, [allComponents]);
-  
+
   // Separate first row components: photo, name, character
   const photoComponent = React.useMemo(() => {
     return components.find(c => c.id === 'photo');
   }, [components]);
-  
+
   const nameComponent = React.useMemo(() => {
     return components.find(c => c.id === 'name');
   }, [components]);
-  
+
   const characterComponent = React.useMemo(() => {
     return components.find(c => c.id === 'character');
   }, [components]);
-  
+
   // Extract headline separately for full-width display
   const headlineComponent = React.useMemo(() => {
     return components.find(c => c.id === 'headline');
@@ -125,7 +126,7 @@ const CapturingTransitionView: React.FC<{
   const otherComponents = React.useMemo(() => {
     // Priority order: jobTitle, company, location, email
     const priorityIds = ['jobTitle', 'company', 'location', 'email'];
-    const filtered = components.filter(c => 
+    const filtered = components.filter(c =>
       c.id !== 'photo' && c.id !== 'name' && c.id !== 'character' && c.id !== 'headline'
     );
     // Sort by priority and limit to 4 elements
@@ -138,7 +139,7 @@ const CapturingTransitionView: React.FC<{
       return aIndex - bIndex;
     }).slice(0, 4); // Limit to 4 elements for clean layout
   }, [components]);
-  
+
   // Extract specific components for elegant layout
   const jobTitleComponent = otherComponents.find(c => c.content.label === 'JOB TITLE' || c.content.label === 'Job Title');
   const companyComponent = otherComponents.find(c => c.content.label === 'COMPANY' || c.content.label === 'Company');
@@ -151,14 +152,14 @@ const CapturingTransitionView: React.FC<{
       <View style={styles.capturingLogoContainer}>
         <Logo />
       </View>
-      
+
       {/* Main Content - Single Column, Centered, Generous Spacing */}
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.capturingScrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Title Section */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInDown.delay(100).springify()}
           style={styles.capturingTitleSection}
         >
@@ -169,7 +170,7 @@ const CapturingTransitionView: React.FC<{
         </Animated.View>
 
         {/* Profile Preview Card - Elegant, Minimal */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInDown.delay(200).springify()}
           style={styles.profilePreviewCard}
         >
@@ -254,7 +255,7 @@ const CapturingTransitionView: React.FC<{
       </ScrollView>
 
       {/* Fixed Bottom Button with iOS Liquid Glass Effect */}
-      <Animated.View 
+      <Animated.View
         entering={FadeInUp.delay(400).springify()}
         style={styles.capturingBottomBarContainer}
       >
@@ -268,7 +269,7 @@ const CapturingTransitionView: React.FC<{
                 fullWidth
                 style={styles.unifiedButton}
               >
-                Continue to Editor
+                Go home
               </Button>
             </View>
           </View>
@@ -286,7 +287,7 @@ const CapturingTransitionView: React.FC<{
                 fullWidth
                 style={styles.unifiedButton}
               >
-                Continue to Editor
+                Go home
               </Button>
             </View>
           </BlurView>
@@ -306,7 +307,7 @@ const ProfileElementCard: React.FC<{
     if (!component || !component.content) {
       return null;
     }
-    
+
     try {
       switch (component.type) {
         case 'heading':
@@ -457,12 +458,12 @@ export default function OnboardingScreen() {
   const { setCard } = useCardStore();
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
-  
+
   // Check for step parameter in URL
   const initialStep = (params.step as Step) || 'auth';
 
   const [step, setStep] = useState<Step>(initialStep);
-  
+
   // Update step when URL params change
   React.useEffect(() => {
     if (params.step && params.step !== step) {
@@ -530,7 +531,7 @@ export default function OnboardingScreen() {
     try {
       // Fetch LinkedIn profile data from API
       const profileData = await fetchLinkedInProfile(linkedinUrl);
-      
+
       // Populate form fields with fetched data
       setProfile({
         name: profileData.name || '',
@@ -543,7 +544,7 @@ export default function OnboardingScreen() {
         character: profileData.character || undefined,
         publications: (profileData as any).publications || undefined,
       });
-      
+
       setIsLoading(false);
       setStep('profile');
     } catch (error) {
@@ -575,7 +576,7 @@ export default function OnboardingScreen() {
     };
     const newCard = createNewCard(linkedInData);
     setCard(newCard);
-    router.replace('/editor');
+    router.replace('/glass-home');
   };
 
   // ========== RENDER CONTENT BY STEP ==========
@@ -655,16 +656,16 @@ export default function OnboardingScreen() {
                   onChangeText={(t) => { setPassword(t); setError(null); }}
                   secureTextEntry
                 />
-              <Button
-                onPress={handleAuth}
-                variant="primary"
-                size="md"
-                fullWidth
-                loading={isLoading}
-                style={styles.unifiedButton}
-              >
-                Continue
-              </Button>
+                <Button
+                  onPress={handleAuth}
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  loading={isLoading}
+                  style={styles.unifiedButton}
+                >
+                  Continue
+                </Button>
               </VStack>
             </VStack>
 
@@ -705,15 +706,12 @@ export default function OnboardingScreen() {
                 autoCapitalize="none"
                 error={error || undefined}
               />
-              <TouchableOpacity onPress={() => setStep('profile')} style={{ alignSelf: 'center', marginTop: spacing.md }}>
-                <Text style={styles.boldLink}>Skip for now</Text>
-              </TouchableOpacity>
             </VStack>
           </Animated.View>
         );
 
       case 'profile':
-        return <CapturingTransitionView 
+        return <CapturingTransitionView
           profile={profile}
           onComplete={handleProfile}
         />;
@@ -725,7 +723,7 @@ export default function OnboardingScreen() {
 
   // Show right side only on auth step
   const showRightSide = isDesktop && step === 'auth';
-  
+
   // Remove maxWidth constraint for capturing step to allow full-width floating elements
   const isCapturingStep = step === 'profile';
   const isLinkedInStep = step === 'linkedin';
@@ -733,7 +731,7 @@ export default function OnboardingScreen() {
   // For capturing step, render it directly at root level to avoid all layout constraints
   if (isCapturingStep) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.white }]}>
         <FontLoader />
         {renderStepContent()}
       </View>
@@ -775,7 +773,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* Fixed Bottom Button with Glass Effect - Outside centeredSide to span full width */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInUp.delay(200).springify()}
           style={styles.capturingBottomBarContainer}
         >
@@ -878,14 +876,12 @@ const styles = StyleSheet.create({
   // Left Side (strict 50% for split layout)
   formSide: {
     width: '50%',
-    backgroundColor: colors.white,
     flex: 1,
     position: 'relative',
   },
   // Centered Side (full width when no right side)
   centeredSide: {
     width: '100%',
-    backgroundColor: colors.white,
     flex: 1,
     position: 'relative',
     maxWidth: 600,
@@ -893,12 +889,11 @@ const styles = StyleSheet.create({
   // Capturing Side (full width for floating elements)
   capturingSide: {
     width: '100%',
-    backgroundColor: colors.white,
     flex: 1,
     position: 'relative',
     // No maxWidth constraint to allow full-width floating elements
   },
-  
+
   // Logo - Centered at top
   logoContainer: {
     width: '100%',
@@ -935,6 +930,8 @@ const styles = StyleSheet.create({
 
   formCard: {
     width: '100%',
+    backgroundColor: 'transparent',
+    padding: spacing.xl,
   },
 
   // Typography - Professional SaaS Scale
@@ -1050,7 +1047,6 @@ const styles = StyleSheet.create({
   capturingContainer: {
     flex: 1,
     width: '100%',
-    backgroundColor: colors.white,
   },
   capturingLogoContainer: {
     width: '100%',
@@ -1091,12 +1087,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     padding: spacing['2xl'],
     borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 24,
-    elevation: 2,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    ...shadows.xl,
   },
   profileHeader: {
     flexDirection: 'row',

@@ -409,6 +409,26 @@ export default function GlassHomeScreen() {
         );
     };
 
+    const handleSaveTag = (tag: { label: string; icon: string }) => {
+        const newTag = {
+            id: Date.now().toString(),
+            label: tag.label,
+            icon: tag.icon,
+        };
+        setCustomTags([...customTags, newTag]);
+        if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        Alert.alert('Success', `Added tag: ${tag.label}`);
+    };
+
+    const handleDeleteTag = (id: string) => {
+        setCustomTags(customTags.filter(t => t.id !== id));
+        if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+    };
+
     return (
         <Box flex={1}>
             {/* Background Gradient or Image */}
@@ -536,35 +556,43 @@ export default function GlassHomeScreen() {
                                             ...shadows.sm,
                                         }}
                                     >
-                                        <Text variant="caption" style={{ fontSize: 10 }}>{tag.icon}</Text>
+                                        {tag.icon ? (
+                                            <Text variant="caption" style={{ fontSize: 10 }}>{tag.icon}</Text>
+                                        ) : null}
                                         <Text variant="caption" weight="medium" style={{ fontSize: 11 }}>
                                             {tag.label}
                                         </Text>
                                         {mode === 'edit' && (
-                                            <Ionicons name="close-circle" size={12} color={colors.textMuted} />
+                                            <TouchableOpacity
+                                                onPress={() => handleDeleteTag(tag.id)}
+                                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                            >
+                                                <Ionicons name="close-circle" size={12} color={colors.textMuted} />
+                                            </TouchableOpacity>
                                         )}
                                     </Box>
                                 </TouchableOpacity>
                             ))}
 
                             {mode === 'edit' && (
-                                <TouchableOpacity onPress={() => setAddTagVisible(true)}>
+                                <TouchableOpacity onPress={() => setAddTagVisible(true)} activeOpacity={0.7}>
                                     <Box
                                         px="md"
                                         py="xs"
                                         borderRadius="pill"
                                         style={{
-                                            backgroundColor: colors.white,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
                                             borderWidth: 1,
-                                            borderColor: colors.dark,
-                                            borderStyle: 'dashed',
+                                            borderColor: isDarkBackground ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.1)',
+                                            borderStyle: 'solid',
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             gap: spacing.xs,
+                                            ...shadows.sm,
                                         }}
                                     >
-                                        <Ionicons name="add" size={12} color={colors.dark} />
-                                        <Text variant="caption" weight="medium" style={{ color: colors.dark, fontSize: 11 }}>
+                                        <Ionicons name="add" size={12} color={textColor} />
+                                        <Text variant="caption" weight="medium" style={{ color: textColor, fontSize: 11 }}>
                                             Add Tag
                                         </Text>
                                     </Box>
@@ -837,6 +865,12 @@ export default function GlassHomeScreen() {
                 visible={addContactVisible}
                 onClose={() => setAddContactVisible(false)}
                 onSave={handleSaveContact}
+            />
+
+            <AddTagModal
+                visible={addTagVisible}
+                onClose={() => setAddTagVisible(false)}
+                onSave={handleSaveTag}
             />
         </Box >
     );

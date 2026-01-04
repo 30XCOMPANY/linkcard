@@ -137,7 +137,12 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="chevron-back" size={24} color={colors.text} />
                         </TouchableOpacity>
-                        <Text variant="h3">Add Highlights</Text>
+                        <VStack align="center" gap="xs" style={{ flex: 1 }}>
+                            <Text variant="h3">Add Highlights</Text>
+                            <Text variant="caption" color="textMuted">
+                                Showcase your best work and experiences
+                            </Text>
+                        </VStack>
                         <TouchableOpacity onPress={handleSave} style={styles.moreButton}>
                             <Ionicons name="ellipsis-horizontal" size={24} color={colors.text} />
                         </TouchableOpacity>
@@ -157,9 +162,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
+                                    borderRadius="md"
                                     style={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -212,9 +217,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
+                                    borderRadius="md"
                                     style={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -235,6 +240,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     value={title}
                                     onChangeText={setTitle}
                                     maxLength={50}
+                                    selectionColor={colors.dark}
                                 />
                             </Box>
                         </VStack>
@@ -245,9 +251,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
+                                    borderRadius="md"
                                     style={{
                                         backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                                        borderRadius: 12,
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -271,6 +277,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     numberOfLines={4}
                                     maxLength={200}
                                     textAlignVertical="top"
+                                    selectionColor={colors.dark}
                                 />
                             </Box>
                         </VStack>
@@ -281,11 +288,11 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                 <Box
                                     width={28}
                                     height={28}
-                                    borderRadius="sm"
+                                    borderRadius="md"
                                     style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
                                         borderWidth: 1,
-                                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                                        borderColor: 'rgba(255, 255, 255, 0.8)',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         ...shadows.sm,
@@ -308,6 +315,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                                     keyboardType="url"
                                     autoCapitalize="none"
                                     autoCorrect={false}
+                                    selectionColor={colors.dark}
                                 />
                             </Box>
                         </VStack>
@@ -327,7 +335,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                     </TouchableOpacity>
                 </Box>
             </KeyboardAvoidingView>
-        </Modal >
+        </Modal>
     );
 };
 
@@ -338,7 +346,7 @@ const styles = StyleSheet.create({
     header: {
         paddingTop: Platform.OS === 'ios' ? 60 : spacing['2xl'],
         paddingHorizontal: spacing['2xl'],
-        paddingBottom: spacing['2xl'], // Changed paddingBottom to '2xl' for larger padding
+        paddingBottom: spacing['2xl'],
     },
     closeButton: {
         width: 40,
@@ -417,6 +425,8 @@ const styles = StyleSheet.create({
         }),
         padding: 0,
         fontWeight: '500',
+        // @ts-ignore - web only
+        outlineStyle: 'none',
     },
     textArea: {
         fontSize: 14,
@@ -430,6 +440,8 @@ const styles = StyleSheet.create({
         padding: 0,
         minHeight: 100,
         fontWeight: '500',
+        // @ts-ignore - web only
+        outlineStyle: 'none',
     },
     footer: {
         padding: spacing['2xl'],

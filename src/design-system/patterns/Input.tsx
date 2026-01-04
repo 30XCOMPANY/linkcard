@@ -77,6 +77,7 @@ export const Input: React.FC<InputProps> = ({
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     placeholderTextColor={colors.placeholder}
+                    selectionColor={colors.dark}
                     style={[
                         styles.input,
                         icon ? styles.inputWithIcon : null,
@@ -127,6 +128,8 @@ const styles = StyleSheet.create({
         fontSize: 15, // Legible standard size
         fontFamily: fontFamily.body,
         color: colors.text,
+        // @ts-ignore - web only
+        outlineStyle: 'none',
     },
     inputWithIcon: {
         paddingLeft: spacing.md,

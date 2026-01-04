@@ -45,7 +45,7 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
 
         onSave({
             label: label.trim(),
-            icon: '🏷️', // Default icon for now
+            icon: '', // Remove default icon
         });
 
         // Reset form
@@ -85,8 +85,13 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
                             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                                 <Ionicons name="close" size={28} color={colors.text} />
                             </TouchableOpacity>
-                            <Text variant="h3">Add Tag</Text>
-                            <Box width={40} />
+                            <VStack align="center" gap="xs" style={{ flex: 1 }}>
+                                <Text variant="h3">Add Tag</Text>
+                                <Text variant="caption" color="textMuted">
+                                    Categorize your profile or card
+                                </Text>
+                            </VStack>
+                            <Box width={36} />
                         </HStack>
                     </Box>
 
@@ -103,6 +108,7 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
                                         onChangeText={setLabel}
                                         autoFocus
                                         maxLength={20}
+                                        selectionColor={colors.dark}
                                     />
                                 </Box>
                             </VStack>
@@ -131,40 +137,45 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
     },
     content: {
-        backgroundColor: colors.white,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         borderTopLeftRadius: radii['2xl'],
         borderTopRightRadius: radii['2xl'],
         paddingBottom: Platform.OS === 'ios' ? 40 : spacing['2xl'],
         ...shadows.xl,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.8)',
     },
     header: {
         paddingTop: spacing.xl,
         paddingHorizontal: spacing['2xl'],
         paddingBottom: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        borderBottomColor: 'rgba(0, 0, 0, 0.05)',
     },
     closeButton: {
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: -spacing.sm,
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        borderRadius: radii.full,
     },
     inputContainer: {
-        backgroundColor: colors.card,
-        borderRadius: radii.md,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: radii.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: 'rgba(0, 0, 0, 0.05)',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
+        ...shadows.sm,
     },
     input: {
-        fontSize: 16,
-        color: colors.text,
+        fontSize: 14,
+        color: colors.dark,
         fontFamily: Platform.select({
             ios: 'System',
             android: 'Roboto',
@@ -172,6 +183,9 @@ const styles = StyleSheet.create({
             default: 'sans-serif',
         }),
         padding: 0,
+        fontWeight: '500',
+        // @ts-ignore - web only
+        outlineStyle: 'none',
     },
     saveButton: {
         height: 52,
