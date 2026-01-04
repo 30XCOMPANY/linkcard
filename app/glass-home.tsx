@@ -189,9 +189,17 @@ export default function GlassHomeScreen() {
 
         const result = [];
 
-        // Character tag (keywords from LinkedIn profile)
+        // Character tags (split keywords into individual tags)
         if (profile.character) {
-            result.push({ id: 'character', icon: '🚀', label: profile.character });
+            // Split by comma and create individual tags
+            const keywords = profile.character.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            keywords.forEach((keyword, index) => {
+                result.push({
+                    id: `character-${index}`,
+                    icon: '🚀',
+                    label: keyword
+                });
+            });
         }
 
         if (profile.company) {
