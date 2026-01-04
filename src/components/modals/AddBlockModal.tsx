@@ -24,10 +24,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Design System
 import { Box, VStack, HStack, Text } from '@/src/design-system/primitives';
 import { colors } from '@/src/design-system/tokens/colors';
+import { gradients } from '@/src/design-system/tokens/effects';
+import { useCardStore } from '@/src/stores/cardStore';
 import { spacing } from '@/src/design-system/tokens/spacing';
 import { radii } from '@/src/design-system/tokens/radii';
 import { shadows } from '@/src/design-system/tokens/shadows';
@@ -53,6 +56,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [link, setLink] = useState('');
+
+    const { currentGradient } = useCardStore();
+    const gradientColors = gradients[currentGradient as keyof typeof gradients] || gradients.lightGlass;
 
     const handlePickImage = async () => {
         if (Platform.OS !== 'web') {
@@ -117,6 +123,10 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
+            <LinearGradient
+                colors={gradientColors}
+                style={StyleSheet.absoluteFill}
+            />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.container}
@@ -330,14 +340,11 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.white,
     },
     header: {
         paddingTop: Platform.OS === 'ios' ? 60 : spacing['2xl'],
         paddingHorizontal: spacing['2xl'],
-        paddingBottom: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        paddingBottom: spacing['2xl'], // Changed paddingBottom to '2xl' for larger padding
     },
     closeButton: {
         width: 40,
@@ -386,34 +393,48 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     inputContainer: {
-        backgroundColor: colors.card,
-        borderRadius: radii.md,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        borderRadius: radii.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: 'rgba(255, 255, 255, 0.6)',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
+        ...shadows.sm,
     },
     textAreaContainer: {
-        backgroundColor: colors.card,
-        borderRadius: radii.md,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        borderRadius: radii.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: 'rgba(255, 255, 255, 0.6)',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
         minHeight: 120,
+        ...shadows.sm,
     },
     input: {
-        fontSize: 16,
-        color: colors.text,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+        fontSize: 14,
+        color: colors.dark,
+        fontFamily: Platform.select({
+            ios: 'System',
+            android: 'Roboto',
+            web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            default: 'sans-serif',
+        }),
         padding: 0,
+        fontWeight: '500',
     },
     textArea: {
-        fontSize: 16,
-        color: colors.text,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+        fontSize: 14,
+        color: colors.dark,
+        fontFamily: Platform.select({
+            ios: 'System',
+            android: 'Roboto',
+            web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            default: 'sans-serif',
+        }),
         padding: 0,
         minHeight: 100,
+        fontWeight: '500',
     },
     footer: {
         padding: spacing['2xl'],
