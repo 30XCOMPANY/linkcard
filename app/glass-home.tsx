@@ -737,8 +737,8 @@ export default function GlassHomeScreen() {
                 <Animated.View entering={FadeInUp.delay(350).springify()}>
                     <VStack gap="md">
                         <HStack style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text variant="body" weight="semibold" style={{ color: textColor }}>
-                                Highlights
+                            <Text variant="label" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.5, color: secondaryTextColor }}>
+                                HIGHLIGHTS
                             </Text>
                             {mode === 'edit' && (
                                 <TouchableOpacity onPress={handleAddHighlight}>

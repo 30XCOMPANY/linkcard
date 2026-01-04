@@ -576,6 +576,26 @@ export default function OnboardingScreen() {
     };
     const newCard = createNewCard(linkedInData);
     setCard(newCard);
+
+    // Smart theme selection based on profile
+    const headline = (linkedInData.headline || '').toLowerCase();
+    const character = (linkedInData.character || '').toLowerCase();
+    const jobTitle = (linkedInData.jobTitle || '').toLowerCase();
+    const combinedText = `${headline} ${character} ${jobTitle}`;
+
+    let selectedTheme = 'lightGlass'; // Default: clean white
+
+    // Tech/Innovation → Ocean (blue)
+    if (combinedText.match(/tech|innovation|digital|ai|software|engineer|developer|data/)) {
+      selectedTheme = 'ocean';
+    }
+    // Creative/Design → V7 Classic
+    else if (combinedText.match(/design|creative|art|visual|brand|ux|ui/)) {
+      selectedTheme = 'v7Classic';
+    }
+
+    useCardStore.getState().setCurrentGradient(selectedTheme);
+
     router.replace('/glass-home');
   };
 
