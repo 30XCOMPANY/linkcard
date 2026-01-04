@@ -33,7 +33,8 @@ type ContactType = 'email' | 'phone' | 'website' | 'custom';
 
 interface ContactOption {
     type: ContactType;
-    icon: string;
+    iconName: keyof typeof Ionicons.glyphMap;
+    color: string;
     label: string;
     placeholder: string;
     keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url';
@@ -42,28 +43,32 @@ interface ContactOption {
 const CONTACT_OPTIONS: ContactOption[] = [
     {
         type: 'email',
-        icon: '📧',
+        iconName: 'mail',
+        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Email',
         placeholder: 'your@email.com',
         keyboardType: 'email-address',
     },
     {
         type: 'phone',
-        icon: '📱',
+        iconName: 'call',
+        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Phone',
         placeholder: '+1 (555) 123-4567',
         keyboardType: 'phone-pad',
     },
     {
         type: 'website',
-        icon: '🌐',
+        iconName: 'globe-outline',
+        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Website',
         placeholder: 'https://yourwebsite.com',
         keyboardType: 'url',
     },
     {
         type: 'custom',
-        icon: '🔗',
+        iconName: 'link',
+        color: 'rgba(0, 0, 0, 0.05)',
         label: 'Custom Link',
         placeholder: 'https://...',
         keyboardType: 'url',
@@ -119,7 +124,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
 
         onSave({
             type: selectedType,
-            icon: selectedOption.icon,
+            icon: selectedOption.iconName, // Store icon name instead of emoji
             label: selectedType === 'custom' && customLabel.trim()
                 ? customLabel.trim()
                 : selectedOption.label,
@@ -165,7 +170,12 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <Ionicons name="close" size={28} color={colors.text} />
                         </TouchableOpacity>
-                        <Text variant="h3">Add Contact</Text>
+                        <VStack align="center" gap="xs">
+                            <Text variant="h3">Add Contact</Text>
+                            <Text variant="caption" color="textMuted" style={{ opacity: 0.6 }}>
+                                QR code will be auto-generated
+                            </Text>
+                        </VStack>
                         <Box width={40} />
                     </HStack>
                 </Box>
@@ -196,17 +206,28 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                             style={{
                                                 backgroundColor: selectedType === option.type
                                                     ? 'rgba(0, 0, 0, 0.05)'
-                                                    : colors.card,
+                                                    : 'transparent',
                                                 borderRadius: radii.lg,
-                                                borderWidth: 2,
+                                                borderWidth: 1,
                                                 borderColor: selectedType === option.type
-                                                    ? colors.dark
-                                                    : colors.border,
-                                                ...shadows.sm,
+                                                    ? 'rgba(0, 0, 0, 0.1)'
+                                                    : 'transparent',
                                             }}
                                         >
                                             <HStack gap="md" align="center">
-                                                <Text variant="h3">{option.icon}</Text>
+                                                <Box
+                                                    width={36}
+                                                    height={36}
+                                                    borderRadius="md"
+                                                    style={{
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <Ionicons name={option.iconName} size={18} color={colors.text} />
+                                                </Box>
+
                                                 <Box flex={1}>
                                                     <Text
                                                         variant="body"
@@ -216,7 +237,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                                                     </Text>
                                                 </Box>
                                                 {selectedType === option.type && (
-                                                    <Ionicons name="checkmark-circle" size={24} color={colors.dark} />
+                                                    <Ionicons name="checkmark-circle" size={20} color={colors.text} />
                                                 )}
                                             </HStack>
                                         </Box>
@@ -228,7 +249,18 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                         {/* Value Input */}
                         <VStack gap="sm">
                             <HStack gap="sm" align="center">
-                                <Text variant="caption">{selectedOption.icon}</Text>
+                                <Box
+                                    width={24}
+                                    height={24}
+                                    borderRadius="sm"
+                                    style={{
+                                        backgroundColor: selectedOption.color,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Ionicons name={selectedOption.iconName} size={14} color={colors.text} />
+                                </Box>
                                 <Text variant="body" weight="semibold">
                                     {selectedOption.label}
                                 </Text>
@@ -252,7 +284,18 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({
                         {selectedType === 'custom' && (
                             <VStack gap="sm">
                                 <HStack gap="sm" align="center">
-                                    <Text variant="caption">✏️</Text>
+                                    <Box
+                                        width={24}
+                                        height={24}
+                                        borderRadius="sm"
+                                        style={{
+                                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <Ionicons name="text-outline" size={14} color={colors.text} />
+                                    </Box>
                                     <Text variant="body" weight="semibold">
                                         Custom Label
                                     </Text>

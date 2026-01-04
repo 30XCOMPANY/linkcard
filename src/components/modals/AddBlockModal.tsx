@@ -144,7 +144,18 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                         {/* Cover Image */}
                         <VStack gap="sm">
                             <HStack gap="sm" align="center">
-                                <Text variant="caption">📷</Text>
+                                <Box
+                                    width={28}
+                                    height={28}
+                                    borderRadius="sm"
+                                    style={{
+                                        backgroundColor: '#000000',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Ionicons name="image" size={16} color="white" />
+                                </Box>
                                 <Text variant="body" weight="semibold">
                                     Cover
                                 </Text>
@@ -187,7 +198,18 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                         {/* Title */}
                         <VStack gap="sm">
                             <HStack gap="sm" align="center">
-                                <Text variant="caption">✏️</Text>
+                                <Box
+                                    width={28}
+                                    height={28}
+                                    borderRadius="sm"
+                                    style={{
+                                        backgroundColor: '#000000',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Ionicons name="text" size={16} color="white" />
+                                </Box>
                                 <Text variant="body" weight="semibold">
                                     Title
                                 </Text>
@@ -208,7 +230,18 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                         {/* Description */}
                         <VStack gap="sm">
                             <HStack gap="sm" align="center">
-                                <Text variant="caption">📝</Text>
+                                <Box
+                                    width={28}
+                                    height={28}
+                                    borderRadius="sm"
+                                    style={{
+                                        backgroundColor: '#000000',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Ionicons name="document-text" size={16} color="white" />
+                                </Box>
                                 <Text variant="body" weight="semibold">
                                     Description
                                 </Text>
@@ -232,7 +265,18 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                         {/* Link */}
                         <VStack gap="sm">
                             <HStack gap="sm" align="center">
-                                <Text variant="caption">🌐</Text>
+                                <Box
+                                    width={28}
+                                    height={28}
+                                    borderRadius="sm"
+                                    style={{
+                                        backgroundColor: '#000000',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Ionicons name="link" size={16} color="white" />
+                                </Box>
                                 <Text variant="body" weight="semibold">
                                     Link
                                 </Text>
