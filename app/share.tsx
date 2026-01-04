@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Share,
-  useColorScheme,
+  Share as RNShare,
+  Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+
+// Design System
+import { Box, VStack, HStack, Text } from '@/src/design-system/primitives';
+import { GlassCard, GlassButton } from '@/src/design-system/patterns';
+import { GlassScreenLayout } from '@/src/design-system/layouts';
+import { colors } from '@/src/design-system/tokens/colors';
+import { spacing } from '@/src/design-system/tokens/spacing';
+import { shadows } from '@/src/design-system/tokens/shadows';
+
 import { BusinessCard } from '@/src/components/cards';
-import { Button } from '@/src/components/ui';
 import { useCardStore } from '@/src/stores/cardStore';
 import { CardVersion } from '@/src/types';
-import { getTheme, spacing, typography, radius, shadows } from '@/src/constants/theme';
 
 export default function ShareScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const { card, themeMode, accentColor } = useCardStore();
-  const theme = getTheme(themeMode, colorScheme || 'light');
+  const { card, accentColor, currentGradient } = useCardStore();
 
   const [selectedVersion, setSelectedVersion] = useState<CardVersion | null>(
     card?.versions.find((v: CardVersion) => v.isDefault) || card?.versions[0] || null
@@ -31,12 +31,21 @@ export default function ShareScreen() {
     selectedVersion?.visibleFields || []
   );
 
+  // Dynamic text color based on background
+  const isDarkBackground = useMemo(() => {
+    return ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient);
+  }, [currentGradient]);
+
+  const secondaryTextColor = isDarkBackground ? 'rgba(255, 255, 255, 0.7)' : colors.textMuted;
+
   if (!card) {
     return null;
   }
 
   const toggleField = (field: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setSelectedFields((prev) =>
       prev.includes(field)
         ? prev.filter((f) => f !== field)
@@ -45,13 +54,13 @@ export default function ShareScreen() {
   };
 
   const handleShare = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
 
     try {
-      // Generate a shareable URL (in production, this would create a unique link)
       const shareUrl = `https://linkcard.app/c/${card.id}?v=${selectedVersion?.id}`;
-
-      await Share.share({
+      await RNShare.share({
         title: `${card.profile.name}'s Business Card`,
         message: `Connect with ${card.profile.name}: ${shareUrl}`,
         url: shareUrl,
@@ -62,9 +71,10 @@ export default function ShareScreen() {
   };
 
   const handleCopyLink = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     // In production, copy to clipboard
-    // Clipboard.setString(shareUrl);
   };
 
   const availableFields = [
@@ -79,29 +89,12 @@ export default function ShareScreen() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.closeButton, { backgroundColor: theme.colors.card }]}
-        >
-          <Ionicons name="close" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Smart Share
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Card Preview */}
-        <Animated.View entering={FadeInUp.delay(100).springify()}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Preview
+    <GlassScreenLayout title="Smart Share" backIcon="close">
+      {/* Card Preview */}
+      <Animated.View entering={FadeInUp.delay(200).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+            PREVIEW
           </Text>
           {selectedVersion && (
             <BusinessCard
@@ -110,247 +103,214 @@ export default function ShareScreen() {
               qrCodeData={card.qrCodeData}
             />
           )}
-        </Animated.View>
+        </VStack>
+      </Animated.View>
 
-        {/* Version Selector */}
-        <Animated.View
-          entering={FadeInDown.delay(200).springify()}
-          style={styles.section}
-        >
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Card Style
+      {/* Version Selector */}
+      <Animated.View entering={FadeInUp.delay(250).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+            CARD STYLE
           </Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.versionList}
+            contentContainerStyle={{ gap: spacing.sm }}
           >
-            {card.versions.map((version: CardVersion) => (
-              <TouchableOpacity
-                key={version.id}
-                onPress={() => {
-                  setSelectedVersion(version);
-                  setSelectedFields(version.visibleFields);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-                style={[
-                  styles.versionChip,
-                  { backgroundColor: theme.colors.card },
-                  selectedVersion?.id === version.id && {
-                    borderColor: version.accentColor,
-                    borderWidth: 2,
-                  },
-                  shadows.sm,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.versionDot,
-                    { backgroundColor: version.accentColor },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.versionText,
-                    { color: theme.colors.text },
-                    selectedVersion?.id === version.id && { fontWeight: '600' },
-                  ]}
-                >
-                  {version.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
-
-        {/* Field Selector */}
-        <Animated.View
-          entering={FadeInDown.delay(300).springify()}
-          style={styles.section}
-        >
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            What to share
-          </Text>
-          <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
-            Choose which information to include
-          </Text>
-
-          <View style={styles.fieldGrid}>
-            {availableFields.map((field) => {
-              const isSelected = selectedFields.includes(field.key);
+            {card.versions.map((version: CardVersion) => {
+              const isSelected = selectedVersion?.id === version.id;
               return (
                 <TouchableOpacity
-                  key={field.key}
-                  onPress={() => toggleField(field.key)}
-                  style={[
-                    styles.fieldChip,
-                    { backgroundColor: theme.colors.card },
-                    isSelected && { backgroundColor: `${accentColor}15` },
-                    shadows.sm,
-                  ]}
+                  key={version.id}
+                  onPress={() => {
+                    setSelectedVersion(version);
+                    setSelectedFields(version.visibleFields);
+                    if (Platform.OS !== 'web') {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }
+                  }}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons
-                    name={field.icon as any}
-                    size={18}
-                    color={isSelected ? accentColor : theme.colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.fieldText,
-                      { color: isSelected ? accentColor : theme.colors.text },
-                      isSelected && { fontWeight: '600' },
-                    ]}
+                  <Box
+                    px="lg"
+                    py="md"
+                    borderRadius="pill"
+                    style={{
+                      backgroundColor: isSelected ? colors.white : 'rgba(255, 255, 255, 0.8)',
+                      borderWidth: isSelected ? 2 : 1,
+                      borderColor: isSelected ? version.accentColor : 'rgba(255, 255, 255, 1)',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.sm,
+                      ...shadows.sm,
+                    }}
                   >
-                    {field.label}
-                  </Text>
-                  {isSelected && (
-                    <Ionicons name="checkmark-circle" size={16} color={accentColor} />
-                  )}
+                    <Box
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 5,
+                        backgroundColor: version.accentColor,
+                      }}
+                    />
+                    <Text
+                      variant="body"
+                      weight={isSelected ? 'semibold' : 'medium'}
+                      style={{ fontSize: 14 }}
+                    >
+                      {version.name}
+                    </Text>
+                  </Box>
                 </TouchableOpacity>
               );
             })}
-          </View>
-        </Animated.View>
-      </ScrollView>
+          </ScrollView>
+        </VStack>
+      </Animated.View>
+
+      {/* Field Selector */}
+      <Animated.View entering={FadeInUp.delay(300).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <VStack gap="xs">
+            <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+              WHAT TO SHARE
+            </Text>
+            <Text variant="caption" color="textMuted">
+              Choose which information to include
+            </Text>
+          </VStack>
+
+          <GlassCard padding="lg" borderRadius="xl">
+            <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {availableFields.map((field) => {
+                const isSelected = selectedFields.includes(field.key);
+                return (
+                  <TouchableOpacity
+                    key={field.key}
+                    onPress={() => toggleField(field.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Box
+                      px="md"
+                      py="sm"
+                      borderRadius="md"
+                      style={{
+                        backgroundColor: isSelected
+                          ? `${accentColor}20`
+                          : 'rgba(255, 255, 255, 0.5)',
+                        borderWidth: isSelected ? 1.5 : 1,
+                        borderColor: isSelected ? accentColor : 'rgba(0, 0, 0, 0.1)',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <Ionicons
+                        name={field.icon as any}
+                        size={16}
+                        color={isSelected ? accentColor : colors.textMuted}
+                      />
+                      <Text
+                        variant="caption"
+                        weight={isSelected ? 'semibold' : 'medium'}
+                        style={{
+                          color: isSelected ? accentColor : colors.text,
+                          fontSize: 13,
+                        }}
+                      >
+                        {field.label}
+                      </Text>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={14} color={accentColor} />
+                      )}
+                    </Box>
+                  </TouchableOpacity>
+                );
+              })}
+            </Box>
+          </GlassCard>
+        </VStack>
+      </Animated.View>
 
       {/* Share Actions */}
-      <Animated.View
-        entering={FadeInUp.delay(400).springify()}
-        style={[styles.footer, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.shareActions}>
-          <TouchableOpacity
-            style={[styles.shareOption, { backgroundColor: theme.colors.card }, shadows.sm]}
-            onPress={handleCopyLink}
-          >
-            <Ionicons name="link-outline" size={22} color={theme.colors.text} />
-          </TouchableOpacity>
+      <Animated.View entering={FadeInUp.delay(350).springify()}>
+        <VStack gap="md">
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+            QUICK ACTIONS
+          </Text>
+          <HStack gap="md" style={{ justifyContent: 'center' }}>
+            <TouchableOpacity
+              onPress={handleCopyLink}
+              activeOpacity={0.7}
+            >
+              <Box
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: colors.white,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...shadows.md,
+                }}
+              >
+                <Ionicons name="link-outline" size={24} color={colors.dark} />
+              </Box>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.shareOption, { backgroundColor: theme.colors.card }, shadows.sm]}
-            onPress={() => {/* AirDrop */ }}
-          >
-            <Ionicons name="radio-outline" size={22} color={theme.colors.text} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { }}
+              activeOpacity={0.7}
+            >
+              <Box
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: colors.white,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...shadows.md,
+                }}
+              >
+                <Ionicons name="radio-outline" size={24} color={colors.dark} />
+              </Box>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.shareOption, { backgroundColor: '#000000' }, shadows.sm]}
-            onPress={() => {/* Add to Wallet */ }}
-          >
-            <Ionicons name="wallet-outline" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              onPress={() => { }}
+              activeOpacity={0.7}
+            >
+              <Box
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: colors.dark,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...shadows.md,
+                }}
+              >
+                <Ionicons name="wallet-outline" size={24} color={colors.white} />
+              </Box>
+            </TouchableOpacity>
+          </HStack>
 
-        <Button
-          onPress={handleShare}
-          variant="primary"
-          size="lg"
-          fullWidth
-          icon={<Ionicons name="share-outline" size={20} color="#000000" style={{ marginRight: 8 }} />}
-        >
-          Share Card
-        </Button>
+          <GlassButton
+            onPress={handleShare}
+            variant="primary"
+            style={{ marginTop: spacing.md }}
+          >
+            <HStack gap="sm" align="center" style={{ justifyContent: 'center' }}>
+              <Ionicons name="share-outline" size={20} color={colors.dark} />
+              <Text variant="button" weight="semibold">
+                Share Card
+              </Text>
+            </HStack>
+          </GlassButton>
+        </VStack>
       </Animated.View>
-    </View>
+    </GlassScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 40,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-  },
-  section: {
-    marginTop: spacing['2xl'],
-  },
-  sectionTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  sectionSubtitle: {
-    fontSize: typography.fontSize.sm,
-    marginBottom: spacing.lg,
-    marginTop: -spacing.sm,
-  },
-  versionList: {
-    gap: spacing.md,
-  },
-  versionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.full,
-  },
-  versionDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: spacing.sm,
-  },
-  versionText: {
-    fontSize: typography.fontSize.sm,
-  },
-  fieldGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  fieldChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  fieldText: {
-    fontSize: typography.fontSize.sm,
-  },
-  footer: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['2xl'],
-    paddingTop: spacing.lg,
-  },
-  shareActions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  shareOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
-
-

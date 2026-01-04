@@ -14,6 +14,7 @@ interface CardState {
     // Theme
     themeMode: ThemeMode;
     accentColor: string;
+    currentGradient: string; // Current background gradient or image URL
 
     // Actions
     setCard: (card: BusinessCard) => void;
@@ -26,6 +27,7 @@ interface CardState {
     // Theme actions
     setThemeMode: (mode: ThemeMode) => void;
     setAccentColor: (color: AccentColorKey | string) => void;
+    setCurrentGradient: (gradient: string) => void;
 
     // Sync actions
     setLoading: (loading: boolean) => void;
@@ -82,6 +84,7 @@ export const useCardStore = create<CardState>()(
             error: null,
             themeMode: 'system',
             accentColor: accentColors.indigo,
+            currentGradient: 'lightGlass', // Default gradient
 
             setCard: (card) => {
                 set({ card, error: null });
@@ -184,6 +187,8 @@ export const useCardStore = create<CardState>()(
                 set({ accentColor: colorValue });
             },
 
+            setCurrentGradient: (gradient) => set({ currentGradient: gradient }),
+
             setLoading: (loading) => set({ isLoading: loading }),
             setError: (error) => set({ error }),
 
@@ -196,6 +201,7 @@ export const useCardStore = create<CardState>()(
                 card: state.card,
                 themeMode: state.themeMode,
                 accentColor: state.accentColor,
+                currentGradient: state.currentGradient,
             }),
         }
     )

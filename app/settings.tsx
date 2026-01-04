@@ -1,62 +1,29 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Pressable,
-  Platform,
-  LayoutAnimation,
-  UIManager,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { TouchableOpacity, Alert, Platform } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { useCardStore } from '@/src/stores/cardStore';
 import * as Haptics from 'expo-haptics';
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-// Custom Switch - Black & White
-const CustomSwitch = ({ value, onValueChange }: { value: boolean; onValueChange: (val: boolean) => void }) => {
-  const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    onValueChange(!value);
-  };
-
-  return (
-    <Pressable
-      onPress={toggle}
-      style={[
-        styles.switchTrack,
-        { backgroundColor: value ? '#000000' : '#E5E5EA' } // Use system gray for off state
-      ]}
-    >
-      <View
-        style={[
-          styles.switchThumb,
-          {
-            transform: [{ translateX: value ? 20 : 0 }],
-          }
-        ]}
-      />
-    </Pressable>
-  );
-};
+// Design System
+import { Box, VStack, HStack, Text } from '@/src/design-system/primitives';
+import { GlassCard, GlassToggle } from '@/src/design-system/patterns';
+import { GlassScreenLayout } from '@/src/design-system/layouts';
+import { colors } from '@/src/design-system/tokens/colors';
+import { spacing } from '@/src/design-system/tokens/spacing';
+import { useCardStore } from '@/src/stores/cardStore';
 
 export default function SettingsScreen() {
-  const router = useRouter();
-  const { clearCard } = useCardStore();
-  const [autoSync, setAutoSync] = React.useState(true);
+  const { clearCard, currentGradient } = useCardStore();
+  const [autoSync, setAutoSync] = useState(true);
+
+  // Dynamic text color based on background
+  const isDarkBackground = ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient);
+  const secondaryTextColor = isDarkBackground ? 'rgba(255, 255, 255, 0.7)' : colors.textMuted;
 
   const handleResetCard = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     Alert.alert(
       'Reset Card',
       'This will delete your card and all versions. You will need to set up again.',
@@ -67,205 +34,108 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             clearCard();
-            router.replace('/onboarding');
+            // Note: navigation will be handled by the layout component
           },
         },
       ]
     );
   };
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
+  const handleSyncNow = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    Alert.alert('Success', 'Syncing your LinkedIn profile...');
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header - Transparent & Aligned */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <GlassScreenLayout title="Settings">
+      {/* Sync Section */}
+      <Animated.View entering={FadeInUp.delay(200).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13, letterSpacing: 0.5 }}>
+            SYNC
+          </Text>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Sync Section - Inset Grouped */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>SYNC</Text>
-          <View style={styles.groupContainer}>
-            {/* Auto Sync Row */}
-            <View style={styles.row}>
-              <View style={styles.rowContent}>
-                <Text style={styles.rowLabel}>Auto-sync LinkedIn</Text>
-                <Text style={styles.rowSubtext}>
-                  check for profile changes
-                </Text>
-              </View>
-              <CustomSwitch value={autoSync} onValueChange={setAutoSync} />
-            </View>
+          <GlassCard padding="md" borderRadius="xl">
+            <VStack gap="md">
+              {/* Auto-sync LinkedIn */}
+              <Box px="lg" py="md">
+                <HStack align="center" style={{ justifyContent: 'space-between' }}>
+                  <VStack gap="xs" style={{ flex: 1, paddingRight: spacing.md }}>
+                    <Text variant="body" weight="medium">
+                      Auto-sync LinkedIn
+                    </Text>
+                    <Text variant="caption" color="textMuted">
+                      check for profile changes
+                    </Text>
+                  </VStack>
+                  <GlassToggle value={autoSync} onValueChange={setAutoSync} />
+                </HStack>
+              </Box>
 
-            <View style={styles.separator} />
+              {/* Separator */}
+              <Box style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.06)', marginHorizontal: spacing.lg }} />
 
-            {/* Sync Now Row */}
-            <TouchableOpacity style={styles.row}>
-              <View style={styles.rowContent}>
-                <Text style={styles.rowLabel}>Sync Now</Text>
-                <Text style={styles.rowSubtext}>
-                  refresh data manually
-                </Text>
-              </View>
-              <Ionicons name="refresh" size={20} color="#8E8E93" />
+              {/* Sync Now */}
+              <TouchableOpacity onPress={handleSyncNow} activeOpacity={0.7}>
+                <Box px="lg" py="md">
+                  <HStack align="center" style={{ justifyContent: 'space-between' }}>
+                    <VStack gap="xs" style={{ flex: 1, paddingRight: spacing.md }}>
+                      <Text variant="body" weight="medium">
+                        Sync Now
+                      </Text>
+                      <Text variant="caption" color="textMuted">
+                        refresh data manually
+                      </Text>
+                    </VStack>
+                    <Ionicons name="refresh" size={20} color={colors.textMuted} />
+                  </HStack>
+                </Box>
+              </TouchableOpacity>
+            </VStack>
+          </GlassCard>
+        </VStack>
+      </Animated.View>
+
+      {/* Data Section */}
+      <Animated.View entering={FadeInUp.delay(300).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13, letterSpacing: 0.5 }}>
+            DATA
+          </Text>
+
+          <GlassCard padding="md" borderRadius="xl">
+            <TouchableOpacity onPress={handleResetCard} activeOpacity={0.7}>
+              <Box px="lg" py="md">
+                <HStack align="center" style={{ justifyContent: 'space-between' }}>
+                  <VStack gap="xs" style={{ flex: 1, paddingRight: spacing.md }}>
+                    <Text variant="body" weight="medium" style={{ color: colors.error }}>
+                      Reset Card
+                    </Text>
+                    <Text variant="caption" color="textMuted">
+                      delete card and start fresh
+                    </Text>
+                  </VStack>
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </HStack>
+              </Box>
             </TouchableOpacity>
-          </View>
-        </View>
+          </GlassCard>
+        </VStack>
+      </Animated.View>
 
-        {/* Data Section - Inset Grouped */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>DATA</Text>
-          <View style={styles.groupContainer}>
-            <TouchableOpacity
-              style={styles.row}
-              onPress={handleResetCard}
-            >
-              <View style={styles.rowContent}>
-                <Text style={[styles.rowLabel, { color: '#FF3B30' }]}>Reset Card</Text>
-                <Text style={styles.rowSubtext}>
-                  delete card and start fresh
-                </Text>
-              </View>
-              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>LinkCard v1.0.0</Text>
-          <Text style={styles.footerText}>Made with ❤️</Text>
-        </View>
-      </ScrollView>
-    </View>
+      {/* Footer */}
+      <Animated.View entering={FadeInUp.delay(400).springify()}>
+        <VStack gap="xs" align="center" style={{ marginTop: spacing.xl }}>
+          <Text variant="caption" style={{ color: secondaryTextColor }}>
+            LinkCard v1.0.0
+          </Text>
+          <Text variant="caption" style={{ color: secondaryTextColor }}>
+            Made with ❤️
+          </Text>
+        </VStack>
+      </Animated.View>
+    </GlassScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F7', // iOS Grouped Background Color
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16, // Standard Margin
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
-    paddingBottom: 12,
-    backgroundColor: '#F2F2F7', // Match background
-    zIndex: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#000000',
-    letterSpacing: -0.4,
-  },
-  placeholder: {
-    width: 40,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  sectionContainer: {
-    marginBottom: 24,
-    marginHorizontal: 16, // Inset Grouped Margin
-  },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#6D6D72',
-    marginBottom: 8,
-    marginLeft: 16, // Align with text inside group
-    textTransform: 'uppercase',
-  },
-  groupContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12, // Rounded corners for the group
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    minHeight: 60, // Ensure touch target
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#C6C6C8',
-    marginLeft: 16, // Inset separator
-  },
-  rowContent: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  rowLabel: {
-    fontSize: 17,
-    fontWeight: '400',
-    color: '#000000',
-    marginBottom: 2,
-    letterSpacing: -0.4,
-  },
-  rowSubtext: {
-    fontSize: 14, // Slightly smaller
-    color: '#8E8E93',
-    letterSpacing: -0.2,
-  },
-  footer: {
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 4,
-  },
-  footerText: {
-    fontSize: 13,
-    color: '#8E8E93',
-  },
-  // Refined Switch Styles
-  switchTrack: {
-    width: 51,
-    height: 31,
-    borderRadius: 15.5,
-    padding: 2,
-    justifyContent: 'center',
-  },
-  switchThumb: {
-    width: 27,
-    height: 27,
-    borderRadius: 13.5,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-});

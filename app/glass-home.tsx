@@ -68,7 +68,7 @@ interface Highlight {
 
 export default function GlassHomeScreen() {
     const router = useRouter();
-    const { card } = useCardStore();
+    const { card, currentGradient, setCurrentGradient } = useCardStore();
 
     // State
     const [mode, setMode] = useState<ViewMode>('view');
@@ -76,7 +76,6 @@ export default function GlassHomeScreen() {
     const [bgPickerVisible, setBgPickerVisible] = useState(false);
     const [addBlockVisible, setAddBlockVisible] = useState(false);
     const [addContactVisible, setAddContactVisible] = useState(false);
-    const [currentGradient, setCurrentGradient] = useState<GradientKey | string>('lightGlass');
     const [showQR, setShowQR] = useState(false);
     const [selectedContact, setSelectedContact] = useState<ContactType>('linkedin');
     const [customHighlights, setCustomHighlights] = useState<Highlight[]>([]);
@@ -574,8 +573,8 @@ export default function GlassHomeScreen() {
                 <Animated.View entering={FadeInUp.delay(250).springify()}>
                     <VStack gap="md" style={{ marginBottom: spacing['2xl'], marginTop: spacing.xl }}>
                         <HStack gap="xs" align="center" style={{ justifyContent: 'space-between' }}>
-                            <Text variant="body" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.3, color: textColor }}>
-                                Contact Information
+                            <Text variant="label" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.5, color: secondaryTextColor }}>
+                                CONTACT INFORMATION
                             </Text>
                             {mode === 'edit' && (
                                 <TouchableOpacity onPress={handleAddContact} activeOpacity={0.7}>
@@ -601,52 +600,62 @@ export default function GlassHomeScreen() {
                             )}
                         </HStack>
 
-                        {/* Horizontal Scrollable Contact Tabs */}
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ gap: spacing.sm }}
-                        >
-                            {allContacts.map((contact) => (
-                                <TouchableOpacity
-                                    key={contact.id}
-                                    onPress={() => handleSelectContact(contact.type)}
-                                    activeOpacity={0.7}
-                                >
-                                    <VStack gap="xs" align="center" style={{ minWidth: 70 }}>
-                                        <Box
-                                            style={{
-                                                width: 56,
-                                                height: 56,
-                                                borderRadius: radii.full,
-                                                backgroundColor: selectedContact === contact.type
-                                                    ? colors.white
-                                                    : 'rgba(255, 255, 255, 0.8)',
-                                                borderWidth: selectedContact === contact.type ? 2 : 1,
-                                                borderColor: selectedContact === contact.type
-                                                    ? 'rgba(0, 0, 0, 0.1)'
-                                                    : 'rgba(0, 0, 0, 0.05)',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                ...shadows.sm,
-                                            }}
+                        <GlassCard padding="lg" borderRadius="xl">
+                            {/* Horizontal Scrollable Contact Tabs */}
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: spacing.lg, paddingVertical: spacing.sm }}
+                            >
+                                {allContacts.map((contact) => {
+                                    const isSelected = selectedContact === contact.type;
+                                    return (
+                                        <TouchableOpacity
+                                            key={contact.id}
+                                            onPress={() => handleSelectContact(contact.type)}
+                                            activeOpacity={0.7}
                                         >
-                                            <Ionicons name={contact.icon as any} size={24} color={colors.dark} />
-                                        </Box>
-                                        <Text
-                                            variant="caption"
-                                            weight={selectedContact === contact.type ? 'semibold' : 'medium'}
-                                            style={{
-                                                fontSize: 12,
-                                                color: selectedContact === contact.type ? textColor : secondaryTextColor,
-                                            }}
-                                        >
-                                            {contact.label}
-                                        </Text>
-                                    </VStack>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+                                            <VStack gap="sm" align="center" style={{ minWidth: 64 }}>
+                                                {/* Glass icon button */}
+                                                <Box
+                                                    style={{
+                                                        width: 64,
+                                                        height: 64,
+                                                        borderRadius: 32,
+                                                        backgroundColor: isSelected
+                                                            ? 'rgba(255, 255, 255, 0.9)'
+                                                            : 'rgba(255, 255, 255, 0.5)',
+                                                        borderWidth: isSelected ? 2 : 1,
+                                                        borderColor: isSelected
+                                                            ? 'rgba(255, 255, 255, 1)'
+                                                            : 'rgba(255, 255, 255, 0.7)',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        ...shadows.md,
+                                                    }}
+                                                >
+                                                    <Ionicons
+                                                        name={contact.icon as any}
+                                                        size={28}
+                                                        color={isSelected ? colors.dark : colors.textMuted}
+                                                    />
+                                                </Box>
+                                                <Text
+                                                    variant="caption"
+                                                    weight={isSelected ? 'semibold' : 'medium'}
+                                                    style={{
+                                                        fontSize: 11,
+                                                        color: isSelected ? colors.dark : colors.textMuted,
+                                                    }}
+                                                >
+                                                    {contact.label}
+                                                </Text>
+                                            </VStack>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
+                        </GlassCard>
                     </VStack>
                 </Animated.View >
 

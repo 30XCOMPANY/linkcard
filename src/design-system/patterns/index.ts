@@ -7,4 +7,4 @@ export * from './Input';
 export * from './Card';
 export * from './GlassCard';
 export * from './GlassButton';
-
+export * from './GlassToggle';

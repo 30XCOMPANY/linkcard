@@ -1,44 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  useColorScheme,
   Alert,
+  Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeInDown, Layout } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+
+// Design System
+import { Box, VStack, HStack, Text } from '@/src/design-system/primitives';
+import { GlassCard } from '@/src/design-system/patterns';
+import { GlassScreenLayout } from '@/src/design-system/layouts';
+import { colors } from '@/src/design-system/tokens/colors';
+import { spacing } from '@/src/design-system/tokens/spacing';
+
 import { BusinessCard } from '@/src/components/cards';
-import { Button } from '@/src/components/ui';
 import { useCardStore } from '@/src/stores/cardStore';
-import { CardVersion, CardTemplate } from '@/src/types';
-import { getTheme, spacing, typography, radius, shadows, accentColors, AccentColorKey } from '@/src/constants/theme';
+import { CardVersion } from '@/src/types';
+import { accentColors } from '@/src/constants/theme';
 
 export default function VersionsScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const { card, themeMode, accentColor, addVersion, updateVersion, deleteVersion, setDefaultVersion } = useCardStore();
-  const theme = getTheme(themeMode, colorScheme || 'light');
+  const { card, accentColor, currentGradient, addVersion, deleteVersion, setDefaultVersion } = useCardStore();
 
   const [selectedVersion, setSelectedVersion] = useState<CardVersion | null>(
     card?.versions[0] || null
   );
+
+  // Dynamic text color based on background
+  const isDarkBackground = useMemo(() => {
+    return ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient);
+  }, [currentGradient]);
+
+  const secondaryTextColor = isDarkBackground ? 'rgba(255, 255, 255, 0.7)' : colors.textMuted;
 
   if (!card) {
     return null;
   }
 
   const handleSelectVersion = (version: CardVersion) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setSelectedVersion(version);
   };
 
   const handleSetDefault = (version: CardVersion) => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     setDefaultVersion(version.id);
   };
 
@@ -78,247 +88,174 @@ export default function VersionsScreen() {
     };
     addVersion(newVersion);
     setSelectedVersion(newVersion);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
   };
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: theme.colors.card }]}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Card Versions
-        </Text>
-        <TouchableOpacity
-          onPress={handleAddVersion}
-          style={[styles.addButton, { backgroundColor: accentColor }]}
-        >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+  const addButton = (
+    <TouchableOpacity
+      onPress={handleAddVersion}
+      style={{ width: 40, height: 40, backgroundColor: accentColor, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    >
+      <Ionicons name="add" size={24} color={colors.white} />
+    </TouchableOpacity>
+  );
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Card Preview */}
-        {selectedVersion && (
-          <Animated.View entering={FadeInUp.springify()}>
+  return (
+    <GlassScreenLayout title="Card Versions" rightElement={addButton}>
+      {/* Card Preview */}
+      {selectedVersion && (
+        <Animated.View entering={FadeInUp.delay(200).springify()}>
+          <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+            <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+              PREVIEW
+            </Text>
             <BusinessCard
               profile={card.profile}
               version={selectedVersion}
               qrCodeData={card.qrCodeData}
             />
-          </Animated.View>
-        )}
+          </VStack>
+        </Animated.View>
+      )}
 
-        {/* Version List */}
-        <Animated.View
-          entering={FadeInDown.delay(200).springify()}
-          style={styles.versionList}
-        >
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Your Versions
+      {/* Version List */}
+      <Animated.View entering={FadeInDown.delay(250).springify()}>
+        <VStack gap="md" style={{ marginBottom: spacing['2xl'] }}>
+          <Text variant="label" weight="semibold" style={{ color: secondaryTextColor, fontSize: 13 }}>
+            YOUR VERSIONS
           </Text>
 
-          {card.versions.map((version: CardVersion, index: number) => (
-            <Animated.View
-              key={version.id}
-              entering={FadeInDown.delay(300 + index * 100).springify()}
-              layout={Layout.springify()}
-            >
-              <TouchableOpacity
-                onPress={() => handleSelectVersion(version)}
-                style={[
-                  styles.versionCard,
-                  { backgroundColor: theme.colors.card },
-                  selectedVersion?.id === version.id && {
-                    borderColor: version.accentColor,
-                    borderWidth: 2,
-                  },
-                  shadows.sm,
-                ]}
+          <VStack gap="md">
+            {card.versions.map((version: CardVersion, index: number) => (
+              <Animated.View
+                key={version.id}
+                entering={FadeInDown.delay(300 + index * 100).springify()}
+                layout={Layout.springify()}
               >
-                <View style={styles.versionHeader}>
-                  <View
-                    style={[
-                      styles.versionColor,
-                      { backgroundColor: version.accentColor },
-                    ]}
-                  />
-                  <View style={styles.versionInfo}>
-                    <Text style={[styles.versionName, { color: theme.colors.text }]}>
-                      {version.name}
-                    </Text>
-                    <Text style={[styles.versionTemplate, { color: theme.colors.textSecondary }]}>
-                      {version.template.charAt(0).toUpperCase() + version.template.slice(1)} • {version.visibleFields.length} fields
-                    </Text>
-                  </View>
-                  {version.isDefault && (
-                    <View style={[styles.defaultBadge, { backgroundColor: `${accentColor}20` }]}>
-                      <Text style={[styles.defaultText, { color: accentColor }]}>
-                        Default
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                <TouchableOpacity
+                  onPress={() => handleSelectVersion(version)}
+                  activeOpacity={0.8}
+                >
+                  <GlassCard
+                    padding="lg"
+                    borderRadius="xl"
+                    style={{
+                      borderWidth: selectedVersion?.id === version.id ? 2 : 0,
+                      borderColor: selectedVersion?.id === version.id ? version.accentColor : 'transparent',
+                    }}
+                  >
+                    <VStack gap="md">
+                      {/* Version Header */}
+                      <HStack align="center" style={{ justifyContent: 'space-between' }}>
+                        <HStack gap="md" align="center" style={{ flex: 1 }}>
+                          <Box
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: 6,
+                              backgroundColor: version.accentColor,
+                            }}
+                          />
+                          <VStack gap="xs" style={{ flex: 1 }}>
+                            <Text variant="body" weight="semibold">
+                              {version.name}
+                            </Text>
+                            <Text variant="caption" color="textMuted">
+                              {version.template.charAt(0).toUpperCase() + version.template.slice(1)} • {version.visibleFields.length} fields
+                            </Text>
+                          </VStack>
+                        </HStack>
+                        {version.isDefault && (
+                          <Box
+                            px="md"
+                            py="xs"
+                            borderRadius="pill"
+                            style={{ backgroundColor: `${accentColor}20` }}
+                          >
+                            <Text variant="caption" weight="semibold" style={{ color: accentColor, fontSize: 11 }}>
+                              Default
+                            </Text>
+                          </Box>
+                        )}
+                      </HStack>
 
-                {selectedVersion?.id === version.id && (
-                  <View style={styles.versionActions}>
-                    {!version.isDefault && (
-                      <TouchableOpacity
-                        onPress={() => handleSetDefault(version)}
-                        style={[styles.actionButton, { backgroundColor: theme.colors.surface }]}
-                      >
-                        <Ionicons name="star-outline" size={18} color={theme.colors.text} />
-                        <Text style={[styles.actionText, { color: theme.colors.text }]}>
-                          Set Default
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      onPress={() => handleDeleteVersion(version)}
-                      style={[styles.actionButton, { backgroundColor: '#FEE2E2' }]}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#DC2626" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </Animated.View>
+                      {/* Version Actions (shown when selected) */}
+                      {selectedVersion?.id === version.id && (
+                        <Animated.View entering={FadeInDown.springify()}>
+                          <Box style={{ height: 1, backgroundColor: 'rgba(0, 0, 0, 0.06)', marginVertical: spacing.xs }} />
+                          <HStack gap="sm">
+                            {!version.isDefault && (
+                              <TouchableOpacity
+                                onPress={() => handleSetDefault(version)}
+                                style={{ flex: 1 }}
+                                activeOpacity={0.7}
+                              >
+                                <Box
+                                  px="md"
+                                  py="sm"
+                                  borderRadius="md"
+                                  style={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: spacing.xs,
+                                  }}
+                                >
+                                  <Ionicons name="star-outline" size={16} color={colors.text} />
+                                  <Text variant="caption" weight="medium">
+                                    Set Default
+                                  </Text>
+                                </Box>
+                              </TouchableOpacity>
+                            )}
+                            <TouchableOpacity
+                              onPress={() => handleDeleteVersion(version)}
+                              activeOpacity={0.7}
+                            >
+                              <Box
+                                px="md"
+                                py="sm"
+                                borderRadius="md"
+                                style={{
+                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Ionicons name="trash-outline" size={16} color={colors.error} />
+                              </Box>
+                            </TouchableOpacity>
+                          </HStack>
+                        </Animated.View>
+                      )}
+                    </VStack>
+                  </GlassCard>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </VStack>
+        </VStack>
+      </Animated.View>
 
-        {/* Tips */}
-        <Animated.View
-          entering={FadeInDown.delay(500).springify()}
-          style={[styles.tipsCard, { backgroundColor: `${accentColor}10` }]}
+      {/* Tips */}
+      <Animated.View entering={FadeInDown.delay(400).springify()}>
+        <GlassCard
+          padding="lg"
+          borderRadius="xl"
+          style={{ backgroundColor: `${accentColor}15` }}
         >
-          <Ionicons name="bulb-outline" size={20} color={accentColor} />
-          <Text style={[styles.tipsText, { color: theme.colors.text }]}>
-            Create different versions for different contexts - use "Professional" for business meetings and "Networking" for casual events.
-          </Text>
-        </Animated.View>
-      </ScrollView>
-    </View>
+          <HStack gap="md" align="flex-start">
+            <Ionicons name="bulb-outline" size={20} color={accentColor} />
+            <Text variant="caption" style={{ flex: 1, lineHeight: 20 }}>
+              Create different versions for different contexts - use "Professional" for business meetings and "Networking" for casual events.
+            </Text>
+          </HStack>
+        </GlassCard>
+      </Animated.View>
+    </GlassScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 60,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-  },
-  sectionTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  versionList: {
-    marginTop: spacing['2xl'],
-  },
-  versionCard: {
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  versionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  versionColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: spacing.md,
-  },
-  versionInfo: {
-    flex: 1,
-  },
-  versionName: {
-    fontSize: typography.fontSize.md,
-    fontWeight: '600',
-  },
-  versionTemplate: {
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.xs,
-  },
-  defaultBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-  },
-  defaultText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: '600',
-  },
-  versionActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  actionText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: '500',
-  },
-  tipsCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    marginTop: spacing.xl,
-    gap: spacing.md,
-  },
-  tipsText: {
-    flex: 1,
-    fontSize: typography.fontSize.sm,
-    lineHeight: typography.fontSize.sm * 1.5,
-  },
-});
-
-
