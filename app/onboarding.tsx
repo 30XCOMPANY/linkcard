@@ -585,9 +585,9 @@ export default function OnboardingScreen() {
 
     let selectedTheme = 'lightGlass'; // Default: clean white
 
-    // Tech/Innovation → Ocean (blue)
+    // Tech/Innovation → Fresh Blue
     if (combinedText.match(/tech|innovation|digital|ai|software|engineer|developer|data/)) {
-      selectedTheme = 'ocean';
+      selectedTheme = 'freshBlue';
     }
     // Creative/Design → V7 Classic
     else if (combinedText.match(/design|creative|art|visual|brand|ux|ui/)) {
