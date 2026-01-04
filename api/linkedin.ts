@@ -206,6 +206,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return result;
         }
 
+        // Get photo URL - try multiple possible field names
+        const photoUrl = data.profile_image_url
+            || data.profile_pic_url
+            || data.profilePicture
+            || data.photo
+            || data.image_url
+            || data.picture
+            || null;
+
+        console.log(`[LinkedIn API] Photo URL fields:`, {
+            profile_image_url: data.profile_image_url,
+            profile_pic_url: data.profile_pic_url,
+            profilePicture: data.profilePicture,
+            photo: data.photo,
+            selected: photoUrl
+        });
+
         const profile: LinkedInProfileData = {
             name: data.full_name || data.first_name + ' ' + data.last_name || username,
             headline: data.headline || data.job_title || '',
@@ -213,7 +230,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             company: data.company || data.current_position?.company || '',
             location: location,
             city: city,
-            photoUrl: data.profile_image_url || null,
+            photoUrl: photoUrl,
             email: data.email,
             phone: data.phone,
             website: data.company_website,
