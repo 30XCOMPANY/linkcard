@@ -116,13 +116,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const location = city || data.location || '';
         const jobTitle = data.job_title || data.current_position?.title || data.positions?.[0]?.title;
 
-        // Get character/bio
+        // Get character/bio - ALWAYS generate 3 keywords
         let character = data.summary || data.about;
 
-        // If character is too long, try to summarize with OpenAI
-        if (character && character.length > 100 && OPENAI_API_KEY) {
+        // If no character exists, build from available info
+        if (!character || character.trim().length === 0) {
+            console.log(`[LinkedIn API] No summary/about found, generating from profile data`);
+            const parts = [];
+            if (data.headline) parts.push(data.headline);
+            if (jobTitle) parts.push(jobTitle);
+            if (data.company) parts.push(`at ${data.company}`);
+            if (data.skills && Array.isArray(data.skills) && data.skills.length > 0) {
+                parts.push(data.skills.slice(0, 3).join(', '));
+            }
+            character = parts.join('. ');
+        }
+
+        // ALWAYS try to generate 3 keywords with OpenAI
+        if (OPENAI_API_KEY && character && character.trim().length > 0) {
             try {
-                console.log(`[LinkedIn API] Attempting to summarize character with OpenAI`);
+                console.log(`[LinkedIn API] Generating 3 keywords from: "${character.substring(0, 100)}..."`);
                 const summaryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -134,11 +147,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         messages: [
                             {
                                 role: 'system',
-                                content: 'You are a helpful assistant that extracts 3 key descriptive keywords from text. Return only the 3 keywords separated by commas, no explanations.',
+                                content: 'You are a helpful assistant that extracts 3 key descriptive keywords from professional profiles. Return ONLY 3 keywords separated by commas, nothing else. Examples: "Innovative, Strategic, Data-Driven" or "Creative, Collaborative, Detail-Oriented"',
                             },
                             {
                                 role: 'user',
-                                content: `Extract 3 key descriptive keywords from this text: ${character}`,
+                                content: `Extract 3 key professional keywords from this profile: ${character}`,
                             },
                         ],
                         temperature: 0.3,
@@ -149,18 +162,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (summaryResponse.ok) {
                     const summaryData = await summaryResponse.json() as any;
                     const keywords = summaryData.choices?.[0]?.message?.content?.trim();
-                    if (keywords) {
+                    if (keywords && keywords.length > 0) {
                         character = keywords;
-                        console.log(`[LinkedIn API] Summarized character: ${character}`);
+                        console.log(`[LinkedIn API] ✓ Generated keywords: "${character}"`);
+                    } else {
+                        console.warn('[LinkedIn API] OpenAI returned empty keywords, using fallback');
+                        character = generateFallbackKeywords(data.headline, jobTitle);
                     }
+                } else {
+                    console.warn(`[LinkedIn API] OpenAI API error: ${summaryResponse.status}`);
+                    character = generateFallbackKeywords(data.headline, jobTitle);
                 }
             } catch (error) {
-                console.warn('[LinkedIn API] Failed to summarize with OpenAI:', error);
-                // Fallback to truncation
-                character = character.substring(0, 97) + '...';
+                console.error('[LinkedIn API] OpenAI error:', error);
+                character = generateFallbackKeywords(data.headline, jobTitle);
             }
-        } else if (character && character.length > 100) {
-            character = character.substring(0, 97) + '...';
+        } else {
+            // No OpenAI key or no character data - use fallback
+            console.warn('[LinkedIn API] No OpenAI key or character data, using fallback');
+            character = generateFallbackKeywords(data.headline, jobTitle);
+        }
+
+        // Fallback function to extract keywords from headline/job title
+        function generateFallbackKeywords(headline?: string, jobTitle?: string): string {
+            const text = `${headline || ''} ${jobTitle || ''}`.toLowerCase();
+            const keywords = [];
+
+            // Common professional keywords
+            if (text.match(/innovat|creative|design/)) keywords.push('Innovative');
+            else if (text.match(/strateg|leader|executive/)) keywords.push('Strategic');
+            else if (text.match(/analyt|data|research/)) keywords.push('Analytical');
+            else keywords.push('Professional');
+
+            if (text.match(/team|collab|social/)) keywords.push('Collaborative');
+            else if (text.match(/tech|engineer|develop/)) keywords.push('Technical');
+            else keywords.push('Experienced');
+
+            if (text.match(/result|driven|focus/)) keywords.push('Results-Driven');
+            else keywords.push('Dedicated');
+
+            const result = keywords.slice(0, 3).join(', ');
+            console.log(`[LinkedIn API] Fallback keywords: "${result}"`);
+            return result;
         }
 
         const profile: LinkedInProfileData = {
