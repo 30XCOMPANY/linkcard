@@ -99,14 +99,15 @@ export function clearProfileCache() {
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_LINKEDIN_HOST || 'fresh-linkedin-profile-data.p.rapidapi.com';
 
-if (!RAPIDAPI_KEY) {
-  throw new Error('RAPIDAPI_KEY environment variable is required. Please set it in api/.env file.');
-}
-
 /**
  * Parse a LinkedIn profile using RapidAPI
  */
 export async function parseLinkedInProfile(username: string): Promise<LinkedInProfileData> {
+  // Check API key at runtime
+  if (!RAPIDAPI_KEY) {
+    throw new Error('RAPIDAPI_KEY environment variable is not configured. Please add it to Vercel environment variables.');
+  }
+
   // Check cache first
   const cached = profileCache.get(username);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
