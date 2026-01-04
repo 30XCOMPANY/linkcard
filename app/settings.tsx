@@ -14,29 +14,11 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useCardStore } from '@/src/stores/cardStore';
-import { getTheme, spacing, typography, radius, shadows, accentColors, AccentColorKey } from '@/src/constants/theme';
+import { spacing, typography, radius, shadows } from '@/src/constants/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const { 
-    themeMode, 
-    setThemeMode, 
-    accentColor, 
-    setAccentColor,
-    clearCard,
-  } = useCardStore();
-  const theme = getTheme(themeMode, colorScheme || 'light');
-
-  const handleThemeChange = (mode: 'light' | 'dark' | 'system') => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setThemeMode(mode);
-  };
-
-  const handleColorChange = (colorKey: AccentColorKey) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAccentColor(colorKey);
-  };
+  const { clearCard } = useCardStore();
 
   const handleResetCard = () => {
     Alert.alert(
@@ -57,16 +39,16 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: theme.colors.card }]}
+          style={[styles.backButton, { backgroundColor: '#F3F4F6' }]}
         >
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#000000" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+        <Text style={[styles.headerTitle, { color: '#000000' }]}>
           Settings
         </Text>
         <View style={styles.placeholder} />
@@ -76,122 +58,55 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Appearance Section */}
-        <Animated.View entering={FadeInDown.delay(100).springify()}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Appearance
-          </Text>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.card }, shadows.sm]}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Theme</Text>
-            <View style={styles.themeOptions}>
-              {(['light', 'dark', 'system'] as const).map((mode) => (
-                <TouchableOpacity
-                  key={mode}
-                  onPress={() => handleThemeChange(mode)}
-                  style={[
-                    styles.themeOption,
-                    { backgroundColor: theme.colors.surface },
-                    themeMode === mode && { 
-                      backgroundColor: `${accentColor}20`,
-                      borderColor: accentColor,
-                      borderWidth: 2,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={
-                      mode === 'light' 
-                        ? 'sunny-outline' 
-                        : mode === 'dark' 
-                          ? 'moon-outline' 
-                          : 'phone-portrait-outline'
-                    }
-                    size={20}
-                    color={themeMode === mode ? accentColor : theme.colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.themeOptionText,
-                      { color: themeMode === mode ? accentColor : theme.colors.text },
-                    ]}
-                  >
-                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={[styles.card, { backgroundColor: theme.colors.card }, shadows.sm]}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Accent Color</Text>
-            <View style={styles.colorGrid}>
-              {(Object.keys(accentColors) as AccentColorKey[]).map((colorKey) => (
-                <TouchableOpacity
-                  key={colorKey}
-                  onPress={() => handleColorChange(colorKey)}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: accentColors[colorKey] },
-                    accentColor === accentColors[colorKey] && styles.colorOptionSelected,
-                  ]}
-                >
-                  {accentColor === accentColors[colorKey] && (
-                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </Animated.View>
 
         {/* Sync Section */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: '#000000' }]}>
             Sync
           </Text>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.card }, shadows.sm]}>
+          <View style={[styles.card, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#F3F4F6' }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
+                <Text style={[styles.settingLabel, { color: '#000000' }]}>
                   Auto-sync LinkedIn
                 </Text>
-                <Text style={[styles.settingDescription, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
                   Automatically check for profile changes
                 </Text>
               </View>
               <Switch
                 value={true}
-                onValueChange={() => {}}
-                trackColor={{ false: theme.colors.border, true: accentColor }}
+                onValueChange={() => { }}
+                trackColor={{ false: '#E5E7EB', true: '#007AFF' }}
               />
             </View>
 
-            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+            <View style={[styles.divider, { backgroundColor: '#E5E7EB' }]} />
 
             <TouchableOpacity style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <Text style={[styles.settingLabel, { color: theme.colors.text }]}>
+                <Text style={[styles.settingLabel, { color: '#000000' }]}>
                   Sync Now
                 </Text>
-                <Text style={[styles.settingDescription, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
                   Manually refresh your LinkedIn data
                 </Text>
               </View>
-              <Ionicons name="refresh-outline" size={22} color={accentColor} />
+              <Ionicons name="refresh-outline" size={22} color="#007AFF" />
             </TouchableOpacity>
           </View>
         </Animated.View>
 
         {/* Danger Zone */}
         <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: '#000000' }]}>
             Data
           </Text>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.card }, shadows.sm]}>
-            <TouchableOpacity 
+          <View style={[styles.card, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#F3F4F6' }]}>
+            <TouchableOpacity
               style={styles.settingRow}
               onPress={handleResetCard}
             >
@@ -199,7 +114,7 @@ export default function SettingsScreen() {
                 <Text style={[styles.settingLabel, { color: '#EF4444' }]}>
                   Reset Card
                 </Text>
-                <Text style={[styles.settingDescription, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.settingDescription, { color: '#6B7280' }]}>
                   Delete your card and start fresh
                 </Text>
               </View>
@@ -211,10 +126,10 @@ export default function SettingsScreen() {
         {/* About */}
         <Animated.View entering={FadeInDown.delay(400).springify()}>
           <View style={styles.about}>
-            <Text style={[styles.aboutText, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.aboutText, { color: '#9CA3AF' }]}>
               LinkCard v1.0.0
             </Text>
-            <Text style={[styles.aboutText, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.aboutText, { color: '#9CA3AF' }]}>
               Made with ❤️
             </Text>
           </View>

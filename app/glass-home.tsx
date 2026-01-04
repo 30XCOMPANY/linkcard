@@ -75,7 +75,7 @@ export default function GlassHomeScreen() {
     const [bgPickerVisible, setBgPickerVisible] = useState(false);
     const [addBlockVisible, setAddBlockVisible] = useState(false);
     const [addContactVisible, setAddContactVisible] = useState(false);
-    const [currentGradient, setCurrentGradient] = useState<GradientKey>('lightGlass');
+    const [currentGradient, setCurrentGradient] = useState<GradientKey | string>('lightGlass');
     const [showQR, setShowQR] = useState(false);
     const [selectedContact, setSelectedContact] = useState<ContactType>('linkedin');
     const [customHighlights, setCustomHighlights] = useState<Highlight[]>([]);
@@ -84,6 +84,17 @@ export default function GlassHomeScreen() {
     const [userContacts, setUserContacts] = useState<ContactMethod[]>([]);
 
     const profile = card?.profile;
+
+    // Dynamic Text Colors based on background
+    const isDarkBackground = useMemo(() => {
+        if (typeof currentGradient === 'string' && currentGradient.includes('/')) {
+            return true; // Default to light text for custom images
+        }
+        return ['black', 'ocean', 'purple', 'sunset', 'midnight'].includes(currentGradient as string);
+    }, [currentGradient]);
+
+    const textColor = isDarkBackground ? colors.white : colors.text;
+    const secondaryTextColor = isDarkBackground ? 'rgba(255, 255, 255, 0.7)' : colors.textMuted;
 
     // All contact methods (LinkedIn is always first)
     const allContacts = useMemo<ContactMethod[]>(() => {
@@ -377,12 +388,20 @@ export default function GlassHomeScreen() {
 
     return (
         <Box flex={1}>
-            {/* Background Gradient */}
-            <LinearGradient
-                colors={[...gradients[currentGradient]]}
-                locations={currentGradient === 'lightGlass' ? [0, 0.3, 0.7, 1] : undefined}
-                style={StyleSheet.absoluteFill}
-            />
+            {/* Background Gradient or Image */}
+            {(gradients[currentGradient as GradientKey]) ? (
+                <LinearGradient
+                    colors={[...gradients[currentGradient as GradientKey]]}
+                    locations={currentGradient === 'lightGlass' ? [0, 0.3, 0.7, 1] : undefined}
+                    style={StyleSheet.absoluteFill}
+                />
+            ) : (
+                <Image
+                    source={{ uri: currentGradient }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                />
+            )}
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -397,14 +416,14 @@ export default function GlassHomeScreen() {
                                     style={styles.headerButton}
                                     onPress={() => setBgPickerVisible(true)}
                                 >
-                                    <Ionicons name="color-palette-outline" size={22} color={colors.text} />
+                                    <Ionicons name="color-palette-outline" size={22} color={textColor} />
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity
                                 style={styles.headerButton}
                                 onPress={() => router.push('/settings')}
                             >
-                                <Ionicons name="settings-outline" size={22} color={colors.text} />
+                                <Ionicons name="settings-outline" size={22} color={textColor} />
                             </TouchableOpacity>
                         </HStack>
                     </Box>
@@ -462,11 +481,11 @@ export default function GlassHomeScreen() {
 
                         {/* Name & Headline */}
                         <VStack gap="xs" align="center" style={{ maxWidth: 320 }}>
-                            <Text variant="h1" align="center">
+                            <Text variant="h1" align="center" style={{ color: textColor }}>
                                 {profile.name}
                             </Text>
                             {profile.headline && (
-                                <Text variant="body" color="textMuted" align="center" numberOfLines={2}>
+                                <Text variant="body" align="center" numberOfLines={2} style={{ color: secondaryTextColor }}>
                                     {profile.headline}
                                 </Text>
                             )}
@@ -536,7 +555,7 @@ export default function GlassHomeScreen() {
                 <Animated.View entering={FadeInUp.delay(250).springify()}>
                     <VStack gap="md" style={{ marginBottom: spacing['2xl'], marginTop: spacing.xl }}>
                         <HStack gap="xs" align="center" style={{ justifyContent: 'space-between' }}>
-                            <Text variant="body" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.3 }}>
+                            <Text variant="body" weight="semibold" style={{ fontSize: 13, letterSpacing: 0.3, color: textColor }}>
                                 Contact Information
                             </Text>
                             {mode === 'edit' && (
@@ -600,7 +619,7 @@ export default function GlassHomeScreen() {
                                             weight={selectedContact === contact.type ? 'semibold' : 'medium'}
                                             style={{
                                                 fontSize: 12,
-                                                color: selectedContact === contact.type ? colors.text : colors.textMuted,
+                                                color: selectedContact === contact.type ? textColor : secondaryTextColor,
                                             }}
                                         >
                                             {contact.label}
@@ -616,7 +635,7 @@ export default function GlassHomeScreen() {
                 <Animated.View entering={FadeInUp.delay(350).springify()}>
                     <VStack gap="md">
                         <HStack style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text variant="body" weight="semibold">
+                            <Text variant="body" weight="semibold" style={{ color: textColor }}>
                                 Highlights
                             </Text>
                             {mode === 'edit' && (
@@ -885,10 +904,14 @@ const styles = StyleSheet.create({
     floatingActions: {
         position: 'absolute',
         bottom: Platform.OS === 'ios' ? 40 : spacing['2xl'],
-        left: spacing['3xl'],
-        right: spacing['3xl'],
+        width: '100%',
+        alignItems: 'center',
+        paddingHorizontal: spacing.md,
     },
     glassMenuBar: {
+        width: '60%',
+        minWidth: 260,
+        maxWidth: 340,
         backgroundColor: 'rgba(255, 255, 255, 0.6)',
         borderRadius: radii['2xl'],
         paddingVertical: 6,
