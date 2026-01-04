@@ -14,14 +14,28 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/linkedin', linkedinRoutes);
-app.use('/api/wallet', walletRoutes);
-app.use('/api/share', shareRoutes);
+// Routes - Support both with and without /api prefix
+const routes = (path: string, router: express.Router) => {
+  app.use(`/api${path}`, router);
+  app.use(path, router);
+};
+
+routes('/linkedin', linkedinRoutes);
+routes('/wallet', walletRoutes);
+routes('/share', shareRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get(['/api/health', '/health'], (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV
+  });
+});
+
+// JSON 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'API route not found', path: req.path });
 });
 
 // Error handling
