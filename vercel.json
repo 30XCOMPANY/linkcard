@@ -2,23 +2,21 @@
     "version": 2,
     "buildCommand": "npm run build:web",
     "outputDirectory": "dist",
-    "devCommand": "npm run web",
-    "installCommand": "npm install",
     "cleanUrls": true,
     "trailingSlash": false,
     "functions": {
         "api/src/index.ts": {
-            "runtime": "@vercel/node"
+            "maxDuration": 15
         }
     },
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "/api/src/index.ts"
+            "destination": "api/src/index.ts"
         },
         {
             "source": "/((?!api/).*)",
-            "destination": "/index.html"
+            "destination": "index.html"
         }
     ]
 }
