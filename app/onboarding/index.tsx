@@ -143,7 +143,7 @@ export default function AuthScreen() {
         {/* Google Button */}
         <Animated.View style={googleStyle}>
           <Pressable
-            className="w-full h-[52px] rounded-full border border-sf-separator flex-row items-center justify-center gap-2 min-h-[44px] min-w-[44px]"
+            className="w-full h-[50px] rounded-full border border-sf-separator flex-row items-center justify-center gap-2 min-h-[44px] min-w-[44px]"
             onPress={handleGoogle}
             onPressIn={() => {
               googleScale.value = withSpring(0.97, springs.snappy);
@@ -179,13 +179,10 @@ export default function AuthScreen() {
               EMAIL ADDRESS
             </Text>
             <View
-              className={`bg-sf-card rounded-xl border px-4 py-3.5 ${
-                error && !email.trim()
-                  ? "border-sf-red"
-                  : emailFocused
-                    ? "border-sf-text"
-                    : "border-sf-card-border"
+              className={`bg-sf-card rounded-[10px] px-4 py-3.5 ${
+                error && !email.trim() ? "bg-sf-red/5" : ""
               }`}
+              style={{ borderCurve: "continuous" as any }}
             >
               <TextInput
                 className="text-body text-sf-text"
@@ -212,13 +209,10 @@ export default function AuthScreen() {
               PASSWORD
             </Text>
             <View
-              className={`bg-sf-card rounded-xl border px-4 py-3.5 ${
-                error && email.trim() && !password.trim()
-                  ? "border-sf-red"
-                  : passwordFocused
-                    ? "border-sf-text"
-                    : "border-sf-card-border"
+              className={`bg-sf-card rounded-[10px] px-4 py-3.5 ${
+                error && email.trim() && !password.trim() ? "bg-sf-red/5" : ""
               }`}
+              style={{ borderCurve: "continuous" as any }}
             >
               <TextInput
                 className="text-body text-sf-text"
@@ -247,8 +241,8 @@ export default function AuthScreen() {
         {/* Continue Button */}
         <Animated.View style={continueStyle}>
           <Pressable
-            className={`w-full h-[52px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px] ${
-              !canSubmit && !isLoading ? "opacity-50" : ""
+            className={`w-full h-[50px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px] ${
+              !canSubmit && !isLoading ? "opacity-30" : ""
             }`}
             onPress={handleAuth}
             onPressIn={() => {

@@ -133,13 +133,10 @@ export default function LinkedInScreen() {
               LINKEDIN URL
             </Text>
             <View
-              className={`bg-sf-card rounded-xl border px-4 py-3.5 ${
-                error
-                  ? "border-sf-red"
-                  : inputFocused
-                    ? "border-sf-text"
-                    : "border-sf-card-border"
+              className={`bg-sf-card rounded-[10px] px-4 py-3.5 ${
+                error ? "bg-sf-red/5" : ""
               }`}
+              style={{ borderCurve: "continuous" as any }}
             >
               <TextInput
                 className="text-body text-sf-text"
@@ -175,7 +172,7 @@ export default function LinkedInScreen() {
           <View className="px-5 pt-4 pb-8 max-w-[480px] self-center w-full">
             <Animated.View style={buttonStyle}>
               <Pressable
-                className={`w-full h-[52px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px] ${
+                className={`w-full h-[50px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px] ${
                   isLoading ? "opacity-80" : ""
                 }`}
                 onPress={handleImport}

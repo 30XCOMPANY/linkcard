@@ -44,12 +44,12 @@ function VersionChip({
         className={cn(
           "h-[40px] px-4 rounded-full flex-row items-center gap-2 min-h-[44px]",
           selected
-            ? "bg-sf-card border-2"
-            : "bg-sf-bg-2 border border-sf-card-border"
+            ? ""
+            : "bg-sf-bg-2"
         )}
         style={[
           selected && {
-            borderColor: version.accentColor,
+            backgroundColor: version.accentColor + "1A",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           },
         ]}
@@ -66,9 +66,10 @@ function VersionChip({
         />
         <Text
           className={cn(
-            "text-subheadline text-sf-text",
-            selected ? "font-semibold" : "font-medium"
+            "text-subheadline",
+            selected ? "font-semibold" : "font-medium text-sf-text-2"
           )}
+          style={selected ? { color: version.accentColor } : undefined}
         >
           {version.name}
         </Text>
@@ -95,7 +96,7 @@ function QuickAction({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-2xl bg-sf-card items-center justify-center"
+        className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-[10px] bg-sf-card items-center justify-center"
         style={{
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           borderCurve: "continuous" as any,

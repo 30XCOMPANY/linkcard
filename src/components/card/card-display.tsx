@@ -1,15 +1,14 @@
 /**
  * [INPUT]: @/src/tw View/Text, @/src/types LinkedInProfile/CardVersion,
- *          CardField, Avatar, QRCode, @/src/lib/cn
- * [OUTPUT]: CardDisplay — physical card with Robinhood-style presence
- * [POS]: Card core — hero element, credit-card proportions, accent bg, soft shadow
+ *          Avatar, QRCode, @/src/lib/cn
+ * [OUTPUT]: CardDisplay — LinkCard business card with centered avatar layout
+ * [POS]: Card core — hero element, centered avatar, version name top-left, company bottom
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
 import { View, Text } from "@/src/tw";
 import { cn } from "@/src/lib/cn";
-import { CardField } from "./card-field";
 import { Avatar } from "@/src/components/shared/avatar";
 import { QRCode } from "@/src/components/shared/qr-code";
 import type { LinkedInProfile, CardVersion } from "@/src/types";
@@ -32,7 +31,7 @@ export function CardDisplay({
   compact = false,
   className,
 }: CardDisplayProps) {
-  const { visibleFields, fieldStyles = {}, accentColor } = version;
+  const { visibleFields, accentColor } = version;
   const vis = (f: string) => visibleFields.includes(f as any);
 
   return (
@@ -40,7 +39,7 @@ export function CardDisplay({
       className={cn("rounded-3xl overflow-hidden", className)}
       style={{
         borderCurve: "continuous" as any,
-        boxShadow: "0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+        boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
       }}
     >
       {/* QR Overlay */}
@@ -59,115 +58,100 @@ export function CardDisplay({
       )}
 
       {/* Card surface */}
-      <View className={cn("bg-sf-card", compact ? "p-4" : "p-5")}>
-        {/* Top row: Avatar + Name block */}
-        <View className="flex-row items-start">
-          {/* Avatar */}
-          {vis("photoUrl") && (
-            <View className="mr-4">
-              <Avatar
-                source={profile.photoUrl}
-                name={profile.name}
-                size={compact ? 56 : 72}
-                accentColor={accentColor}
-                showBorder
-              />
-            </View>
-          )}
-
-          {/* Name + Title */}
-          <View className="flex-1 justify-center">
-            {vis("name") && (
-              <CardField
-                field="name"
-                value={profile.name}
-                fieldStyle={fieldStyles.name}
-              />
-            )}
-            {vis("jobTitle") && profile.jobTitle && (
-              <CardField
-                field="jobTitle"
-                value={profile.jobTitle}
-                fieldStyle={fieldStyles.jobTitle}
-                className="mt-1"
-              />
+      <View className={cn("bg-sf-card", compact ? "p-4" : "p-5 pb-4")}>
+        {/* Top row: version name + location */}
+        <View className="flex-row justify-between items-start mb-4">
+          <View>
+            <Text className="text-body font-semibold text-sf-text">
+              {version.name}
+            </Text>
+            {vis("location") && profile.location && (
+              <Text className="text-caption-1 text-sf-text-2">
+                {profile.location}
+              </Text>
             )}
           </View>
+          {vis("company") && profile.company && (
+            <Text className="text-caption-1 text-sf-text-2">
+              {profile.company}
+            </Text>
+          )}
         </View>
 
-        {/* Headline */}
+        {/* Centered avatar */}
+        {vis("photoUrl") && (
+          <View className="items-center mb-3">
+            <Avatar
+              source={profile.photoUrl}
+              name={profile.name}
+              size={compact ? 64 : 80}
+              accentColor={accentColor}
+            />
+          </View>
+        )}
+
+        {/* Name */}
+        {vis("name") && (
+          <Text
+            className={cn(
+              "text-center font-bold text-sf-text",
+              compact ? "text-title-3" : "text-title-2"
+            )}
+          >
+            {profile.name}
+          </Text>
+        )}
+
+        {/* Headline / Job Title */}
         {vis("headline") && (
-          <CardField
-            field="headline"
-            value={profile.headline}
-            fieldStyle={fieldStyles.headline}
-            className="mt-4"
-          />
+          <Text
+            className="text-center text-subheadline text-sf-text-2 mt-1"
+            numberOfLines={2}
+          >
+            {profile.jobTitle
+              ? `${profile.jobTitle} at ${profile.company}`
+              : profile.headline}
+          </Text>
         )}
 
-        {/* Character tags */}
+        {/* Character tag */}
         {vis("character") && profile.character && (
-          <View className="flex-row flex-wrap gap-1.5 mt-3">
-            {profile.character.split(",").map((tag, i) => (
-              <View
-                key={i}
-                className="rounded-full px-2.5 py-0.5"
-                style={{ backgroundColor: accentColor + "15" }}
+          <View className="items-center mt-3">
+            <View
+              className="rounded-full px-3 py-1"
+              style={{ backgroundColor: accentColor + "15" }}
+            >
+              <Text
+                className="text-caption-1 font-medium"
+                style={{ color: accentColor }}
               >
-                <Text
-                  className="text-caption-1 font-medium"
-                  style={{ color: accentColor }}
-                >
-                  {tag.trim()}
-                </Text>
-              </View>
-            ))}
+                {profile.character}
+              </Text>
+            </View>
           </View>
         )}
 
-        {/* Accent divider */}
+        {/* Bottom bar: Your Links + Direct */}
         <View
-          className="h-[2px] rounded-full mt-4 mb-3"
-          style={{ backgroundColor: accentColor + "30", width: 32 }}
-        />
-
-        {/* Company + Location */}
-        {(vis("company") || vis("location")) && (
+          className="flex-row items-center justify-between mt-5 pt-4"
+          style={{
+            borderTopWidth: 0.5,
+            borderTopColor: "rgba(0,0,0,0.06)",
+          }}
+        >
+          <Text className="text-subheadline font-medium text-sf-text">
+            LinkCard
+          </Text>
           <View className="flex-row items-center gap-1.5">
-            {vis("company") && (
-              <CardField
-                field="company"
-                value={profile.company}
-                fieldStyle={fieldStyles.company}
-              />
-            )}
-            {vis("company") && vis("location") && profile.company && profile.location && (
-              <Text className="text-sf-text-3 text-subheadline">·</Text>
-            )}
-            {vis("location") && (
-              <CardField
-                field="location"
-                value={profile.location}
-                fieldStyle={fieldStyles.location}
-              />
-            )}
+            <View
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
+            <Text className="text-subheadline font-medium text-sf-text">
+              {version.template.charAt(0).toUpperCase() + version.template.slice(1)}
+            </Text>
           </View>
-        )}
-
-        {/* Contact fields */}
-        {(vis("email") || vis("phone") || vis("website")) && (
-          <View className="gap-0.5 mt-2">
-            {vis("email") && profile.email && (
-              <CardField field="email" value={profile.email} fieldStyle={fieldStyles.email} />
-            )}
-            {vis("phone") && profile.phone && (
-              <CardField field="phone" value={profile.phone} fieldStyle={fieldStyles.phone} />
-            )}
-            {vis("website") && profile.website && (
-              <CardField field="website" value={profile.website} fieldStyle={fieldStyles.website} />
-            )}
-          </View>
-        )}
+        </View>
       </View>
     </View>
   );

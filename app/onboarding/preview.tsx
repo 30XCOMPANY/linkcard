@@ -183,8 +183,9 @@ export default function PreviewScreen() {
           {/* Profile Card */}
           <Animated.View entering={stagger(3)}>
             <View
-              className="bg-sf-card rounded-2xl p-5 border border-sf-card-border"
+              className="bg-sf-card rounded-[10px] p-5"
               style={{
+                borderCurve: "continuous" as any,
                 boxShadow:
                   "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
               }}
@@ -319,7 +320,7 @@ export default function PreviewScreen() {
           <View className="px-5 pt-4 pb-8 max-w-[480px] self-center w-full">
             <Animated.View style={buttonStyle}>
               <Pressable
-                className="w-full h-[52px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px]"
+                className="w-full h-[50px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px]"
                 onPress={handleGoHome}
                 onPressIn={() => {
                   buttonScale.value = withSpring(0.97, springs.snappy);

@@ -1,5 +1,5 @@
 /**
- * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, react-native Switch/Share/Clipboard,
+ * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, react-native Switch/Share/Clipboard/StyleSheet,
  *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
  *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn
  * [OUTPUT]: ShareScreen — field-toggle grouped list, card preview, single CTA
@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from "react";
-import { Switch, Share, Clipboard } from "react-native";
+import { Switch, Share, Clipboard, StyleSheet } from "react-native";
 import { View, Text, ScrollView, Pressable } from "@/src/tw";
 import { Animated } from "@/src/tw/animated";
 import { FadeInDown } from "react-native-reanimated";
@@ -60,11 +60,11 @@ function FieldRow({
 }) {
   return (
     <>
-      <View className="flex-row items-center min-h-[44px] py-[11px] px-4">
-        <View className="w-[30px] items-center mr-3">
+      <View style={styles.fieldRow}>
+        <View style={styles.fieldIconWrap}>
           <Icon web={field.web} size={20} />
         </View>
-        <Text className="flex-1 text-body text-sf-text">{field.label}</Text>
+        <Text className="text-sf-text" style={styles.fieldLabel}>{field.label}</Text>
         <Switch
           value={enabled}
           onValueChange={() => {
@@ -73,7 +73,7 @@ function FieldRow({
           }}
         />
       </View>
-      {!isLast && <View className="h-px bg-sf-separator ml-14" />}
+      {!isLast && <View className="h-px bg-sf-separator" style={styles.fieldSeparator} />}
     </>
   );
 }
@@ -160,12 +160,12 @@ export default function ShareScreen() {
       </View>
 
       {/* What to Share — grouped list */}
-      <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-1.5 mt-[35px]">
+      <Text className="text-sf-text-2" style={styles.sectionHeader}>
         What to Share
       </Text>
       <View
-        className="bg-sf-card rounded-2xl overflow-hidden mx-4"
-        style={{ borderCurve: "continuous" as any }}
+        className="bg-sf-card rounded-[10px] overflow-hidden"
+        style={styles.group}
       >
         {SHARE_FIELDS.map((f, i) => (
           <FieldRow
@@ -179,26 +179,97 @@ export default function ShareScreen() {
       </View>
 
       {/* Primary CTA */}
-      <View className="px-4 mt-[35px]">
+      <View style={styles.ctaWrap}>
         <Pressable
-          className="h-[52px] rounded-2xl bg-sf-text flex-row items-center justify-center gap-2 min-h-[44px]"
+          className="bg-sf-text"
+          style={styles.cta}
           onPress={handleShare}
         >
           <Icon web="share-outline" size={18} color="#FFFFFF" />
-          <Text className="text-body font-semibold text-sf-bg">Share</Text>
+          <Text className="text-sf-bg" style={styles.ctaLabel}>Share</Text>
         </Pressable>
       </View>
 
       {/* Secondary links */}
-      <View className="flex-row items-center justify-center mt-4 gap-1">
-        <Pressable className="min-h-[44px] justify-center px-2" onPress={handleCopyLink}>
-          <Text className="text-footnote text-sf-blue">Copy Link</Text>
+      <View style={styles.secondaryLinks}>
+        <Pressable style={styles.secondaryLinkButton} onPress={handleCopyLink}>
+          <Text className="text-sf-blue" style={styles.secondaryLinkText}>Copy Link</Text>
         </Pressable>
-        <Text className="text-footnote text-sf-text-3">{"\u00B7"}</Text>
-        <Pressable className="min-h-[44px] justify-center px-2" onPress={handleWallet}>
-          <Text className="text-footnote text-sf-blue">Add to Wallet</Text>
+        <Text className="text-sf-text-3" style={styles.secondaryLinkText}>{"\u00B7"}</Text>
+        <Pressable style={styles.secondaryLinkButton} onPress={handleWallet}>
+          <Text className="text-sf-blue" style={styles.secondaryLinkText}>Add to Wallet</Text>
         </Pressable>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionHeader: {
+    marginTop: 35,
+    marginBottom: 6,
+    marginHorizontal: 20,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+  },
+  group: {
+    marginHorizontal: 16,
+    borderCurve: "continuous" as any,
+  },
+  fieldRow: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fieldIconWrap: {
+    width: 30,
+    alignItems: "center",
+    marginRight: 12,
+  },
+  fieldLabel: {
+    flex: 1,
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  fieldSeparator: {
+    marginLeft: 56,
+  },
+  ctaWrap: {
+    paddingHorizontal: 16,
+    marginTop: 35,
+  },
+  cta: {
+    minHeight: 50,
+    borderRadius: 10,
+    borderCurve: "continuous" as any,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaLabel: {
+    marginLeft: 8,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+  },
+  secondaryLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  secondaryLinkButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  secondaryLinkText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+});
