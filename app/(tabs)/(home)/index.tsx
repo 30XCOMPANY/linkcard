@@ -44,7 +44,7 @@ function VersionChip({
       }}
       style={[
         styles.chip,
-        selected && [styles.chipSelected, { borderColor: version.accentColor }],
+        selected && { backgroundColor: version.accentColor },
       ]}
     >
       <View
