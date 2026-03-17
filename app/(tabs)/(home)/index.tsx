@@ -1,9 +1,10 @@
 /**
- * [INPUT]: react-native ScrollView/View/Text/Pressable,
+ * [INPUT]: react-native ScrollView/View/Text/Pressable/PlatformColor,
+ *          expo-glass-effect GlassView, expo-router Stack,
  *          @/src/stores/cardStore, @/src/components/card/card-display CardDisplay,
- *          @/src/lib/haptics, @/src/lib/icons Icon
- * [OUTPUT]: HomeScreen — card hero, version chips, quick actions
- * [POS]: Primary tab screen — pure RN, no SwiftUI Host (preserves large title)
+ *          @/src/lib/haptics
+ * [OUTPUT]: HomeScreen — card hero (tap for QR), version chips, Edit in nav bar
+ * [POS]: Primary tab screen — card is the hero and the interactive surface
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -17,12 +18,12 @@ import {
   PlatformColor,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Stack } from "expo-router/stack";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
 import { haptic } from "@/src/lib/haptics";
-import { Icon } from "@/src/lib/icons";
 import type { CardVersion } from "@/src/types";
 
 const useGlass = isGlassEffectAPIAvailable();
@@ -83,45 +84,6 @@ function VersionChip({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Quick Action                                                       */
-/* ------------------------------------------------------------------ */
-
-function QuickAction({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  onPress: () => void;
-}) {
-  const actionInner = (
-    <>
-      <Icon web={icon} size={20} />
-      <Text style={styles.actionLabel}>{label}</Text>
-    </>
-  );
-
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityLabel={label}
-      accessibilityRole="button"
-    >
-      {useGlass ? (
-        <GlassView glassEffectStyle="regular" style={styles.action}>
-          {actionInner}
-        </GlassView>
-      ) : (
-        <View style={[styles.action, { backgroundColor: "#F2F2F7" }]}>
-          {actionInner}
-        </View>
-      )}
-    </Pressable>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Home Screen                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -156,64 +118,61 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.content}
-    >
-      {/* Card */}
-      <View style={styles.cardWrap}>
-        <CardDisplay
-          profile={card.profile}
-          version={currentVersion}
-          qrCodeData={card.qrCodeData}
-          showQR={showQR}
-        />
-      </View>
+    <>
+      {/* Edit button in navigation bar — Apple standard position */}
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              onPress={() => {
+                haptic.light();
+                router.push("/editor" as any);
+              }}
+              style={styles.headerButton}
+            >
+              <Text style={styles.headerButtonText}>Edit</Text>
+            </Pressable>
+          ),
+        }}
+      />
 
-      {/* Version Selector */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content}
       >
-        {card.versions.map((v: CardVersion) => (
-          <VersionChip
-            key={v.id}
-            version={v}
-            selected={v.id === selectedVersionId}
-            onPress={() => handleSelectVersion(v.id)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* Quick Actions */}
-      <View style={styles.actions}>
-        <QuickAction
-          icon="edit-pen"
-          label="Edit"
-          onPress={() => {
-            haptic.light();
-            router.push("/editor" as any);
-          }}
-        />
-        <QuickAction
-          icon="share"
-          label="Share"
-          onPress={() => {
-            haptic.light();
-            router.push("/share" as any);
-          }}
-        />
-        <QuickAction
-          icon="qr-code"
-          label="QR Code"
+        {/* Card — tap to toggle QR */}
+        <Pressable
+          style={styles.cardWrap}
           onPress={() => {
             haptic.medium();
             setShowQR((p) => !p);
           }}
-        />
-      </View>
-    </ScrollView>
+        >
+          <CardDisplay
+            profile={card.profile}
+            version={currentVersion}
+            qrCodeData={card.qrCodeData}
+            showQR={showQR}
+          />
+        </Pressable>
+
+        {/* Version Selector */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chips}
+        >
+          {card.versions.map((v: CardVersion) => (
+            <VersionChip
+              key={v.id}
+              version={v}
+              selected={v.id === selectedVersionId}
+              onPress={() => handleSelectVersion(v.id)}
+            />
+          ))}
+        </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
@@ -233,6 +192,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: PlatformColor("secondaryLabel"),
+  },
+  headerButton: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerButtonText: {
+    fontSize: 17,
+    fontWeight: "400",
+    color: PlatformColor("systemBlue"),
   },
   cardWrap: {
     paddingHorizontal: 16,
@@ -266,27 +236,5 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginTop: 8,
-  },
-  action: {
-    alignItems: "center" as const,
-    gap: 4,
-    minWidth: 60,
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    justifyContent: "center" as const,
-    overflow: "hidden" as const,
-  },
-  actionLabel: {
-    fontSize: 12,
-    color: PlatformColor("secondaryLabel"),
-    fontWeight: "500",
   },
 });
