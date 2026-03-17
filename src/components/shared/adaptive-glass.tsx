@@ -1,8 +1,8 @@
 /**
  * [INPUT]: expo-glass-effect, expo-blur, react-native AccessibilityInfo
- * [OUTPUT]: AdaptiveGlass component with runtime-guarded glass rendering
- * [POS]: Shared wrapper — Liquid Glass on iOS 26+, BlurView fallback, opaque on Android/reduced-transparency
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [OUTPUT]: AdaptiveGlass component with runtime-guarded glass rendering and configurable fallback tint
+ * [POS]: Shared wrapper — Liquid Glass on iOS 26+, BlurView fallback, configurable transparency on web/Android
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useEffect, useState } from "react";
@@ -28,6 +28,9 @@ interface AdaptiveGlassProps {
   className?: string;
   style?: ViewStyle;
   intensity?: number;
+  blurTint?: "default" | "light" | "dark";
+  fallbackColor?: string;
+  glassEffectStyle?: "regular" | "clear" | "identity";
 }
 
 export function AdaptiveGlass({
@@ -35,6 +38,9 @@ export function AdaptiveGlass({
   className,
   style,
   intensity = 40,
+  blurTint = "light",
+  fallbackColor = "rgba(255, 255, 255, 0.72)",
+  glassEffectStyle = "regular",
 }: AdaptiveGlassProps) {
   const [reduceTransparency, setReduceTransparency] = useState(false);
 
@@ -51,7 +57,10 @@ export function AdaptiveGlass({
   // Opaque fallback for reduced transparency
   if (reduceTransparency) {
     return (
-      <View className={className} style={[{ backgroundColor: "rgba(242,242,247,0.95)" }, style]}>
+      <View
+        className={className}
+        style={[{ backgroundColor: fallbackColor }, style]}
+      >
         {children}
       </View>
     );
@@ -61,7 +70,7 @@ export function AdaptiveGlass({
   if (isIOS && isGlassEffectAPIAvailable?.()) {
     return (
       <GlassView
-        glassEffectStyle="regular"
+        glassEffectStyle={glassEffectStyle}
         style={[{ borderCurve: "continuous" as any }, style]}
         className={className}
       >
@@ -73,7 +82,7 @@ export function AdaptiveGlass({
   // iOS fallback — BlurView
   if (isIOS) {
     return (
-      <BlurView intensity={intensity} tint="light" style={style} className={className}>
+      <BlurView intensity={intensity} tint={blurTint} style={style} className={className}>
         {children}
       </BlurView>
     );
@@ -86,7 +95,7 @@ export function AdaptiveGlass({
         className={className}
         style={[
           {
-            backgroundColor: "rgba(255, 255, 255, 0.72)",
+            backgroundColor: fallbackColor,
             // @ts-expect-error web-only CSS properties
             backdropFilter: "blur(40px) saturate(180%)",
             WebkitBackdropFilter: "blur(40px) saturate(180%)",
@@ -101,7 +110,7 @@ export function AdaptiveGlass({
 
   // Android fallback — semi-transparent
   return (
-    <View className={className} style={[{ backgroundColor: "rgba(242,242,247,0.92)" }, style]}>
+    <View className={className} style={[{ backgroundColor: fallbackColor }, style]}>
       {children}
     </View>
   );

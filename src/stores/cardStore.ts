@@ -1,6 +1,6 @@
 /**
  * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/accent-colors
- * [OUTPUT]: useCardStore — card data, theme mode, accent color, gradient, CRUD actions
+ * [OUTPUT]: useCardStore — card data, theme mode, accent color, gradient, CRUD actions, tag editing actions
  * [POS]: Main app state — single Zustand store with AsyncStorage persistence + debounced Supabase sync
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -8,7 +8,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BusinessCard, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
+import { BusinessCard, CardTag, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
 import { accentColors, AccentColorKey } from '@/src/lib/accent-colors';
 import type { NameFontKey } from '@/src/lib/name-fonts';
 import { cardService } from '@/src/services/supabase';
@@ -41,6 +41,9 @@ interface CardState {
     updateVersion: (versionId: string, updates: Partial<CardVersion>) => void;
     deleteVersion: (versionId: string) => void;
     setDefaultVersion: (versionId: string) => void;
+    addCustomTag: (tag: Pick<CardTag, 'emoji' | 'label'>) => void;
+    removeTag: (tagId: string) => void;
+    renameTag: (tagId: string, label: string) => void;
 
     // Theme actions
     setThemeMode: (mode: ThemeMode) => void;
@@ -116,6 +119,11 @@ const MOCK_CARD: BusinessCard = {
         checksum: 'mock-checksum',
     },
     versions: defaultVersions,
+    tagState: {
+        custom: [],
+        hidden: [],
+        renamed: {},
+    },
     qrCodeData: 'https://linkcard.app/c/henryzhao',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -223,6 +231,85 @@ export const useCardStore = create<CardState>()(
                 debouncedSync(updatedCard);
             },
 
+            addCustomTag: (tag) => {
+                const currentCard = get().card;
+                if (!currentCard) return;
+
+                const updatedCard = {
+                    ...currentCard,
+                    tagState: {
+                        ...currentCard.tagState,
+                        custom: [
+                            ...currentCard.tagState.custom,
+                            {
+                                id: `custom:${Date.now()}`,
+                                emoji: tag.emoji,
+                                label: tag.label,
+                                source: 'custom' as const,
+                            },
+                        ],
+                    },
+                    updatedAt: new Date(),
+                };
+
+                set({ card: updatedCard });
+                debouncedSync(updatedCard);
+            },
+
+            removeTag: (tagId) => {
+                const currentCard = get().card;
+                if (!currentCard) return;
+
+                const isCustomTag = tagId.startsWith('custom:');
+                const updatedCard = {
+                    ...currentCard,
+                    tagState: {
+                        ...currentCard.tagState,
+                        custom: isCustomTag
+                            ? currentCard.tagState.custom.filter((tag) => tag.id !== tagId)
+                            : currentCard.tagState.custom,
+                        hidden: isCustomTag
+                            ? currentCard.tagState.hidden
+                            : Array.from(new Set([...currentCard.tagState.hidden, tagId])),
+                    },
+                    updatedAt: new Date(),
+                };
+
+                set({ card: updatedCard });
+                debouncedSync(updatedCard);
+            },
+
+            renameTag: (tagId, label) => {
+                const currentCard = get().card;
+                if (!currentCard) return;
+
+                const trimmed = label.trim();
+                if (!trimmed) return;
+
+                const isCustomTag = tagId.startsWith('custom:');
+                const updatedCard = {
+                    ...currentCard,
+                    tagState: {
+                        ...currentCard.tagState,
+                        custom: isCustomTag
+                            ? currentCard.tagState.custom.map((tag) =>
+                                tag.id === tagId ? { ...tag, label: trimmed } : tag
+                            )
+                            : currentCard.tagState.custom,
+                        renamed: isCustomTag
+                            ? currentCard.tagState.renamed
+                            : {
+                                ...currentCard.tagState.renamed,
+                                [tagId]: trimmed,
+                            },
+                    },
+                    updatedAt: new Date(),
+                };
+
+                set({ card: updatedCard });
+                debouncedSync(updatedCard);
+            },
+
             setThemeMode: (mode) => set({ themeMode: mode }),
 
             setAccentColor: (color) => {
@@ -259,8 +346,12 @@ export const createNewCard = (profile: LinkedInProfile): BusinessCard => ({
     id: `card-${Date.now()}`,
     profile,
     versions: defaultVersions,
+    tagState: {
+        custom: [],
+        hidden: [],
+        renamed: {},
+    },
     qrCodeData: `https://www.linkedin.com/in/${profile.username}`,
     createdAt: new Date(),
     updatedAt: new Date(),
 });
-

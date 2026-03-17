@@ -1,7 +1,7 @@
 /**
  * [INPUT]: none (pure type definitions)
- * [OUTPUT]: LinkedInProfile, CardTemplate, FieldStyle, CardVersion, BusinessCard, ShareSession,
- *           WalletPassData, RootStackParamList, ThemeMode, Theme
+ * [OUTPUT]: LinkedInProfile, CardTemplate, FieldStyle, CardVersion, CardTag, CardTagState,
+ *           BusinessCard, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, and components across the app
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -67,11 +67,25 @@ export interface CardVersion {
   fieldStyles?: Record<string, FieldStyle>;
 }
 
+export interface CardTag {
+  id: string;
+  emoji: string;
+  label: string;
+  source: 'derived' | 'custom';
+}
+
+export interface CardTagState {
+  custom: CardTag[];
+  hidden: string[];
+  renamed: Record<string, string>;
+}
+
 // The main business card
 export interface BusinessCard {
   id: string;
   profile: LinkedInProfile;
   versions: CardVersion[];
+  tagState: CardTagState;
   qrCodeData: string;
   createdAt: Date;
   updatedAt: Date;
@@ -121,4 +135,3 @@ export interface Theme {
     error: string;
   };
 }
-

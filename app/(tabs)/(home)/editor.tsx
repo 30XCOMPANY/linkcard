@@ -8,13 +8,20 @@
  */
 
 import React, { useCallback, useMemo } from "react";
-import { Switch, RefreshControl, StyleSheet } from "react-native";
-import { View, Text, ScrollView, Pressable } from "@/src/tw";
+import {
+  Switch,
+  StyleSheet,
+  ScrollView as RNScrollView,
+  Pressable as RNPressable,
+  Text as RNText,
+} from "react-native";
+import { View, Text, Pressable } from "@/src/tw";
 import { Stack, useRouter } from "expo-router";
 import { useCardStore } from "@/src/stores/cardStore";
-import { CardDisplay } from "@/src/components/card/card-display";
+import { ProfileCard } from "@/src/components/card/profile-card";
 import { Icon } from "@/src/lib/icons";
 import { accentColors } from "@/src/lib/accent-colors";
+import type { LinkedInProfile } from "@/src/types";
 import {
   SettingsColorGrid,
   SettingsGroup,
@@ -22,7 +29,6 @@ import {
   SettingsSectionHeader,
   SettingsSegmented,
   SettingsSeparator,
-  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 type ToggleableField = keyof LinkedInProfile | "qrCode" | "character";
@@ -130,29 +136,25 @@ export default function EditorScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable
+            <RNPressable
               onPress={() => router.back()}
               style={styles.doneButton}
             >
-              <Text className="text-sf-blue" style={styles.doneLabel}>Done</Text>
-            </Pressable>
+              <RNText style={styles.doneLabel}>Done</RNText>
+            </RNPressable>
           ),
         }}
       />
 
-      <ScrollView
-        className="flex-1"
-        style={settingsPageStyle}
+      <RNScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="pb-12"
-        refreshControl={<RefreshControl refreshing={false} onRefresh={() => {}} />}
+        contentContainerStyle={{ paddingBottom: 48 }}
       >
-        <View className="bg-sf-bg-2 rounded-[20px] p-4 mx-4 mt-4">
-          <CardDisplay
+        {/* Live card preview — same as home */}
+        <View style={styles.cardWrap}>
+          <ProfileCard
             profile={card.profile}
             version={version}
-            qrCodeData={card.qrCodeData}
-            compact
           />
         </View>
 
@@ -221,12 +223,16 @@ export default function EditorScreen() {
             trailing={<Icon web="chevron-forward" size={16} />}
           />
         </SettingsGroup>
-      </ScrollView>
+      </RNScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  cardWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   groupBody: {
     paddingHorizontal: 16,
     paddingVertical: 11,
@@ -246,5 +252,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
+    color: "#007AFF",
   },
 });

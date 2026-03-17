@@ -1,11 +1,11 @@
 /**
  * [INPUT]: react-native ScrollView/View/Text/Pressable/PlatformColor/Linking/StyleSheet,
- *          expo-router Stack,
+ *          expo-router Stack, expo-blur BlurView, expo-glass-effect GlassView,
  *          @/src/stores/cardStore, @/src/components/shared/avatar Avatar,
  *          @/src/lib/haptics, @/src/lib/profile-tags
- * [OUTPUT]: ProfileScreen — Bonjour!-style profile card with native menu version picker
+ * [OUTPUT]: ProfileScreen — Bonjour!-style profile card with glass-ring avatar and native menu version picker
  * [POS]: Primary tab screen — vertical profile card, version switching via header menu
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useState, useCallback } from "react";
@@ -13,17 +13,22 @@ import {
   ScrollView,
   View,
   Text,
+  TextInput,
   Image,
   Pressable,
   StyleSheet,
   PlatformColor,
   Linking,
+  Alert,
 } from "react-native";
 import { Stack } from "expo-router/stack";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { SymbolView } from "expo-symbols";
 import * as ImagePicker from "expo-image-picker";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { Avatar } from "@/src/components/shared/avatar";
@@ -32,16 +37,149 @@ import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import type { CardVersion, LinkedInProfile } from "@/src/types";
 
+const useGlass = isGlassEffectAPIAvailable();
+
 /* ------------------------------------------------------------------ */
-/*  Tag Pill                                                           */
+/*  Editable Text — tap to inline edit, blur to save                   */
 /* ------------------------------------------------------------------ */
 
-function TagPill({ emoji, label }: { emoji: string; label: string }) {
+function EditableText({
+  value,
+  style,
+  wrapperStyle,
+  placeholder,
+  multiline,
+  onSave,
+}: {
+  value: string;
+  style: any;
+  wrapperStyle?: any;
+  placeholder: string;
+  multiline?: boolean;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  if (editing) {
+    return (
+      <View style={wrapperStyle}>
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          onBlur={() => {
+            setEditing(false);
+            if (draft.trim() && draft !== value) {
+              onSave(draft.trim());
+              haptic.success();
+            } else {
+              setDraft(value);
+            }
+          }}
+          autoFocus
+          multiline={multiline}
+          style={[style, { padding: 0, margin: 0 }]}
+          placeholder={placeholder}
+          placeholderTextColor={PlatformColor("tertiaryLabel") as unknown as string}
+          returnKeyType={multiline ? "default" : "done"}
+          blurOnSubmit={!multiline}
+        />
+      </View>
+    );
+  }
+
   return (
-    <View style={s.tag}>
-      <Text style={s.tagEmoji}>{emoji}</Text>
-      <Text style={s.tagLabel}>{label}</Text>
-    </View>
+    <Pressable
+      onPress={() => {
+        haptic.light();
+        setDraft(value);
+        setEditing(true);
+      }}
+    >
+      <View style={wrapperStyle}>
+        {value ? (
+          <Text style={style}>{value}</Text>
+        ) : (
+          <Text style={[style, { color: PlatformColor("tertiaryLabel") as unknown as string }]}>
+            {placeholder}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Editable Tag Pill                                                  */
+/* ------------------------------------------------------------------ */
+
+function EditableTag({
+  emoji,
+  label,
+  editing,
+  onLongPress,
+  onDelete,
+  onRename,
+}: {
+  emoji: string;
+  label: string;
+  editing: boolean;
+  onLongPress: () => void;
+  onDelete: () => void;
+  onRename: (newLabel: string) => void;
+}) {
+  const [renaming, setRenaming] = useState(false);
+  const [draft, setDraft] = useState(label);
+
+  return (
+    <Animated.View
+      exiting={FadeOut.duration(150)}
+      layout={LinearTransition.duration(250)}
+    >
+      <Pressable
+        onLongPress={onLongPress}
+        onPress={() => {
+          if (editing && !renaming) {
+            haptic.light();
+            setDraft(label);
+            setRenaming(true);
+          }
+        }}
+      >
+        <View style={s.tag}>
+          <Text style={s.tagEmoji}>{emoji}</Text>
+          {renaming ? (
+            <TextInput
+              value={draft}
+              onChangeText={setDraft}
+              onBlur={() => {
+                setRenaming(false);
+                if (draft.trim() && draft !== label) {
+                  onRename(draft.trim());
+                }
+              }}
+              autoFocus
+              style={[s.tagLabel, { padding: 0, margin: 0, minWidth: 40 }]}
+              returnKeyType="done"
+            />
+          ) : (
+            <Text style={s.tagLabel}>{label}</Text>
+          )}
+          {editing && !renaming && (
+            <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(100)}>
+              <Pressable hitSlop={8} onPress={onDelete}>
+                <SymbolView
+                  name="xmark.circle.fill"
+                  tintColor={PlatformColor("systemGray3") as unknown as string}
+                  style={{ width: 16, height: 16, marginLeft: 4 }}
+                  resizeMode="scaleAspectFit"
+                />
+              </Pressable>
+            </Animated.View>
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -55,12 +193,18 @@ function ProfileHeader({
   profile,
   onSelectVersion,
   onEdit,
+  onFontCycle,
+  onCreateVersion,
+  onSync,
 }: {
   versions: CardVersion[];
   currentVersion: CardVersion;
   profile: LinkedInProfile;
   onSelectVersion: (id: string) => void;
   onEdit: () => void;
+  onFontCycle: () => void;
+  onCreateVersion: () => void;
+  onSync: () => void;
 }) {
   return (
     <>
@@ -105,7 +249,10 @@ function ProfileHeader({
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
               icon="textformat"
-              onPress={() => haptic.light()}
+              onPress={() => {
+                haptic.light();
+                onFontCycle();
+              }}
             >
               Change Font
             </Stack.Toolbar.MenuAction>
@@ -113,13 +260,19 @@ function ProfileHeader({
           <Stack.Toolbar.Menu inline>
             <Stack.Toolbar.MenuAction
               icon="plus.rectangle"
-              onPress={() => haptic.medium()}
+              onPress={() => {
+                haptic.medium();
+                onCreateVersion();
+              }}
             >
               Create New Card
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
               icon="arrow.triangle.2.circlepath"
-              onPress={() => haptic.light()}
+              onPress={() => {
+                haptic.light();
+                onSync();
+              }}
             >
               Sync LinkedIn
             </Stack.Toolbar.MenuAction>
@@ -158,8 +311,39 @@ export default function HomeScreen() {
     card?.versions.find((v: CardVersion) => v.id === selectedVersionId) ??
     defaultVersion;
 
+  const [tagsEditing, setTagsEditing] = useState(false);
+
   const handleSelectVersion = useCallback((id: string) => {
     setSelectedVersionId(id);
+  }, []);
+
+  // Cycle through fonts: classic → modern → mono → system → classic
+  const handleFontCycle = useCallback(() => {
+    const keys: NameFontKey[] = ["classic", "modern", "mono", "system"];
+    const current = keys.indexOf(nameFont);
+    const next = keys[(current + 1) % keys.length];
+    useCardStore.getState().setNameFont(next);
+  }, [nameFont]);
+
+  // Create a new version with a unique name
+  const handleCreateVersion = useCallback(() => {
+    if (!card) return;
+    const count = card.versions.length + 1;
+    const newVersion: CardVersion = {
+      id: `v-${Date.now()}`,
+      name: `Card ${count}`,
+      visibleFields: ["photoUrl", "name", "jobTitle", "headline", "company", "location", "qrCode"],
+      template: "modern",
+      accentColor: "#007AFF",
+      isDefault: false,
+    };
+    useCardStore.getState().addVersion(newVersion);
+    setSelectedVersionId(newVersion.id);
+  }, [card]);
+
+  // Sync LinkedIn profile
+  const handleSync = useCallback(() => {
+    Alert.alert("Syncing", "Refreshing your LinkedIn data...");
   }, []);
 
   if (!card || !currentVersion) {
@@ -184,6 +368,9 @@ export default function HomeScreen() {
         profile={profile}
         onSelectVersion={handleSelectVersion}
         onEdit={() => router.push("/editor" as any)}
+        onFontCycle={handleFontCycle}
+        onCreateVersion={handleCreateVersion}
+        onSync={handleSync}
       />
 
       <ScrollView
@@ -242,26 +429,18 @@ export default function HomeScreen() {
             source={profile.photoUrl}
             name={profile.name}
             size={120}
+            glassPadding={8}
+            glassIntensity={18}
             accentColor={accent}
           />
-          <Text style={[s.profileName, nameFonts[nameFont].fontFamily ? { fontFamily: nameFonts[nameFont].fontFamily } : undefined]}>
-            {profile.name}
-          </Text>
+          <EditableText
+            value={profile.name}
+            style={[s.profileName, nameFonts[nameFont].fontFamily ? { fontFamily: nameFonts[nameFont].fontFamily } : undefined]}
+            onSave={(v) => useCardStore.getState().updateProfile({ name: v })}
+            placeholder="Your Name"
+          />
 
-          {/* Headline */}
-          {profile.headline ? (
-            <View style={s.statusBox}>
-              <Text style={s.statusText} numberOfLines={2}>
-                {profile.headline}
-              </Text>
-            </View>
-          ) : (
-            <View style={s.statusBox}>
-              <Text style={s.statusPlaceholder}>Set a status...</Text>
-            </View>
-          )}
-
-          {/* Identity Line */}
+          {/* Identity Line — below name */}
           {(profile.website || profile.jobTitle) && (
             <View style={s.identityLine}>
               {profile.website && (
@@ -290,13 +469,95 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Tags */}
-          {tags.length > 0 && (
-            <View style={s.tagsWrap}>
-              {tags.map((t, i) => (
-                <TagPill key={`${t.label}-${i}`} emoji={t.emoji} label={t.label} />
-              ))}
-            </View>
+          {/* Headline — tap to edit */}
+          <EditableText
+            value={profile.headline}
+            style={s.statusText}
+            wrapperStyle={s.statusBox}
+            onSave={(v) => useCardStore.getState().updateProfile({ headline: v })}
+            placeholder="Set a status..."
+            multiline
+          />
+
+          {/* Tags — long press to edit, tap to rename in edit mode */}
+          <Animated.View style={s.tagsWrap} layout={LinearTransition.duration(250)}>
+            {tags.map((t, i) => (
+              <EditableTag
+                key={`${t.label}-${i}`}
+                emoji={t.emoji}
+                label={t.label}
+                editing={tagsEditing}
+                onLongPress={() => {
+                  haptic.medium();
+                  setTagsEditing(true);
+                }}
+                onDelete={() => {
+                  haptic.warning();
+                  // TODO: remove tag
+                }}
+                onRename={(newLabel: string) => {
+                  haptic.success();
+                  // TODO: persist renamed tag
+                }}
+              />
+            ))}
+            {/* "+" add tag */}
+            <Animated.View layout={LinearTransition.duration(250)}>
+              <Pressable
+                onPress={() => {
+                  haptic.light();
+                  Alert.prompt(
+                    "Add Tag",
+                    "Enter a tag (e.g. 💡 Swift)",
+                    (text: string) => {
+                      if (text?.trim()) {
+                        haptic.success();
+                        // TODO: persist custom tags
+                      }
+                    }
+                  );
+                }}
+              >
+                <View style={s.addTagPill}>
+                  <SymbolView
+                    name="plus"
+                    tintColor={PlatformColor("secondaryLabel") as unknown as string}
+                    style={{ width: 14, height: 14 }}
+                    resizeMode="scaleAspectFit"
+                  />
+                </View>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+
+          {/* Done editing tags */}
+          {tagsEditing && (
+            <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(100)}>
+              <Pressable
+                onPress={() => {
+                  haptic.light();
+                  setTagsEditing(false);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Done editing tags"
+                hitSlop={6}
+                style={({ pressed }) => [s.doneBtn, pressed ? s.doneBtnPressed : null]}
+              >
+                {useGlass ? (
+                  <GlassView
+                    glassEffectStyle="regular"
+                    tintColor={PlatformColor("systemBlue") as unknown as string}
+                    style={s.doneBtnSurface}
+                  >
+                    <Text style={s.doneBtnText}>Done</Text>
+                  </GlassView>
+                ) : (
+                  <View style={[s.doneBtnSurface, s.doneBtnFallback]}>
+                    <Text style={s.doneBtnText}>Done</Text>
+                  </View>
+                )}
+              </Pressable>
+            </Animated.View>
           )}
 
           {/* Contact + Stats */}
@@ -495,6 +756,46 @@ const s = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: PlatformColor("label") as unknown as string,
+  },
+  addTagPill: {
+    height: 36,
+    width: 36,
+    borderRadius: 999,
+    borderCurve: "continuous" as any,
+    backgroundColor: PlatformColor("systemBackground") as unknown as string,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PlatformColor("separator") as unknown as string,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneBtn: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderCurve: "continuous" as any,
+  },
+  doneBtnSurface: {
+    minHeight: 38,
+    minWidth: 74,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderCurve: "continuous" as any,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden" as any,
+  },
+  doneBtnFallback: {
+    backgroundColor: PlatformColor("systemBlue") as unknown as string,
+  },
+  doneBtnPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.92,
+  },
+  doneBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
   },
 
   contactRow: {

@@ -1,12 +1,20 @@
 /**
- * [INPUT]: react-native View/Image/ViewStyle, assets/avatars/*.png
- * [OUTPUT]: Avatar component — photo, or stable illustration fallback from 11 avatars
- * [POS]: Shared avatar — shows LinkedIn photo or deterministic illustrated avatar
+ * [INPUT]: react-native View/Image/ViewStyle/StyleSheet, AdaptiveGlass, assets/avatars/*.png
+ * [OUTPUT]: Avatar component — photo or stable illustration fallback, optional Liquid Glass shell
+ * [POS]: Shared avatar — reused across cards/settings, can wrap hero avatars in a soft transparent glass ring
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { View, Image, ViewStyle } from "react-native";
+import {
+  Image,
+  type ImageSourcePropType,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from "react-native";
+
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 
 // ── Illustration fallbacks ──────────────────────────────────────
 
@@ -52,6 +60,8 @@ interface AvatarProps {
   name?: string;
   size?: AvatarSize;
   accentColor?: string;
+  glassPadding?: number;
+  glassIntensity?: number;
   showBorder?: boolean;
   style?: ViewStyle;
 }
@@ -63,43 +73,61 @@ export function Avatar({
   name = "",
   size = "md",
   accentColor,
+  glassPadding = 0,
+  glassIntensity = 52,
   showBorder = false,
   style,
 }: AvatarProps) {
   const dim = typeof size === "number" ? size : sizeMap[size] ?? 48;
-
-  const container: ViewStyle = {
-    width: dim,
-    height: dim,
-    borderRadius: dim / 2,
+  const inset = Math.max(0, glassPadding);
+  const innerDim = inset > 0 ? Math.max(0, dim - inset * 2) : dim;
+  const avatarStyle: ViewStyle = {
+    width: innerDim,
+    height: innerDim,
+    borderRadius: innerDim / 2,
     overflow: "hidden",
     backgroundColor: "#F2F2F7",
     ...(showBorder && accentColor && { borderWidth: 3, borderColor: accentColor }),
   };
-
-  // LinkedIn photo
-  if (source) {
-    return (
-      <View style={[container, style]}>
-        <Image
-          source={{ uri: source }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      </View>
-    );
-  }
-
-  // Illustrated fallback — same name always picks same avatar
   const index = stableHash(name) % ILLUSTRATIONS.length;
-
-  return (
-    <View style={[container, style]}>
-      <Image
-        source={ILLUSTRATIONS[index]}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-      />
+  const imageSource: ImageSourcePropType = source ? { uri: source } : ILLUSTRATIONS[index];
+  const avatar = (
+    <View style={inset > 0 ? avatarStyle : [avatarStyle, style]}>
+      <Image source={imageSource} style={styles.image} resizeMode="cover" />
     </View>
   );
+
+  if (inset <= 0) {
+    return avatar;
+  }
+
+  const shellStyle: ViewStyle = {
+    width: dim,
+    height: dim,
+    borderRadius: dim / 2,
+    borderCurve: "continuous" as any,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  };
+
+  return (
+    <AdaptiveGlass
+      intensity={glassIntensity}
+      glassEffectStyle="clear"
+      blurTint="default"
+      fallbackColor="rgba(255,255,255,0.08)"
+      style={[shellStyle, style]}
+    >
+      {avatar}
+    </AdaptiveGlass>
+  );
 }
+
+const styles = StyleSheet.create({
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+});
