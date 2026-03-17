@@ -177,45 +177,40 @@ export default function HomeScreen() {
         </Link>
       </View>
 
-      {/* Version Selector — one glass group */}
-      <View className="mx-4 mt-3">
-        <AdaptiveGlass
-          className="rounded-full flex-row items-center p-1"
-          style={{ borderCurve: "continuous" as any }}
-        >
-          {card.versions.map((v: CardVersion) => (
-            <VersionChip
-              key={v.id}
-              version={v}
-              selected={v.id === selectedVersionId}
-              onPress={() => handleSelectVersion(v.id)}
-            />
-          ))}
-        </AdaptiveGlass>
-      </View>
+      {/* Version Selector */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="px-4 py-3 gap-2"
+        className="mt-2"
+      >
+        {card.versions.map((v: CardVersion) => (
+          <VersionChip
+            key={v.id}
+            version={v}
+            selected={v.id === selectedVersionId}
+            onPress={() => handleSelectVersion(v.id)}
+          />
+        ))}
+      </ScrollView>
 
-      {/* Quick Actions — one glass group */}
-      <View className="mx-auto mt-3">
-        <AdaptiveGlass
-          className="rounded-full flex-row items-center px-2 py-1"
-          style={{ borderCurve: "continuous" as any }}
-        >
-          <QuickAction
-            icon="edit-pen"
-            label="Edit card"
-            onPress={() => { haptic.light(); router.push("/editor" as any); }}
-          />
-          <QuickAction
-            icon="share"
-            label="Share card"
-            onPress={() => { haptic.light(); router.push("/share" as any); }}
-          />
-          <QuickAction
-            icon="qr-code"
-            label="Toggle QR code"
-            onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
-          />
-        </AdaptiveGlass>
+      {/* Quick Actions */}
+      <View className="flex-row items-center justify-center gap-4 mt-3">
+        <QuickAction
+          icon="edit-pen"
+          label="Edit card"
+          onPress={() => { haptic.light(); router.push("/editor" as any); }}
+        />
+        <QuickAction
+          icon="share"
+          label="Share card"
+          onPress={() => { haptic.light(); router.push("/share" as any); }}
+        />
+        <QuickAction
+          icon="qr-code"
+          label="Toggle QR code"
+          onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
+        />
       </View>
     </ScrollView>
   );
