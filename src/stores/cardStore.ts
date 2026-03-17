@@ -1,6 +1,6 @@
 /**
- * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/card-presets
- * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions
+ * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types (incl. ContactAction), @/src/lib/card-presets
+ * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions, updateContactAction
  * [POS]: Main app state — single Zustand store with AsyncStorage persistence, version ordering, and debounced Supabase sync
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -8,7 +8,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BusinessCard, CardBackground, CardTag, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
+import { BusinessCard, CardBackground, CardTag, CardVersion, ContactAction, LinkedInProfile, ThemeMode } from '@/src/types';
 import { createDefaultCardVersions, normalizeCardVersion } from '@/src/lib/card-presets';
 import type { NameFontKey } from '@/src/lib/name-fonts';
 import { cardService } from '@/src/services/supabase';
@@ -82,6 +82,7 @@ interface CardState {
     // Sync actions
     setLoading: (loading: boolean) => void;
     setError: (error: string | null) => void;
+    updateContactAction: (action: ContactAction | undefined) => void;
     clearCard: () => void;
 }
 
@@ -326,6 +327,18 @@ export const useCardStore = create<CardState>()(
 
             setLoading: (loading) => set({ isLoading: loading }),
             setError: (error) => set({ error }),
+
+            updateContactAction: (action) => {
+                const currentCard = get().card;
+                if (!currentCard) return;
+                const updatedCard = {
+                    ...currentCard,
+                    contactAction: action,
+                    updatedAt: new Date(),
+                };
+                set({ card: updatedCard });
+                debouncedSync(updatedCard);
+            },
 
             clearCard: () => set({ card: null, error: null }),
         }),
