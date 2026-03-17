@@ -14,6 +14,7 @@ import {
   Text,
   Pressable,
   StyleSheet,
+  PlatformColor,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
@@ -60,10 +61,8 @@ function VersionChip({
       {useGlass ? (
         <GlassView
           glassEffectStyle="regular"
-          style={[
-            styles.chip,
-            selected && { backgroundColor: version.accentColor },
-          ]}
+          tintColor={selected ? version.accentColor : undefined}
+          style={styles.chip}
         >
           {inner}
         </GlassView>
@@ -98,7 +97,7 @@ function QuickAction({
 }) {
   const actionInner = (
     <>
-      <Icon web={icon} size={20} color="#000" />
+      <Icon web={icon} size={20} />
       <Text style={styles.actionLabel}>{label}</Text>
     </>
   );
@@ -233,7 +232,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: "#8E8E93",
+    color: PlatformColor("secondaryLabel"),
   },
   cardWrap: {
     paddingHorizontal: 16,
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#000",
+    color: PlatformColor("label"),
   },
   chipTextSelected: {
     fontWeight: "600",
@@ -287,7 +286,7 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 12,
-    color: "#8E8E93",
+    color: PlatformColor("secondaryLabel"),
     fontWeight: "500",
   },
 });
