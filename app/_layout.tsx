@@ -9,6 +9,7 @@ import "@/src/css/global.css";
 
 import { Stack } from "expo-router/stack";
 import { useFonts } from "expo-font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoudyBookletter1911_400Regular } from "@expo-google-fonts/goudy-bookletter-1911";
 import { DMSans_400Regular } from "@expo-google-fonts/dm-sans";
 import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono";
@@ -26,12 +27,14 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {!card ? (
-        <Stack.Screen name="onboarding" />
-      ) : (
-        <Stack.Screen name="(tabs)" />
-      )}
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {!card ? (
+          <Stack.Screen name="onboarding" />
+        ) : (
+          <Stack.Screen name="(tabs)" />
+        )}
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
