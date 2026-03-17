@@ -138,28 +138,36 @@ export default function DiscoverScreen() {
               {index + 1} / {batch.length}
             </Text>
 
-            {/* Card */}
+            {/* Card + overlay bookmark */}
             <Animated.View
               key={current.id}
               entering={FadeInRight.springify()
                 .stiffness(springs.gentle.stiffness)
                 .damping(springs.gentle.damping)}
               exiting={FadeOutLeft.duration(200)}
+              style={styles.cardWrap}
             >
               <ProfileCard
                 profile={current.profile}
                 version={toCardVersion(current)}
               />
+              {/* Bookmark — glass chip overlaid on card top-right */}
+              <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
+                <AdaptiveGlass
+                  style={styles.bookmarkGlass}
+                  glassEffectStyle="regular"
+                  intensity={50}
+                  blurTint="light"
+                  fallbackColor="rgba(255,255,255,0.75)"
+                >
+                  <Icon
+                    web={saved ? "bookmark" : "bookmark-outline"}
+                    size={18}
+                    color={saved ? "#FF9500" : (PlatformColor("label") as unknown as string)}
+                  />
+                </AdaptiveGlass>
+              </Pressable>
             </Animated.View>
-
-            {/* Bookmark */}
-            <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
-              <Icon
-                web={saved ? "bookmark" : "bookmark-outline"}
-                size={22}
-                color={saved ? "#FF9500" : (PlatformColor("secondaryLabel") as unknown as string)}
-              />
-            </Pressable>
           </>
         ) : status === "batch_exhausted" ? (
           <View style={styles.emptyState}>
@@ -298,11 +306,21 @@ const styles = StyleSheet.create({
     color: PlatformColor("secondaryLabel") as unknown as string,
     marginBottom: 16,
   },
+  cardWrap: {
+    position: "relative",
+  },
   bookmarkBtn: {
-    alignSelf: "flex-end",
-    marginTop: 12,
-    minHeight: 44,
-    minWidth: 44,
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  bookmarkGlass: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderCurve: "continuous" as any,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
   },
