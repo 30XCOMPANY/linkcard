@@ -8,7 +8,10 @@
  */
 
 import React, { useState, useCallback, useMemo } from "react";
-import { Switch, Share, Clipboard, StyleSheet } from "react-native";
+import { Switch, Share, Clipboard, StyleSheet, PlatformColor } from "react-native";
+import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+
+const useGlass = isGlassEffectAPIAvailable();
 import { View, Text, ScrollView, Pressable } from "@/src/tw";
 import { Animated } from "@/src/tw/animated";
 import { FadeInDown } from "react-native-reanimated";
@@ -167,13 +170,22 @@ export default function ShareScreen() {
       </SettingsGroup>
 
       <View style={styles.ctaWrap}>
-        <Pressable
-          className="bg-sf-text"
-          style={styles.cta}
-          onPress={handleShare}
-        >
-          <Icon web="share-outline" size={18} color="#FFFFFF" />
-          <Text className="text-sf-bg" style={styles.ctaLabel}>Share</Text>
+        <Pressable onPress={handleShare}>
+          {useGlass ? (
+            <GlassView
+              glassEffectStyle="regular"
+              tintColor={PlatformColor("systemBlue") as unknown as string}
+              style={styles.cta}
+            >
+              <Icon web="share" size={18} color="#FFFFFF" />
+              <Text style={styles.ctaLabel}>Share</Text>
+            </GlassView>
+          ) : (
+            <View style={[styles.cta, { backgroundColor: PlatformColor("systemBlue") as any }]}>
+              <Icon web="share" size={18} color="#FFFFFF" />
+              <Text style={styles.ctaLabel}>Share</Text>
+            </View>
+          )}
         </Pressable>
       </View>
 
@@ -197,16 +209,18 @@ const styles = StyleSheet.create({
   },
   cta: {
     minHeight: 50,
-    borderRadius: 16,
+    borderRadius: 25,
     borderCurve: "continuous" as any,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    overflow: "hidden" as const,
   },
   ctaLabel: {
     marginLeft: 8,
     fontSize: 17,
     lineHeight: 22,
+    color: "#FFFFFF",
     fontWeight: "600",
   },
   secondaryLinks: {
