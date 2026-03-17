@@ -37,6 +37,7 @@ interface ContactsState {
   saveContact: (profile: DiscoverProfile) => void;
   removeContact: (id: string) => void;
   nextCard: () => void;
+  prevCard: () => void;
   refreshBatch: () => void;
   resetDailyIfNeeded: () => void;
 }
@@ -88,6 +89,13 @@ export const useContactsStore = create<ContactsState>()(
           });
         } else {
           set({ discoverIndex: nextIndex });
+        }
+      },
+
+      prevCard: () => {
+        const { discoverIndex } = get();
+        if (discoverIndex > 0) {
+          set({ discoverIndex: discoverIndex - 1 });
         }
       },
 

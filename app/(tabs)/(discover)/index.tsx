@@ -1,17 +1,19 @@
 /**
- * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
- *          expo-router Stack/useRouter, react-native-reanimated Animated/FadeInRight/FadeOutLeft,
+ * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView/Dimensions,
+ *          expo-router Stack/useRouter, react-native-reanimated,
+ *          react-native-gesture-handler Gesture/GestureDetector,
  *          @/src/stores/contactsStore, @/src/components/card/profile-card ProfileCard,
  *          @/src/components/shared/adaptive-glass AdaptiveGlass,
  *          @/src/lib/haptics, @/src/lib/springs, @/src/lib/icons Icon,
  *          @/src/lib/contact-actions, @/src/types CardVersion
- * [OUTPUT]: DiscoverScreen — discover feed with card browsing and actions
- * [POS]: Discover tab main screen — one card at a time with Next/Say Hi buttons
+ * [OUTPUT]: DiscoverScreen — discover feed with swipe gestures and card browsing
+ * [POS]: Discover tab main screen — Tinder-style swipe + Next/Say Hi buttons
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
+  Dimensions,
   PlatformColor,
   Pressable,
   ScrollView,
@@ -21,16 +23,27 @@ import {
 } from "react-native";
 import { Stack } from "expo-router/stack";
 import { useRouter } from "expo-router";
-import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
-import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
 import type { CardVersion, DiscoverProfile } from "@/src/types";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const SPRING_CONFIG = { damping: 20, stiffness: 200 };
 
 // ── Synthesize CardVersion from DiscoverProfile fields ───────────
 function toCardVersion(p: DiscoverProfile): CardVersion {
@@ -52,13 +65,14 @@ export default function DiscoverScreen() {
   const status = useContactsStore((s) => s.discoverStatus);
   const refreshesUsed = useContactsStore((s) => s.refreshesUsed);
   const nextCard = useContactsStore((s) => s.nextCard);
+  const prevCard = useContactsStore((s) => s.prevCard);
   const refreshBatch = useContactsStore((s) => s.refreshBatch);
   const saveContact = useContactsStore((s) => s.saveContact);
   const resetDaily = useContactsStore((s) => s.resetDailyIfNeeded);
+  const removeContact = useContactsStore((s) => s.removeContact);
 
   const current = index < batch.length ? batch[index] : null;
 
-  // Reactive bookmark check — re-renders when savedContacts changes
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
   );
@@ -67,7 +81,6 @@ export default function DiscoverScreen() {
     resetDaily();
   }, [resetDaily]);
 
-  // Auto-load first batch if empty
   useEffect(() => {
     if (
       batch.length === 0 &&
@@ -78,10 +91,88 @@ export default function DiscoverScreen() {
     }
   }, [batch.length, status, refreshesUsed, refreshBatch]);
 
+  // ── Swipe gesture ──────────────────────────────────────────────
+  const translateX = useSharedValue(0);
+  const directionRef = useRef<"left" | "right" | null>(null);
+
+  const onSwipeComplete = useCallback(
+    (direction: "left" | "right") => {
+      if (direction === "left") {
+        haptic.selection();
+        nextCard();
+      } else {
+        haptic.selection();
+        prevCard();
+      }
+      // Reset position after state update
+      translateX.value = 0;
+    },
+    [nextCard, prevCard, translateX]
+  );
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-15, 15])
+    .onUpdate((e) => {
+      translateX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      if (e.translationX < -SWIPE_THRESHOLD) {
+        // Swipe left → next card
+        translateX.value = withSpring(
+          -SCREEN_WIDTH,
+          SPRING_CONFIG,
+          () => {
+            runOnJS(onSwipeComplete)("left");
+          }
+        );
+      } else if (e.translationX > SWIPE_THRESHOLD && index > 0) {
+        // Swipe right → prev card
+        translateX.value = withSpring(
+          SCREEN_WIDTH,
+          SPRING_CONFIG,
+          () => {
+            runOnJS(onSwipeComplete)("right");
+          }
+        );
+      } else {
+        // Snap back
+        translateX.value = withSpring(0, SPRING_CONFIG);
+      }
+    });
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      {
+        rotate: `${interpolate(
+          translateX.value,
+          [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+          [-8, 0, 8]
+        )}deg`,
+      },
+    ],
+    opacity: interpolate(
+      Math.abs(translateX.value),
+      [0, SCREEN_WIDTH],
+      [1, 0.5]
+    ),
+  }));
+
+  // Reset translateX when index changes
+  useEffect(() => {
+    translateX.value = 0;
+  }, [index, translateX]);
+
   const handleNext = useCallback(() => {
     haptic.selection();
-    nextCard();
-  }, [nextCard]);
+    translateX.value = withSpring(
+      -SCREEN_WIDTH,
+      SPRING_CONFIG,
+      () => {
+        runOnJS(onSwipeComplete)("left");
+      }
+    );
+  }, [translateX, onSwipeComplete]);
 
   const handleSayHi = useCallback(() => {
     if (!current) return;
@@ -89,7 +180,6 @@ export default function DiscoverScreen() {
     executeContactAction(current.contactAction, current.profile.url);
   }, [current]);
 
-  const removeContact = useContactsStore((s) => s.removeContact);
   const handleSave = useCallback(() => {
     if (!current) return;
     if (saved) {
@@ -138,16 +228,8 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
       >
         {status === "browsing" && current ? (
-          <>
-            {/* Card + overlay bookmark */}
-            <Animated.View
-              key={current.id}
-              entering={FadeInRight.springify()
-                .stiffness(springs.gentle.stiffness)
-                .damping(springs.gentle.damping)}
-              exiting={FadeOutLeft.duration(200)}
-              style={styles.cardWrap}
-            >
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
               <ProfileCard
                 profile={current.profile}
                 version={toCardVersion(current)}
@@ -169,7 +251,7 @@ export default function DiscoverScreen() {
                 </AdaptiveGlass>
               </Pressable>
             </Animated.View>
-          </>
+          </GestureDetector>
         ) : status === "batch_exhausted" ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>
