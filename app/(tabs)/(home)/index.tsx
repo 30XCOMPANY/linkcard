@@ -48,7 +48,7 @@ function VersionChip({
       ]}
     >
       <View
-        style={[styles.chipDot, { backgroundColor: version.accentColor }]}
+        style={[styles.chipDot, { backgroundColor: selected ? "#FFFFFF" : version.accentColor }]}
       />
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
         {version.name}
