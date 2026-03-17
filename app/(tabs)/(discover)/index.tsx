@@ -167,9 +167,9 @@ export default function DiscoverScreen() {
                   fallbackColor="rgba(255,255,255,0.75)"
                 >
                   <Icon
-                    web={saved ? "bookmark" : "bookmark-outline"}
+                    web="bookmark"
                     size={18}
-                    color={saved ? "#FF9500" : (PlatformColor("label") as unknown as string)}
+                    color={saved ? "#FF9500" : "#FFFFFF"}
                   />
                 </AdaptiveGlass>
               </Pressable>
