@@ -52,11 +52,13 @@ function ProfileHeader({
   currentVersion,
   profile,
   onSelectVersion,
+  onEdit,
 }: {
   versions: CardVersion[];
   currentVersion: CardVersion;
   profile: LinkedInProfile;
   onSelectVersion: (id: string) => void;
+  onEdit: () => void;
 }) {
   return (
     <>
@@ -88,10 +90,39 @@ function ProfileHeader({
       </Stack.Toolbar>
 
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          icon="plus"
-          onPress={() => haptic.medium()}
-        />
+        <Stack.Toolbar.Menu icon="ellipsis">
+          <Stack.Toolbar.Menu inline>
+            <Stack.Toolbar.MenuAction
+              icon="pencil"
+              onPress={() => {
+                haptic.light();
+                onEdit();
+              }}
+            >
+              Edit Card
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="textformat"
+              onPress={() => haptic.light()}
+            >
+              Change Font
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+          <Stack.Toolbar.Menu inline>
+            <Stack.Toolbar.MenuAction
+              icon="plus.rectangle"
+              onPress={() => haptic.medium()}
+            >
+              Create New Card
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+              icon="arrow.triangle.2.circlepath"
+              onPress={() => haptic.light()}
+            >
+              Sync LinkedIn
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+        </Stack.Toolbar.Menu>
         <Stack.Toolbar.View>
           <View style={{ width: 32, height: 32 }}>
             <Avatar
@@ -368,7 +399,7 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 120,
+    height: 200,
   },
 
   profileName: {
