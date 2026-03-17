@@ -20,7 +20,7 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="(discover)">
         <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-creditcard.png")}
+          src={require("@/assets/icons/tab-tickets.png")}
           renderingMode="template"
         />
         <NativeTabs.Trigger.Label hidden>Discover</NativeTabs.Trigger.Label>
@@ -28,7 +28,7 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="(events)">
         <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-creditcard.png")}
+          src={require("@/assets/icons/tab-calendar.png")}
           renderingMode="template"
         />
         <NativeTabs.Trigger.Label hidden>Events</NativeTabs.Trigger.Label>
