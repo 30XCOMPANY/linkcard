@@ -31,6 +31,7 @@ interface AdaptiveGlassProps {
   blurTint?: "default" | "light" | "dark";
   fallbackColor?: string;
   glassEffectStyle?: "regular" | "clear" | "identity";
+  tintColor?: string;
 }
 
 export function AdaptiveGlass({
@@ -41,6 +42,7 @@ export function AdaptiveGlass({
   blurTint = "light",
   fallbackColor = "rgba(255, 255, 255, 0.72)",
   glassEffectStyle = "regular",
+  tintColor,
 }: AdaptiveGlassProps) {
   const [reduceTransparency, setReduceTransparency] = useState(false);
 
@@ -71,6 +73,7 @@ export function AdaptiveGlass({
     return (
       <GlassView
         glassEffectStyle={glassEffectStyle}
+        tintColor={tintColor}
         style={[{ borderCurve: "continuous" as any }, style]}
         className={className}
       >

@@ -217,9 +217,10 @@ export default function DiscoverScreen() {
             <AdaptiveGlass
               style={styles.glassChipPrimary}
               glassEffectStyle="regular"
+              tintColor="#007AFF"
               intensity={50}
               blurTint="dark"
-              fallbackColor={PlatformColor("systemBlue") as unknown as string}
+              fallbackColor="#007AFF"
             >
               <Text style={styles.glassChipPrimaryLabel}>
                 {current.contactAction?.label ?? "Say Hi"}
