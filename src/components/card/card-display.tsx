@@ -59,7 +59,7 @@ export function CardDisplay({
       )}
 
       {/* Card surface */}
-      <View className={cn("bg-sf-card", compact ? "p-5" : "p-6 pb-7")}>
+      <View className={cn("bg-sf-card", compact ? "p-4" : "p-5")}>
         {/* Top row: Avatar + Name block */}
         <View className="flex-row items-start">
           {/* Avatar */}

@@ -163,7 +163,7 @@ export default function PreviewScreen() {
         contentContainerClassName="pt-8 pb-32"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full max-w-[680px] self-center px-6">
+        <View className="w-full max-w-[680px] self-center px-5">
           {/* Title */}
           <Animated.View entering={stagger(1)}>
             <Text
@@ -183,7 +183,7 @@ export default function PreviewScreen() {
           {/* Profile Card */}
           <Animated.View entering={stagger(3)}>
             <View
-              className="bg-sf-card rounded-2xl p-6 border border-sf-card-border"
+              className="bg-sf-card rounded-2xl p-5 border border-sf-card-border"
               style={{
                 boxShadow:
                   "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
@@ -316,7 +316,7 @@ export default function PreviewScreen() {
         style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
       >
         <AdaptiveGlass>
-          <View className="px-6 pt-4 pb-8 max-w-[480px] self-center w-full">
+          <View className="px-5 pt-4 pb-8 max-w-[480px] self-center w-full">
             <Animated.View style={buttonStyle}>
               <Pressable
                 className="w-full h-[52px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px]"

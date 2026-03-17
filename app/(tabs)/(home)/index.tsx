@@ -14,7 +14,6 @@ import { useRouter } from "expo-router";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
-import { StripedBackground } from "@/src/components/shared/striped-background";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -144,19 +143,14 @@ export default function HomeScreen() {
     );
   }
 
-  const bgColor = useCardStore((s: any) => s.currentGradient) || "cyan";
-
   return (
-    <View style={{ flex: 1 }}>
-      <StripedBackground color={bgColor} />
-      <ScrollView
-        className="flex-1"
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="pb-8"
-        style={{ backgroundColor: "transparent" }}
-      >
-        {/* Card Display — hero */}
-        <View className="px-4 pt-4">
+    <ScrollView
+      className="flex-1 bg-sf-bg"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="pb-8"
+    >
+      {/* Card Display — hero */}
+      <View className="px-4 pt-4">
         <CardDisplay
           profile={card.profile}
           version={currentVersion}
@@ -169,7 +163,7 @@ export default function HomeScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2 px-4 py-4"
+        contentContainerClassName="gap-2 px-4 py-3"
         className="mt-2"
       >
         {card.versions.map((v: CardVersion) => (
@@ -183,7 +177,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Quick Actions */}
-      <View className="flex-row items-center justify-center gap-3 mt-1">
+      <View className="flex-row items-center justify-center gap-4 mt-3">
         <QuickAction
           icon="edit-pen"
           label="Edit card"
@@ -200,7 +194,6 @@ export default function HomeScreen() {
           onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
         />
       </View>
-      </ScrollView>
-    </View>
+    </ScrollView>
   );
 }

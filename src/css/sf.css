@@ -112,6 +112,36 @@
     --text-caption-2: var(--sf-caption-2);
     --text-caption-2--line-height: var(--sf-caption-2-lh);
 
+    /* ============================================================
+     * APPLE HIG SPACING (8pt grid + Apple-specific values)
+     * https://developer.apple.com/design/human-interface-guidelines/layout
+     * ============================================================ */
+
+    /* Screen edge insets */
+    --spacing-screen: 20px;        /* Standard screen-edge horizontal inset (grouped) */
+    --spacing-screen-compact: 16px; /* Compact screen-edge inset (plain lists) */
+
+    /* Section spacing */
+    --spacing-section-gap: 35px;   /* Between sections (header-to-header) */
+    --spacing-section-header: 6px; /* Section header to first row */
+
+    /* List row */
+    --spacing-row-h: 16px;         /* Row horizontal padding */
+    --spacing-row-v: 11px;         /* Row vertical padding */
+    --spacing-row-min: 44px;       /* Minimum row / touch target height */
+
+    /* Separator insets */
+    --spacing-separator: 16px;     /* Text-only row separator indent */
+    --spacing-separator-icon: 56px; /* Row with icon separator indent */
+
+    /* Content spacing */
+    --spacing-card: 16px;          /* Card internal padding */
+    --spacing-tight: 4px;          /* Tight spacing (between related items) */
+    --spacing-compact: 8px;        /* Compact gap */
+    --spacing-default: 12px;       /* Default content gap */
+    --spacing-relaxed: 16px;       /* Relaxed gap */
+    --spacing-loose: 24px;         /* Loose spacing */
+
     /* Colors */
     --color-sf-blue: var(--sf-blue);
     --color-sf-green: var(--sf-green);

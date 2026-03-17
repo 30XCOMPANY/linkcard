@@ -113,7 +113,7 @@ export default function AuthScreen() {
 
   const formContent = (
     <Animated.View entering={FadeInDown.duration(400)}>
-      <View className="w-full max-w-[480px] self-center px-6">
+      <View className="w-full max-w-[480px] self-center px-5">
         {/* Logo */}
         <View className="items-center mb-6">
           <Image
@@ -175,7 +175,7 @@ export default function AuthScreen() {
         {/* Email Input */}
         <Animated.View style={shakeStyle}>
           <View className="mb-4">
-            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-1.5">
               EMAIL ADDRESS
             </Text>
             <View
@@ -208,7 +208,7 @@ export default function AuthScreen() {
 
           {/* Password Input */}
           <View className="mb-4">
-            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-1.5">
               PASSWORD
             </Text>
             <View
@@ -271,7 +271,7 @@ export default function AuthScreen() {
         </Animated.View>
 
         {/* Footer */}
-        <View className="flex-row justify-center items-center gap-1 mt-8">
+        <View className="flex-row justify-center items-center gap-1 mt-[35px]">
           <Text className="text-subheadline text-sf-text-2">New to LinkCard?</Text>
           <Pressable
             className="min-h-[44px] min-w-[44px] justify-center"

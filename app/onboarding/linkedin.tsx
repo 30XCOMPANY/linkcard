@@ -104,7 +104,7 @@ export default function LinkedInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full max-w-[480px] self-center px-6">
+        <View className="w-full max-w-[480px] self-center px-5">
           {/* Title */}
           <Animated.View entering={FadeInDown.delay(100).springify()}>
             <Text
@@ -129,7 +129,7 @@ export default function LinkedInScreen() {
             entering={FadeInDown.delay(200).springify()}
             style={shakeStyle}
           >
-            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-1.5">
               LINKEDIN URL
             </Text>
             <View
@@ -172,7 +172,7 @@ export default function LinkedInScreen() {
         style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
       >
         <AdaptiveGlass>
-          <View className="px-6 pt-4 pb-8 max-w-[480px] self-center w-full">
+          <View className="px-5 pt-4 pb-8 max-w-[480px] self-center w-full">
             <Animated.View style={buttonStyle}>
               <Pressable
                 className={`w-full h-[52px] rounded-full bg-sf-text items-center justify-center min-h-[44px] min-w-[44px] ${

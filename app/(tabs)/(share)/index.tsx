@@ -15,7 +15,6 @@ import { FadeInDown } from "react-native-reanimated";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
-import { StripedBackground } from "@/src/components/shared/striped-background";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -61,7 +60,7 @@ function FieldRow({
 }) {
   return (
     <>
-      <View className="flex-row items-center min-h-[44px] py-3 px-4">
+      <View className="flex-row items-center min-h-[44px] py-[11px] px-4">
         <View className="w-[30px] items-center mr-3">
           <Icon web={field.web} size={20} />
         </View>
@@ -138,17 +137,12 @@ export default function ShareScreen() {
     );
   }
 
-  const bgColor = useCardStore((s: any) => s.currentGradient) || "cyan";
-
   return (
-    <View style={{ flex: 1 }}>
-      <StripedBackground color={bgColor} />
-      <ScrollView
-        className="flex-1"
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="pb-8"
-        style={{ backgroundColor: "transparent" }}
-      >
+    <ScrollView
+      className="flex-1 bg-sf-bg"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="pb-8"
+    >
         {/* Card Preview */}
         <View className="px-4 pt-4">
         <Animated.View
@@ -166,7 +160,7 @@ export default function ShareScreen() {
       </View>
 
       {/* What to Share — grouped list */}
-      <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
+      <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-1.5 mt-[35px]">
         What to Share
       </Text>
       <View
@@ -185,7 +179,7 @@ export default function ShareScreen() {
       </View>
 
       {/* Primary CTA */}
-      <View className="px-4 mt-8">
+      <View className="px-4 mt-[35px]">
         <Pressable
           className="h-[52px] rounded-2xl bg-sf-text flex-row items-center justify-center gap-2 min-h-[44px]"
           onPress={handleShare}
@@ -205,7 +199,6 @@ export default function ShareScreen() {
           <Text className="text-footnote text-sf-blue">Add to Wallet</Text>
         </Pressable>
       </View>
-      </ScrollView>
-    </View>
+    </ScrollView>
   );
 }

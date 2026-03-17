@@ -56,7 +56,7 @@ function Separator() {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
+    <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-1.5 mt-[35px]">
       {title}
     </Text>
   );
@@ -76,7 +76,7 @@ function FieldToggleRow({
   onToggle: (next: boolean) => void;
 }) {
   return (
-    <Pressable className="flex-row items-center justify-between px-4 min-h-[44px] py-3">
+    <Pressable className="flex-row items-center justify-between px-4 min-h-[44px] py-[11px]">
       <Text className="text-body text-sf-text flex-1">{label}</Text>
       <Switch
         value={enabled}
@@ -188,7 +188,7 @@ export default function EditorScreen() {
           style={{ borderCurve: "continuous" as any }}
         >
           <Pressable
-            className="flex-row items-center justify-between px-4 min-h-[44px] py-3 min-w-[44px]"
+            className="flex-row items-center justify-between px-4 min-h-[44px] py-[11px] min-w-[44px]"
             onPress={() => {
               haptic.light();
               // Sheet implementation deferred

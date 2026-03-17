@@ -16,77 +16,56 @@
 |------|--------|----------------|
 | `src/components/shared/striped-background.tsx` | Modify | Fix dark mode hardcode |
 | `app/(tabs)/(home)/index.tsx` | Modify | Add entrance animations + CardDisplay press feedback |
-| `src/components/card/card-display.tsx` | Modify | Add press scale + haptic on tap |
 | `app/(tabs)/(settings)/index.tsx` | Modify | Fix ColorDot 44pt touch target |
 | `app/onboarding/_layout.tsx` | Modify | Enable native headers for back navigation hint |
 | `app/(tabs)/(home)/index.tsx` | Modify | Apple-style empty state |
 | `app/(tabs)/(share)/index.tsx` | Modify | Apple-style empty state |
 | `app/(tabs)/(home)/editor.tsx` | Modify | Apple-style empty state |
-| `src/design-system/` | Delete (entire directory) | Remove ghost layer |
 | `DESIGN_SYSTEM.md` | Delete | Remove stale documentation for deleted system |
-| `src/stores/cardStore.ts` | Modify | Remove design-system import, use `src/lib/accent-colors` |
+| `CLAUDE.md` | Modify | Remove design-system references from directory tree |
+| `src/components/shared/CLAUDE.md` | Modify | Add striped-background.tsx to member list |
 
 ---
 
 ## Task 1: Fix StripedBackground Dark Mode (P0)
 
-**Why:** Bottom 70% of home screen hardcodes `#F2F2F7` — dark mode renders a glaring light-grey slab.
+**Why:** The `SYS_BG` constant hardcodes `#F2F2F7` — dark mode renders a glaring light-grey slab across the entire background and gradient fade.
 
 **Files:**
 - Modify: `src/components/shared/striped-background.tsx`
 
-- [ ] **Step 1: Fix the hardcoded system background color**
+- [ ] **Step 1: Replace hardcoded SYS_BG with dynamic color scheme**
 
-Replace the hardcoded `#F2F2F7` with the `sf-bg` CSS variable so it resolves to the correct color in both light and dark modes. Also fix the gradient fade endpoint.
+The component uses a `SYS_BG` constant (line 72) referenced in two places:
+1. Root View `backgroundColor` (line 80)
+2. LinearGradient fade-to color (line 88)
 
-In `src/components/shared/striped-background.tsx`, change the `StripedBackground` component:
-
-```tsx
-// Before (lines 83-91):
-<LinearGradient
-  colors={["transparent", "rgba(255,255,255,0.85)", "#F2F2F7"]}
-  locations={[0.2, 0.75, 1]}
-  style={StyleSheet.absoluteFill}
-/>
-// ...
-<View style={{ flex: 1, backgroundColor: "#F2F2F7" }} />
-
-// After:
-<LinearGradient
-  colors={["transparent", "rgba(255,255,255,0.85)", sfBg]}
-  locations={[0.2, 0.75, 1]}
-  style={StyleSheet.absoluteFill}
-/>
-// ...
-<View style={{ flex: 1, backgroundColor: sfBg }} />
-```
-
-Where `sfBg` comes from the CSS variable system. Add this import and constant at the top of the component:
+Add `useColorScheme` import and make `SYS_BG` dynamic:
 
 ```tsx
-import { useCSSVariable } from "@/src/tw";
+// Add to existing import from "react-native" (line 9):
+import { StyleSheet, View, useWindowDimensions, useColorScheme } from "react-native";
 
-// Inside StripedBackground component, before the return:
-const sfBg = useCSSVariable("--sf-bg");
-```
+// Delete the constant at line 72:
+// const SYS_BG = "#F2F2F7";   ← remove this
 
-Note: If `useCSSVariable` doesn't work inside this component (it uses raw RN `View` not `@/src/tw` View), fall back to `useColorScheme()`:
-
-```tsx
-import { useColorScheme } from "react-native";
-
-// Inside component:
+// Inside StripedBackground function body, before the return (after line 77):
 const colorScheme = useColorScheme();
-const sfBg = colorScheme === "dark" ? "#000000" : "#F2F2F7";
-const fadeMid = colorScheme === "dark" ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)";
+const sysBg = colorScheme === "dark" ? "#000000" : "#F2F2F7";
 ```
 
-And update the gradient colors to use `fadeMid` instead of the hardcoded white-ish value:
+Then update the two usages:
+
 ```tsx
+// Line 80 — root View:
+<View style={[StyleSheet.absoluteFill, { backgroundColor: sysBg }]}>
+
+// Line 88 — gradient:
 <LinearGradient
-  colors={["transparent", fadeMid, sfBg]}
-  locations={[0.2, 0.75, 1]}
+  colors={["transparent", sysBg]}
+  locations={[0.15, 0.35]}
   style={StyleSheet.absoluteFill}
+  pointerEvents="none"
 />
 ```
 
@@ -104,61 +83,39 @@ git commit -m "fix: StripedBackground respects dark mode color scheme"
 
 ---
 
-## Task 2: Delete Ghost Design System (P0)
+## Task 2: Clean Up Ghost Design System Remnants (P0)
 
-**Why:** `src/design-system/` is an orphaned layer — zero live `.tsx`/`.ts` imports. Its tokens (`colors.ts`, `animation.ts`) conflict with the current `src/css/sf.css` and `src/lib/springs.ts`. Keeping it causes developer confusion about which source of truth to use.
+**Why:** `src/design-system/` was already deleted from disk in a prior migration, and `cardStore.ts` already imports from `src/lib/accent-colors`. However, `DESIGN_SYSTEM.md` still exists and `CLAUDE.md` still references the old directory tree. These stale references confuse developers about the source of truth.
 
 **Files:**
-- Delete: `src/design-system/` (entire directory)
 - Delete: `DESIGN_SYSTEM.md`
-- Modify: `src/stores/cardStore.ts` — remove `accentColors` import from design-system, use `src/lib/accent-colors.ts`
+- Modify: `CLAUDE.md` — remove `design-system/` from directory tree
+- Modify: `src/components/shared/CLAUDE.md` — add `striped-background.tsx` to member list
 
-- [ ] **Step 1: Verify no live imports exist**
-
-Run:
-```bash
-grep -r "@/src/design-system" --include="*.tsx" --include="*.ts" src/ app/
-```
-Expected: Zero results. (Only `DESIGN_SYSTEM.md` and `docs/` may reference it in prose.)
-
-- [ ] **Step 2: Update cardStore import**
-
-`src/stores/cardStore.ts` imports `accentColors` and `AccentColorKey` from the old system. Check `src/lib/accent-colors.ts` — it should already export these. If it does, update the import:
-
-```tsx
-// Before:
-import { accentColors, AccentColorKey } from '@/src/design-system/tokens/colors';
-
-// After:
-import { accentColors, type AccentColorKey } from '@/src/lib/accent-colors';
-```
-
-If `src/lib/accent-colors.ts` doesn't have the exact same exports, copy the `accentColors` object and `AccentColorKey` type from `src/design-system/tokens/colors.ts` into `src/lib/accent-colors.ts` before deleting.
-
-- [ ] **Step 3: Read accent-colors.ts to verify exports match**
-
-Read `src/lib/accent-colors.ts` and compare its `accentColors` object with the one in `src/design-system/tokens/colors.ts`. They must have the same keys and values.
-
-- [ ] **Step 4: Delete the design-system directory**
+- [ ] **Step 1: Delete stale documentation**
 
 ```bash
-rm -rf src/design-system/
 rm DESIGN_SYSTEM.md
 ```
 
-- [ ] **Step 5: Verify app still compiles**
+- [ ] **Step 2: Update root CLAUDE.md**
 
-Run: `npx expo start` — confirm no import errors in the terminal.
+Remove the entire `design-system/` block from the directory structure. The tree should no longer reference `src/design-system/` or its subdirectories (tokens, primitives, patterns, layouts, theme, bento).
 
-- [ ] **Step 6: Update CLAUDE.md**
+- [ ] **Step 3: Update shared/ CLAUDE.md**
 
-Remove the `design-system/` entry from the directory structure in `/CLAUDE.md`. The tree should no longer reference `src/design-system/` or its subdirectories.
+Add `striped-background.tsx` to the member list in `src/components/shared/CLAUDE.md`:
 
-- [ ] **Step 7: Commit**
+```
+- `striped-background.tsx`: StripedBackground — Mindo-style vertical stripes + radial gradient fade, user-selectable color palette (BG_COLORS), dark mode aware
+```
+
+- [ ] **Step 4: Commit**
 
 ```bash
-git add -A
-git commit -m "chore: delete orphaned design-system layer, migrate last import to lib/accent-colors"
+git add CLAUDE.md src/components/shared/CLAUDE.md
+git rm DESIGN_SYSTEM.md
+git commit -m "chore: remove stale design-system docs, update CLAUDE.md directory tree"
 ```
 
 ---
@@ -242,43 +199,54 @@ git commit -m "feat: add staggered entrance animations to Home screen"
 
 **Files:**
 - Modify: `app/(tabs)/(home)/index.tsx` — wrap CardDisplay in pressable with scale animation
-- Modify: `src/components/card/card-display.tsx` — make it accept `onPress` prop (optional)
 
 - [ ] **Step 1: Add press feedback wrapper in Home**
 
-In `app/(tabs)/(home)/index.tsx`, wrap CardDisplay with a Pressable that has spring scale feedback:
+In `app/(tabs)/(home)/index.tsx`, wrap CardDisplay with a Pressable that has spring scale feedback.
 
+Add `useAnimatedStyle` to the existing reanimated import (line 12):
 ```tsx
-// Add near the top of HomeScreen component:
-const cardScale = useSharedValue(1);
-
-// In the JSX, replace the bare CardDisplay with:
-<Pressable
-  onPress={() => {
-    haptic.medium();
-    setShowQR((p) => !p);
-  }}
-  onPressIn={() => {
-    cardScale.value = withSpring(0.97, springs.snappy);
-  }}
-  onPressOut={() => {
-    cardScale.value = withSpring(1, springs.snappy);
-  }}
-  accessibilityLabel={showQR ? "Hide QR code" : "Show QR code"}
-  accessibilityRole="button"
->
-  <Animated.View style={{ transform: [{ scale: cardScale }] }}>
-    <CardDisplay
-      profile={card.profile}
-      version={currentVersion}
-      qrCodeData={card.qrCodeData}
-      showQR={showQR}
-    />
-  </Animated.View>
-</Pressable>
+import { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 ```
 
-Make sure `useAnimatedStyle` is not needed — the inline `style={{ transform }}` with shared value works directly on `Animated.View`.
+Inside `HomeScreen`, add the scale value and animated style:
+```tsx
+const cardScale = useSharedValue(1);
+const cardAnimStyle = useAnimatedStyle(() => ({
+  transform: [{ scale: cardScale.value }],
+}));
+```
+
+In the JSX, replace the bare `<View className="px-4 pt-4"><CardDisplay ... /></View>` with:
+```tsx
+<View className="px-4 pt-4">
+  <Pressable
+    onPress={() => {
+      haptic.medium();
+      setShowQR((p) => !p);
+    }}
+    onPressIn={() => {
+      cardScale.value = withSpring(0.97, springs.snappy);
+    }}
+    onPressOut={() => {
+      cardScale.value = withSpring(1, springs.snappy);
+    }}
+    accessibilityLabel={showQR ? "Hide QR code" : "Show QR code"}
+    accessibilityRole="button"
+  >
+    <Animated.View style={cardAnimStyle}>
+      <CardDisplay
+        profile={card.profile}
+        version={currentVersion}
+        qrCodeData={card.qrCodeData}
+        showQR={showQR}
+      />
+    </Animated.View>
+  </Pressable>
+</View>
+```
+
+Note: `useAnimatedStyle` is required — you cannot pass shared values directly in inline style objects with reanimated.
 
 - [ ] **Step 2: Verify**
 
@@ -460,10 +428,13 @@ if (!card || !currentVersion) {
 
 - [ ] **Step 2: Update Share empty state**
 
-In `app/(tabs)/(share)/index.tsx`, replace the empty guard (around line 131):
+In `app/(tabs)/(share)/index.tsx`, replace the empty guard (around line 131).
+
+**Important:** The current Share screen has a React Rules of Hooks violation — `useCardStore` calls at line 141 occur after the early return at line 131. Move the card-null check below all hook calls, or restructure the guard to only check `card`:
 
 ```tsx
-if (!card || !currentVersion || !previewVersion) {
+// The early return should only check card (which is derived from a hook above):
+if (!card) {
   return (
     <View className="flex-1 items-center justify-center bg-sf-bg px-8">
       <Icon web="send" size={48} color="rgba(60,60,67,0.3)" />
@@ -477,6 +448,8 @@ if (!card || !currentVersion || !previewVersion) {
   );
 }
 ```
+
+Then keep a second guard after all hooks for version/preview checks (these are derived from state, not hooks).
 
 - [ ] **Step 3: Update Editor empty state**
 
