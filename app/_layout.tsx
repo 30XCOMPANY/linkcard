@@ -1,54 +1,25 @@
 /**
- * [INPUT]: expo-router Stack, design-system ThemeProvider + useTheme
- * [OUTPUT]: Root layout with theme context
- * [POS]: App shell — wraps all screens with ThemeProvider
+ * [INPUT]: @/src/css/global.css, expo-router Stack, cardStore
+ * [OUTPUT]: Root layout — gates between onboarding and tabs based on card state
+ * [POS]: Root — entry point, imports global CSS, conditional navigation
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import "@/src/css/global.css";
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-import { ThemeProvider, useTheme } from '@/src/design-system/theme';
-
-function RootLayoutInner() {
-  const { colors, isDark } = useTheme();
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background as string }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background as string },
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="glass-home" />
-        <Stack.Screen name="preview" />
-        <Stack.Screen name="editor" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="versions" />
-        <Stack.Screen
-          name="share"
-          options={{
-            presentation: 'modal',
-            animation: 'fade',
-          }}
-        />
-      </Stack>
-    </GestureHandlerRootView>
-  );
-}
+import { Stack } from "expo-router/stack";
+import { useCardStore } from "@/src/stores/cardStore";
 
 export default function RootLayout() {
+  const card = useCardStore((s) => s.card);
+
   return (
-    <ThemeProvider>
-      <RootLayoutInner />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      {!card ? (
+        <Stack.Screen name="onboarding" />
+      ) : (
+        <Stack.Screen name="(tabs)" />
+      )}
+    </Stack>
   );
 }
