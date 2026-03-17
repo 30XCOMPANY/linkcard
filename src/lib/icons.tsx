@@ -79,7 +79,7 @@ const SF_ALIASES: Record<string, string> = {
   "business-outline": "briefcase",
   tag: "tag",
   "tag-outline": "tag",
-  bookmark: "bookmark",
+  bookmark: "bookmark.fill",
   "bookmark-outline": "bookmark",
   heart: "heart",
   "heart-outline": "heart",
