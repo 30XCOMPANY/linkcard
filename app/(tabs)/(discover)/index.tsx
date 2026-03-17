@@ -89,11 +89,17 @@ export default function DiscoverScreen() {
     executeContactAction(current.contactAction, current.profile.url);
   }, [current]);
 
+  const removeContact = useContactsStore((s) => s.removeContact);
   const handleSave = useCallback(() => {
-    if (!current || saved) return;
-    haptic.success();
-    saveContact(current);
-  }, [current, saved, saveContact]);
+    if (!current) return;
+    if (saved) {
+      haptic.light();
+      removeContact(current.id);
+    } else {
+      haptic.success();
+      saveContact(current);
+    }
+  }, [current, saved, saveContact, removeContact]);
 
   const handleRefresh = useCallback(() => {
     haptic.medium();
@@ -115,7 +121,7 @@ export default function DiscoverScreen() {
             }}
             style={styles.toolbarBtn}
           >
-            <Icon web="bookmark" size={20} color={PlatformColor("label") as unknown as string} />
+            <Icon web="wallet" size={20} color={PlatformColor("label") as unknown as string} />
           </Pressable>
         </Stack.Toolbar.View>
       </Stack.Toolbar>
