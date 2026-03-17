@@ -43,18 +43,6 @@ function VersionChip({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        className={cn(
-          "h-[40px] px-4 rounded-full flex-row items-center gap-2 min-h-[44px]",
-          selected
-            ? ""
-            : "bg-sf-bg-2"
-        )}
-        style={[
-          selected && {
-            backgroundColor: version.accentColor + "1A",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          },
-        ]}
         onPress={() => {
           haptic.selection();
           onPress();
@@ -62,19 +50,23 @@ function VersionChip({
         onPressIn={() => { scale.value = withSpring(0.97, springs.snappy); }}
         onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
       >
-        <View
-          className="w-2.5 h-2.5 rounded-full"
-          style={{ backgroundColor: version.accentColor }}
-        />
-        <Text
-          className={cn(
-            "text-subheadline",
-            selected ? "font-semibold" : "font-medium text-sf-text-2"
-          )}
-          style={selected ? { color: version.accentColor } : undefined}
+        <AdaptiveGlass
+          className="h-[44px] px-4 rounded-full flex-row items-center gap-2"
+          style={selected ? { backgroundColor: `${version.accentColor}20` } : undefined}
         >
-          {version.name}
-        </Text>
+          <View
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ backgroundColor: version.accentColor }}
+          />
+          <Text
+            className={cn(
+              "text-subheadline",
+              selected ? "font-semibold text-sf-text" : "font-medium text-sf-text-2"
+            )}
+          >
+            {version.name}
+          </Text>
+        </AdaptiveGlass>
       </Pressable>
     </Animated.View>
   );
