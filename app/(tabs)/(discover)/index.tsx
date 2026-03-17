@@ -139,11 +139,6 @@ export default function DiscoverScreen() {
       >
         {status === "browsing" && current ? (
           <>
-            {/* Progress */}
-            <Text style={styles.progress}>
-              {index + 1} / {batch.length}
-            </Text>
-
             {/* Card + overlay bookmark */}
             <Animated.View
               key={current.id}
@@ -303,14 +298,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "500",
     color: PlatformColor("secondaryLabel") as unknown as string,
-  },
-  progress: {
-    textAlign: "center",
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-    color: PlatformColor("secondaryLabel") as unknown as string,
-    marginBottom: 16,
   },
   cardWrap: {
     position: "relative",
