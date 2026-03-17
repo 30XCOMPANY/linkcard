@@ -98,16 +98,14 @@ export function ProfileCard({
       </Pressable>
 
       {/* Avatar */}
-      {vis.has("photoUrl") && (
-        <Avatar
-          source={profile.photoUrl}
-          name={profile.name}
-          size={120}
-          glassPadding={8}
-          glassIntensity={18}
-          accentColor={accent}
-        />
-      )}
+      <Avatar
+        source={profile.photoUrl}
+        name={profile.name}
+        size={120}
+        glassPadding={8}
+        glassIntensity={18}
+        accentColor={accent}
+      />
 
       {/* Name */}
       {vis.has("name") && (

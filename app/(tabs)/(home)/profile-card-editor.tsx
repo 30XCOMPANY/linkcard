@@ -94,16 +94,14 @@ export function ProfileCardEditor({
         />
       </Pressable>
 
-      {vis.has("photoUrl") && (
-        <Avatar
-          accentColor={version.accentColor}
-          glassIntensity={18}
-          glassPadding={8}
-          name={profile.name}
-          size={120}
-          source={profile.photoUrl}
-        />
-      )}
+      <Avatar
+        accentColor={version.accentColor}
+        glassIntensity={18}
+        glassPadding={8}
+        name={profile.name}
+        size={120}
+        source={profile.photoUrl}
+      />
 
       {vis.has("name") && (
         <EditableText

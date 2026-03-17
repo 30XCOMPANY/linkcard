@@ -44,13 +44,8 @@ const FIELDS: { key: ToggleableField; label: string; icon: string; color: string
   { key: "name", label: "Name", icon: "person", color: "#007AFF" },
   { key: "headline", label: "Headline", icon: "note-text", color: "#5856D6" },
   { key: "jobTitle", label: "Job Title", icon: "briefcase", color: "#FF9500" },
-  { key: "company", label: "Company", icon: "briefcase", color: "#34C759" },
-  { key: "location", label: "Location", icon: "location", color: "#FF3B30" },
-  { key: "email", label: "Email", icon: "mail", color: "#007AFF" },
-  { key: "phone", label: "Phone", icon: "phone", color: "#34C759" },
   { key: "website", label: "Website", icon: "globe", color: "#5AC8FA" },
-  { key: "qrCode", label: "QR Code", icon: "qr-code", color: "#8E8E93" },
-  { key: "character", label: "Character", icon: "star", color: "#FF9500" },
+  { key: "email", label: "Email", icon: "mail", color: "#007AFF" },
 ];
 
 const WEIGHTS = ["Regular", "Medium", "Bold"] as const;
