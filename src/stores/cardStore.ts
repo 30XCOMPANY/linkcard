@@ -10,6 +10,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BusinessCard, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
 import { accentColors, AccentColorKey } from '@/src/lib/accent-colors';
+import type { NameFontKey } from '@/src/lib/name-fonts';
 import { cardService } from '@/src/services/supabase';
 
 // Debounced cloud sync — avoids hammering Supabase on rapid edits
@@ -31,6 +32,7 @@ interface CardState {
     themeMode: ThemeMode;
     accentColor: string;
     currentGradient: string; // Current background gradient or image URL
+    nameFont: NameFontKey;
 
     // Actions
     setCard: (card: BusinessCard) => void;
@@ -44,6 +46,7 @@ interface CardState {
     setThemeMode: (mode: ThemeMode) => void;
     setAccentColor: (color: AccentColorKey | string) => void;
     setCurrentGradient: (gradient: string) => void;
+    setNameFont: (font: NameFontKey) => void;
 
     // Sync actions
     setLoading: (loading: boolean) => void;
@@ -127,6 +130,7 @@ export const useCardStore = create<CardState>()(
             themeMode: 'system',
             accentColor: accentColors.indigo,
             currentGradient: 'lightGlass', // Default gradient
+            nameFont: 'classic' as NameFontKey,
 
             setCard: (card) => {
                 set({ card, error: null });
@@ -229,6 +233,7 @@ export const useCardStore = create<CardState>()(
             },
 
             setCurrentGradient: (gradient) => set({ currentGradient: gradient }),
+            setNameFont: (font) => set({ nameFont: font }),
 
             setLoading: (loading) => set({ isLoading: loading }),
             setError: (error) => set({ error }),
@@ -243,6 +248,7 @@ export const useCardStore = create<CardState>()(
                 themeMode: state.themeMode,
                 accentColor: state.accentColor,
                 currentGradient: state.currentGradient,
+                nameFont: state.nameFont,
             }),
         }
     )

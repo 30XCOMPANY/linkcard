@@ -13,17 +13,21 @@ import {
   ScrollView,
   View,
   Text,
+  Image,
   Pressable,
   StyleSheet,
   PlatformColor,
   Linking,
 } from "react-native";
 import { Stack } from "expo-router/stack";
+import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
+import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import type { CardVersion, LinkedInProfile } from "@/src/types";
 
 /* ------------------------------------------------------------------ */
@@ -108,6 +112,7 @@ function ProfileHeader({
 
 export default function HomeScreen() {
   const card = useCardStore((s: any) => s.card);
+  const nameFont: NameFontKey = useCardStore((s: any) => s.nameFont) ?? "classic";
 
   const defaultVersion =
     card?.versions.find((v: CardVersion) => v.isDefault) ?? card?.versions[0];
@@ -153,6 +158,40 @@ export default function HomeScreen() {
       >
         {/* Profile Card */}
         <View style={s.card}>
+          {/* Banner Image — tap to change */}
+          <Pressable
+            style={s.bannerWrap}
+            onPress={async () => {
+              haptic.light();
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ["images"],
+                allowsEditing: true,
+                aspect: [16, 9],
+                quality: 0.8,
+              });
+              if (!result.canceled && result.assets[0]) {
+                useCardStore.getState().updateProfile({
+                  bannerUrl: result.assets[0].uri,
+                } as any);
+              }
+            }}
+          >
+            <Image
+              source={
+                (profile as any).bannerUrl
+                  ? { uri: (profile as any).bannerUrl }
+                  : require("@/assets/default-banner.jpg")
+              }
+              style={s.bannerImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["transparent", "rgba(255,255,255,0.6)", "rgba(255,255,255,1)"]}
+              locations={[0, 0.6, 1]}
+              style={s.bannerFade}
+            />
+          </Pressable>
+
           {/* Avatar + Name */}
           <Avatar
             source={profile.photoUrl}
@@ -160,7 +199,9 @@ export default function HomeScreen() {
             size={120}
             accentColor={accent}
           />
-          <Text style={s.profileName}>{profile.name}</Text>
+          <Text style={[s.profileName, nameFonts[nameFont].fontFamily ? { fontFamily: nameFonts[nameFont].fontFamily } : undefined]}>
+            {profile.name}
+          </Text>
 
           {/* Headline */}
           {profile.headline ? (
@@ -301,17 +342,34 @@ const s = StyleSheet.create({
     borderRadius: 24,
     borderCurve: "continuous" as any,
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 0,
     paddingBottom: 20,
     gap: 20,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PlatformColor("separator") as unknown as string,
     marginTop: 8,
+    overflow: "hidden",
+  },
+
+  bannerWrap: {
+    width: "100%",
+    height: 180,
+    marginBottom: -20,
+  },
+  bannerImage: {
+    width: "100%",
+    height: "100%",
+  },
+  bannerFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 80,
   },
 
   profileName: {
     fontSize: 32,
-    fontFamily: "GoudyBookletter1911_400Regular",
     color: PlatformColor("label") as unknown as string,
     letterSpacing: 0.2,
   },
