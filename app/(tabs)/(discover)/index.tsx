@@ -175,10 +175,10 @@ export default function DiscoverScreen() {
             </Text>
             {remainingRefreshes > 0 ? (
               <Pressable
-                style={[styles.btnPrimary, styles.refreshBtn]}
+                style={styles.refreshBtn}
                 onPress={handleRefresh}
               >
-                <Text style={styles.btnPrimaryLabel}>Refresh</Text>
+                <Text style={styles.refreshBtnLabel}>Refresh</Text>
               </Pressable>
             ) : null}
           </View>
@@ -192,28 +192,40 @@ export default function DiscoverScreen() {
         )}
       </ScrollView>
 
-      {/* ── Floating action bar — liquid glass ──────────────── */}
+      {/* ── Floating action chips — liquid glass ─────────────── */}
       {status === "browsing" && current ? (
         <View style={styles.floatingBar}>
-          <AdaptiveGlass
-            style={styles.glassBar}
-            glassEffectStyle="regular"
-            intensity={60}
-            blurTint="light"
-            fallbackColor="rgba(255,255,255,0.85)"
+          <Pressable
+            onPress={handleNext}
+            style={styles.glassChipWrap}
           >
-            <View style={styles.actions}>
-              <Pressable style={styles.btnSecondary} onPress={handleNext}>
-                <Text style={styles.btnSecondaryLabel}>Next</Text>
-              </Pressable>
-              <View style={styles.btnSpacer} />
-              <Pressable style={styles.btnPrimary} onPress={handleSayHi}>
-                <Text style={styles.btnPrimaryLabel}>
-                  {current.contactAction?.label ?? "Say Hi"}
-                </Text>
-              </Pressable>
-            </View>
-          </AdaptiveGlass>
+            <AdaptiveGlass
+              style={styles.glassChip}
+              glassEffectStyle="regular"
+              intensity={50}
+              blurTint="light"
+              fallbackColor="rgba(245,245,247,0.88)"
+            >
+              <Text style={styles.glassChipLabel}>Next</Text>
+            </AdaptiveGlass>
+          </Pressable>
+          <View style={styles.btnSpacer} />
+          <Pressable
+            onPress={handleSayHi}
+            style={styles.glassChipWrap}
+          >
+            <AdaptiveGlass
+              style={styles.glassChipPrimary}
+              glassEffectStyle="regular"
+              intensity={50}
+              blurTint="dark"
+              fallbackColor={PlatformColor("systemBlue") as unknown as string}
+            >
+              <Text style={styles.glassChipPrimaryLabel}>
+                {current.contactAction?.label ?? "Say Hi"}
+              </Text>
+            </AdaptiveGlass>
+          </Pressable>
         </View>
       ) : null}
     </>
@@ -230,14 +242,40 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  glassBar: {
-    borderRadius: 28,
+  glassChipWrap: {
+    flex: 1,
+  },
+  glassChip: {
+    minHeight: 50,
+    borderRadius: 25,
     borderCurve: "continuous" as any,
     overflow: "hidden",
-    padding: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  glassChipLabel: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: PlatformColor("label") as unknown as string,
+  },
+  glassChipPrimary: {
+    minHeight: 50,
+    borderRadius: 25,
+    borderCurve: "continuous" as any,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  glassChipPrimaryLabel: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   toolbarBtn: {
     minHeight: 32,
@@ -267,46 +305,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  actions: {
-    flexDirection: "row",
-    marginTop: 24,
-  },
   btnSpacer: { width: 12 },
-  btnSecondary: {
-    flex: 1,
-    minHeight: 50,
-    borderRadius: 25,
-    borderCurve: "continuous" as any,
-    borderWidth: 1,
-    borderColor: PlatformColor("separator") as unknown as string,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnSecondaryLabel: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "600",
-    color: PlatformColor("label") as unknown as string,
-  },
-  btnPrimary: {
-    flex: 1,
+  refreshBtn: {
+    marginTop: 24,
+    width: 200,
     minHeight: 50,
     borderRadius: 25,
     borderCurve: "continuous" as any,
     backgroundColor: PlatformColor("systemBlue") as unknown as string,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "center",
   },
-  btnPrimaryLabel: {
+  refreshBtnLabel: {
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  refreshBtn: {
-    marginTop: 24,
-    width: 200,
-    alignSelf: "center",
   },
   emptyState: {
     alignItems: "center",
