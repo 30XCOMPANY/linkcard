@@ -220,11 +220,15 @@ export default function HomeScreen() {
               style={s.bannerImage}
               resizeMode="cover"
             />
-            {/* Progressive blur — 4 stacked BlurViews with increasing opacity */}
-            <BlurView intensity={50} tint="default" style={[s.bannerBlur, { top: "40%", opacity: 0.4 }]} />
-            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "55%", opacity: 0.6 }]} />
-            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "65%", opacity: 0.8 }]} />
-            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "75%", opacity: 1 }]} />
+            {/* Progressive blur — 8 layers for seamless gradient blur */}
+            <BlurView intensity={15}  tint="default" style={[s.bannerBlur, { top: "30%", opacity: 0.15 }]} />
+            <BlurView intensity={30}  tint="default" style={[s.bannerBlur, { top: "38%", opacity: 0.25 }]} />
+            <BlurView intensity={50}  tint="default" style={[s.bannerBlur, { top: "46%", opacity: 0.35 }]} />
+            <BlurView intensity={70}  tint="default" style={[s.bannerBlur, { top: "54%", opacity: 0.50 }]} />
+            <BlurView intensity={85}  tint="default" style={[s.bannerBlur, { top: "62%", opacity: 0.65 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "70%", opacity: 0.80 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "78%", opacity: 0.90 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "86%", opacity: 1.0  }]} />
             {/* White fade on top of blur */}
             <LinearGradient
               colors={["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", "rgba(255,255,255,1)"]}
