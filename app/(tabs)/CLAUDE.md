@@ -6,11 +6,12 @@ Tab-based main navigation. Uses `NativeTabs` (iOS Liquid Glass) with web fallbac
 ## Members
 
 ```
-_layout.tsx:          Native tab navigator — NativeTabs with SF Symbols (Card, Discover, Settings)
+_layout.tsx:          Native tab navigator — NativeTabs with SF Symbols (Card, Discover, Events, Settings)
 _layout.web.tsx:      Web fallback — Tabs with Ionicons icons
 (home)/               Home tab — screen orchestrator, split header/card editor primitives, editor push
-(settings)/           Settings tab — grouped preferences, account card, theme, accent color
 (discover)/           Discover tab — random profile feed, card holder collection
+(events)/             Events tab — event listing and management
+(settings)/           Settings tab — grouped preferences, account card, theme, accent color
 ```
 
 ## Architecture

@@ -7,8 +7,9 @@ Expo SDK 55 + expo-router + Zustand + Supabase + Express API
 app/               — Expo Router screens (file-based routing)
   (tabs)/          — Tab navigator (NativeTabs iOS / Tabs web)
     (home)/        — Home tab: card hero, editor push, version chips
-    (settings)/    — Settings tab: grouped preferences, account card
     (discover)/    — Discover tab: random profile feed, card holder collection
+    (events)/      — Events tab: event listing and management
+    (settings)/    — Settings tab: grouped preferences, account card
   onboarding/      — 3-step onboarding flow (auth → linkedin → preview)
 src/
   components/      — Shared UI components
