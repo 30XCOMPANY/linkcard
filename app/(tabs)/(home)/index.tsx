@@ -16,12 +16,15 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import type { CardVersion } from "@/src/types";
+
+const useGlass = isGlassEffectAPIAvailable();
 
 /* ------------------------------------------------------------------ */
 /*  Version Chip                                                       */
@@ -36,23 +39,46 @@ function VersionChip({
   selected: boolean;
   onPress: () => void;
 }) {
-  return (
-    <Pressable
-      onPress={() => {
-        haptic.selection();
-        onPress();
-      }}
-      style={[
-        styles.chip,
-        selected && { backgroundColor: version.accentColor },
-      ]}
-    >
+  const inner = (
+    <>
       <View
         style={[styles.chipDot, { backgroundColor: selected ? "#FFFFFF" : version.accentColor }]}
       />
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
         {version.name}
       </Text>
+    </>
+  );
+
+  return (
+    <Pressable
+      onPress={() => {
+        haptic.selection();
+        onPress();
+      }}
+    >
+      {useGlass ? (
+        <GlassView
+          glassEffectStyle="regular"
+          style={[
+            styles.chip,
+            selected && { backgroundColor: version.accentColor },
+          ]}
+        >
+          {inner}
+        </GlassView>
+      ) : (
+        <View
+          style={[
+            styles.chip,
+            selected
+              ? { backgroundColor: version.accentColor }
+              : { backgroundColor: "#F2F2F7" },
+          ]}
+        >
+          {inner}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -207,16 +233,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   chip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     gap: 8,
     height: 40,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#F2F2F7",
-  },
-  chipSelected: {
-    backgroundColor: "#1C1C1E",
+    overflow: "hidden" as const,
   },
   chipDot: {
     width: 10,

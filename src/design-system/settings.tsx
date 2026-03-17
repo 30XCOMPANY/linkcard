@@ -1,14 +1,24 @@
 /**
- * [INPUT]: react-native StyleSheet/ViewStyle, @/src/tw View/Text/Pressable, @/src/lib/haptics
- * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid
- * [POS]: design-system entry for iOS grouped settings surfaces, rows, and inline controls
+ * [INPUT]: react-native StyleSheet/ViewStyle/PlatformColor, @/src/tw View/Text/Pressable, @/src/lib/haptics
+ * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid, settingsPageStyle
+ * [POS]: design-system entry for iOS grouped settings surfaces, rows, inline controls, and page background
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React from "react";
-import { StyleSheet, type ViewStyle } from "react-native";
+import { Platform, PlatformColor, StyleSheet, type ViewStyle } from "react-native";
 import { View, Text, Pressable } from "@/src/tw";
 import { haptic } from "@/src/lib/haptics";
+
+const settingsColors = {
+  page: Platform.OS === "ios" ? PlatformColor("systemGroupedBackground") : "#F2F2F7",
+  group: Platform.OS === "ios" ? PlatformColor("secondarySystemGroupedBackground") : "#FFFFFF",
+  separator: Platform.OS === "ios" ? PlatformColor("separator") : "rgba(60,60,67,0.29)",
+};
+
+export const settingsPageStyle = {
+  backgroundColor: settingsColors.page,
+} satisfies ViewStyle;
 
 export function SettingsSectionHeader({ title }: { title: string }) {
   return (
@@ -27,7 +37,6 @@ export function SettingsGroup({
 }) {
   return (
     <View
-      className="bg-sf-card overflow-hidden"
       style={[styles.group, style]}
     >
       {children}
@@ -36,7 +45,7 @@ export function SettingsGroup({
 }
 
 export function SettingsSeparator({ inset = 16 }: { inset?: number }) {
-  return <View className="h-px bg-sf-separator" style={{ marginLeft: inset }} />;
+  return <View style={[styles.separator, { marginLeft: inset }]} />;
 }
 
 export function SettingsRow({
@@ -154,7 +163,7 @@ export function SettingsColorGrid({
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    marginTop: 28,
+    marginTop: 30,
     marginBottom: 6,
     marginHorizontal: 20,
     fontSize: 13,
@@ -164,11 +173,16 @@ const styles = StyleSheet.create({
   },
   group: {
     marginHorizontal: 16,
+    backgroundColor: settingsColors.group,
     borderRadius: 20,
     borderCurve: "continuous" as any,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: settingsColors.separator,
+  },
   row: {
-    minHeight: 44,
+    minHeight: 50,
     paddingHorizontal: 16,
     paddingVertical: 11,
     flexDirection: "row",

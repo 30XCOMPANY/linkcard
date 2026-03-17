@@ -1,20 +1,24 @@
 /**
- * [INPUT]: expo-router Stack
- * [OUTPUT]: Home tab stack with Card display and Editor push screen
- * [POS]: Home Stack — enables push navigation to editor from card tab
+ * [INPUT]: expo-router Stack, react-native PlatformColor
+ * [OUTPUT]: Home tab stack with large title and editor push
+ * [POS]: Home Stack — native iOS large title with collapse behavior
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { Stack } from "expo-router/stack";
+import { PlatformColor } from "react-native";
 
 export default function HomeStackLayout() {
   return (
     <Stack
       screenOptions={{
-        headerLargeTitle: true,
-        headerTransparent: false,
-        headerLargeTitleShadowVisible: false,
+        headerTransparent: true,
         headerShadowVisible: false,
+        headerLargeTitleShadowVisible: false,
+        headerLargeStyle: { backgroundColor: "transparent" },
+        headerTitleStyle: { color: PlatformColor("label") as unknown as string },
+        headerLargeTitle: true,
+        headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
       }}
     >
