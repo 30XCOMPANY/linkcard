@@ -21,7 +21,7 @@ export default function WebTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="share"
+        name="(share)"
         options={{
           title: "Share",
           tabBarIcon: ({ color }) => (
@@ -30,7 +30,7 @@ export default function WebTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="(settings)"
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (

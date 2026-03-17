@@ -85,10 +85,36 @@ const defaultVersions: CardVersion[] = [
     },
 ];
 
+// ── Mock card for frontend development ──────────────────────────
+const MOCK_CARD: BusinessCard = {
+    id: 'mock-card-001',
+    profile: {
+        url: 'https://linkedin.com/in/henryzhao',
+        username: 'henryzhao',
+        name: 'Henry Zhao',
+        headline: 'Building the future of professional networking',
+        jobTitle: 'Founder & CEO',
+        company: 'LinkCard',
+        location: 'San Francisco, CA',
+        city: 'San Francisco',
+        photoUrl: null,
+        email: 'henry@linkcard.app',
+        phone: '+1 (415) 555-0123',
+        website: 'https://linkcard.app',
+        character: 'Visionary Builder',
+        lastSynced: new Date(),
+        checksum: 'mock-checksum',
+    },
+    versions: defaultVersions,
+    qrCodeData: 'https://linkcard.app/c/henryzhao',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+};
+
 export const useCardStore = create<CardState>()(
     persist(
         (set, get) => ({
-            card: null,
+            card: MOCK_CARD,  // TODO: revert to null when onboarding is ready
             isLoading: false,
             error: null,
             themeMode: 'system',
