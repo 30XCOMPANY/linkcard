@@ -48,7 +48,6 @@
  * ================================================================ */
 
 :root {
-  /* Font sizes */
   --sf-large-title: 34px;
   --sf-title-1: 28px;
   --sf-title-2: 22px;
@@ -61,7 +60,6 @@
   --sf-caption-1: 12px;
   --sf-caption-2: 11px;
 
-  /* Line heights */
   --sf-large-title-lh: 41px;
   --sf-title-1-lh: 34px;
   --sf-title-2-lh: 28px;
@@ -75,9 +73,25 @@
   --sf-caption-2-lh: 13px;
 }
 
+/* ================================================================
+ * APPLE HIG SPACING — reference values only (plain :root vars)
+ * Use via arbitrary values: mt-[35px], py-[11px], px-5 (20px)
+ * NOT in @theme to avoid polluting Tailwind's --spacing-* namespace
+ * ================================================================ */
+
+:root {
+  --hig-screen: 20px;
+  --hig-section-gap: 35px;
+  --hig-section-header: 6px;
+  --hig-row-v: 11px;
+  --hig-row-min: 44px;
+  --hig-separator: 16px;
+  --hig-separator-icon: 56px;
+}
+
 @layer theme {
   @theme {
-    /* Apple Dynamic Type text sizes */
+    /* Apple Dynamic Type — Tailwind text-* utilities read from --text-* */
     --text-large-title: var(--sf-large-title);
     --text-large-title--line-height: var(--sf-large-title-lh);
 
@@ -111,36 +125,6 @@
 
     --text-caption-2: var(--sf-caption-2);
     --text-caption-2--line-height: var(--sf-caption-2-lh);
-
-    /* ============================================================
-     * APPLE HIG SPACING (8pt grid + Apple-specific values)
-     * https://developer.apple.com/design/human-interface-guidelines/layout
-     * ============================================================ */
-
-    /* Screen edge insets */
-    --spacing-screen: 20px;        /* Standard screen-edge horizontal inset (grouped) */
-    --spacing-screen-compact: 16px; /* Compact screen-edge inset (plain lists) */
-
-    /* Section spacing */
-    --spacing-section-gap: 35px;   /* Between sections (header-to-header) */
-    --spacing-section-header: 6px; /* Section header to first row */
-
-    /* List row */
-    --spacing-row-h: 16px;         /* Row horizontal padding */
-    --spacing-row-v: 11px;         /* Row vertical padding */
-    --spacing-row-min: 44px;       /* Minimum row / touch target height */
-
-    /* Separator insets */
-    --spacing-separator: 16px;     /* Text-only row separator indent */
-    --spacing-separator-icon: 56px; /* Row with icon separator indent */
-
-    /* Content spacing */
-    --spacing-card: 16px;          /* Card internal padding */
-    --spacing-tight: 4px;          /* Tight spacing (between related items) */
-    --spacing-compact: 8px;        /* Compact gap */
-    --spacing-default: 12px;       /* Default content gap */
-    --spacing-relaxed: 16px;       /* Relaxed gap */
-    --spacing-loose: 24px;         /* Loose spacing */
 
     /* Colors */
     --color-sf-blue: var(--sf-blue);

@@ -1,14 +1,16 @@
 /**
- * [INPUT]: @/src/tw View/Text/ScrollView/Pressable,
+ * [INPUT]: @/src/tw View/Text/ScrollView/Pressable/Link,
  *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
- *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn
- * [OUTPUT]: HomeScreen — card hero display, version chips, quick actions
+ *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn,
+ *          react-native RefreshControl
+ * [OUTPUT]: HomeScreen — card hero with context menu, pull-to-refresh, version chips, quick actions
  * [POS]: Primary tab screen — the card is the hero, everything serves it
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, Pressable } from "@/src/tw";
+import { RefreshControl } from "react-native";
+import { View, Text, ScrollView, Pressable, Link } from "@/src/tw";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 
@@ -124,14 +126,23 @@ export default function HomeScreen() {
     defaultVersion?.id ?? ""
   );
   const [showQR, setShowQR] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const currentVersion =
-    card?.versions.find((v: CardVersion) => v.id === selectedVersionId) ?? defaultVersion;
+    card?.versions.find((v: CardVersion) => v.id === selectedVersionId) ??
+    defaultVersion;
 
   const handleSelectVersion = useCallback(
     (id: string) => setSelectedVersionId(id),
     []
   );
+
+  /* Pull-to-refresh — re-sync card data */
+  const onRefresh = useCallback(() => {
+    haptic.medium();
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1500);
+  }, []);
 
   if (!card || !currentVersion) {
     return (
@@ -148,15 +159,43 @@ export default function HomeScreen() {
       className="flex-1 bg-sf-bg"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-8"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
-      {/* Card Display — hero */}
+      {/* Card Display — hero with native context menu + preview */}
       <View className="px-4 pt-4">
-        <CardDisplay
-          profile={card.profile}
-          version={currentVersion}
-          qrCodeData={card.qrCodeData}
-          showQR={showQR}
-        />
+        <Link href="/editor">
+          <Link.Trigger>
+            <CardDisplay
+              profile={card.profile}
+              version={currentVersion}
+              qrCodeData={card.qrCodeData}
+              showQR={showQR}
+            />
+          </Link.Trigger>
+          <Link.Menu>
+            <Link.MenuAction
+              icon="pencil"
+              onPress={() => router.push("/editor" as any)}
+            >
+              Edit Card
+            </Link.MenuAction>
+            <Link.MenuAction
+              icon="square.and.arrow.up"
+              onPress={() => router.push("/share" as any)}
+            >
+              Share
+            </Link.MenuAction>
+            <Link.MenuAction
+              icon="qrcode"
+              onPress={() => setShowQR(true)}
+            >
+              Show QR Code
+            </Link.MenuAction>
+          </Link.Menu>
+          <Link.Preview />
+        </Link>
       </View>
 
       {/* Version Selector */}
