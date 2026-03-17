@@ -1,6 +1,6 @@
 /**
  * [INPUT]: expo-router Tabs, @expo/vector-icons Ionicons
- * [OUTPUT]: Web tab layout with Ionicons
+ * [OUTPUT]: Web tab layout with Ionicons — Card, Discover, Settings
  * [POS]: Web-specific tab navigator — fallback for NativeTabs on web
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -21,11 +21,11 @@ export default function WebTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(share)"
+        name="(discover)"
         options={{
-          title: "Share",
+          title: "Discover",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="share-outline" size={24} color={color} />
+            <Ionicons name="people-outline" size={24} color={color} />
           ),
         }}
       />

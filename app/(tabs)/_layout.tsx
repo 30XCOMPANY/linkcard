@@ -1,6 +1,6 @@
 /**
  * [INPUT]: expo-router NativeTabs, Majesticons tab icon PNGs
- * [OUTPUT]: Tab layout with Card, Share, Settings tabs using Majesticons
+ * [OUTPUT]: Tab layout with Card, Discover, Settings tabs using Majesticons
  * [POS]: Tab navigator — iOS native tabs with Liquid Glass on iOS 26+
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -18,12 +18,12 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label hidden>Card</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="(share)">
+      <NativeTabs.Trigger name="(discover)">
         <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-send.png")}
+          src={require("@/assets/icons/tab-creditcard.png")}
           renderingMode="template"
         />
-        <NativeTabs.Trigger.Label hidden>Share</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label hidden>Discover</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="(settings)">

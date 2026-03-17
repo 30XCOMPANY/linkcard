@@ -8,9 +8,9 @@ Expo Router file-based screens. Root layout gates onboarding vs tabs.
 ```
 _layout.tsx:       Root layout — gates onboarding/ (no card) vs (tabs)/ (card exists)
 (tabs)/            Tab navigator (NativeTabs iOS / Tabs web)
-  (home)/          Home tab — card hero, editor push
+  (home)/          Home tab — orchestrator + split card editor primitives + deep editor route
   (settings)/      Settings tab — grouped preferences
-  (share)/         Share tab — field toggles, card preview, share actions
+  (discover)/      — Discover tab: random profile feed, card holder collection
 onboarding/        3-step auth → linkedin → preview flow
 ```
 
