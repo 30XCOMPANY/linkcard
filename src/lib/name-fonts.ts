@@ -19,11 +19,11 @@ export const nameFonts: Record<NameFontKey, NameFontDef> = {
   },
   modern: {
     label: "Modern",
-    fontFamily: "DMSans_700Bold",
+    fontFamily: "DMSans_400Regular",
   },
   mono: {
     label: "Mono",
-    fontFamily: "JetBrainsMono_700Bold",
+    fontFamily: "JetBrainsMono_400Regular",
   },
   system: {
     label: "System",

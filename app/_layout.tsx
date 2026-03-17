@@ -10,8 +10,8 @@ import "@/src/css/global.css";
 import { Stack } from "expo-router/stack";
 import { useFonts } from "expo-font";
 import { GoudyBookletter1911_400Regular } from "@expo-google-fonts/goudy-bookletter-1911";
-import { DMSans_700Bold } from "@expo-google-fonts/dm-sans";
-import { JetBrainsMono_700Bold } from "@expo-google-fonts/jetbrains-mono";
+import { DMSans_400Regular } from "@expo-google-fonts/dm-sans";
+import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono";
 import { useCardStore } from "@/src/stores/cardStore";
 
 export default function RootLayout() {
@@ -19,8 +19,8 @@ export default function RootLayout() {
 
   const [fontsLoaded] = useFonts({
     GoudyBookletter1911_400Regular,
-    DMSans_700Bold,
-    JetBrainsMono_700Bold,
+    DMSans_400Regular,
+    JetBrainsMono_400Regular,
   });
 
   if (!fontsLoaded) return null;
