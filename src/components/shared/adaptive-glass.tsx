@@ -62,7 +62,7 @@ export function AdaptiveGlass({
     return (
       <GlassView
         glassEffectStyle="regular"
-        style={[style]}
+        style={[{ borderCurve: "continuous" as any }, style]}
         className={className}
       >
         {children}

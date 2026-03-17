@@ -1,9 +1,10 @@
 /**
  * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, react-native Switch/Share/Clipboard/StyleSheet,
  *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
+ *          @/src/components/shared/adaptive-glass AdaptiveGlass,
  *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn
- * [OUTPUT]: ShareScreen — field-toggle grouped list, card preview, single CTA
- * [POS]: Share tab — editorial luxury sharing experience with Apple Settings pattern
+ * [OUTPUT]: ShareScreen — field-toggle glass grouped list, card preview, single CTA
+ * [POS]: Share tab — editorial luxury sharing experience with glass material grouped cards
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -15,6 +16,7 @@ import { FadeInDown } from "react-native-reanimated";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -139,7 +141,7 @@ export default function ShareScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-sf-bg"
+      className="flex-1"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-8"
     >
@@ -163,8 +165,8 @@ export default function ShareScreen() {
       <Text className="text-sf-text-2" style={styles.sectionHeader}>
         What to Share
       </Text>
-      <View
-        className="bg-sf-card rounded-[10px] overflow-hidden"
+      <AdaptiveGlass
+        className="rounded-[10px] overflow-hidden"
         style={styles.group}
       >
         {SHARE_FIELDS.map((f, i) => (
@@ -176,7 +178,7 @@ export default function ShareScreen() {
             isLast={i === SHARE_FIELDS.length - 1}
           />
         ))}
-      </View>
+      </AdaptiveGlass>
 
       {/* Primary CTA */}
       <View style={styles.ctaWrap}>

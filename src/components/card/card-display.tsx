@@ -1,14 +1,13 @@
 /**
- * [INPUT]: @/src/tw View/Text, @/src/types LinkedInProfile/CardVersion,
- *          Avatar, QRCode, @/src/lib/cn
- * [OUTPUT]: CardDisplay — LinkCard business card with centered avatar layout
- * [POS]: Card core — hero element, centered avatar, version name top-left, company bottom
+ * [INPUT]: react-native View/Text/StyleSheet, @/src/types LinkedInProfile/CardVersion,
+ *          Avatar, QRCode, react-native-reanimated
+ * [OUTPUT]: CardDisplay — stable business card renderer with explicit RN layout
+ * [POS]: Card core — hero component, isolated from flaky className layout utilities
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { View, Text } from "@/src/tw";
-import { cn } from "@/src/lib/cn";
+import { View, Text, StyleSheet } from "react-native";
 import { Avatar } from "@/src/components/shared/avatar";
 import { QRCode } from "@/src/components/shared/qr-code";
 import type { LinkedInProfile, CardVersion } from "@/src/types";
@@ -20,7 +19,6 @@ interface CardDisplayProps {
   qrCodeData: string;
   showQR?: boolean;
   compact?: boolean;
-  className?: string;
 }
 
 export function CardDisplay({
@@ -29,58 +27,44 @@ export function CardDisplay({
   qrCodeData,
   showQR = false,
   compact = false,
-  className,
 }: CardDisplayProps) {
   const { visibleFields, accentColor } = version;
   const vis = (f: string) => visibleFields.includes(f as any);
 
   return (
-    <View
-      className={cn("rounded-3xl overflow-hidden", className)}
-      style={{
-        borderCurve: "continuous" as any,
-        boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
-      }}
-    >
+    <View style={[styles.shell, compact && styles.shellCompact]}>
       {/* QR Overlay */}
       {showQR && (
         <Animated.View
           entering={ZoomIn.springify()}
           exiting={ZoomOut.duration(200)}
-          className="absolute inset-0 z-10 items-center justify-center rounded-3xl"
-          style={{ backgroundColor: "rgba(255,255,255,0.97)" }}
+          style={styles.overlay}
         >
           <QRCode value={qrCodeData} size={compact ? 140 : 180} />
-          <Text className="text-caption-1 text-sf-text-2 mt-4" selectable>
+          <Text style={styles.overlayText} selectable>
             {qrCodeData}
           </Text>
         </Animated.View>
       )}
 
       {/* Card surface */}
-      <View className={cn("bg-sf-card", compact ? "p-4" : "p-5 pb-4")}>
+      <View style={[styles.surface, compact ? styles.surfaceCompact : styles.surfaceRegular]}>
         {/* Top row: version name + location */}
-        <View className="flex-row justify-between items-start mb-4">
+        <View style={styles.topRow}>
           <View>
-            <Text className="text-body font-semibold text-sf-text">
-              {version.name}
-            </Text>
+            <Text style={styles.versionName}>{version.name}</Text>
             {vis("location") && profile.location && (
-              <Text className="text-caption-1 text-sf-text-2">
-                {profile.location}
-              </Text>
+              <Text style={styles.metaText}>{profile.location}</Text>
             )}
           </View>
           {vis("company") && profile.company && (
-            <Text className="text-caption-1 text-sf-text-2">
-              {profile.company}
-            </Text>
+            <Text style={styles.metaText}>{profile.company}</Text>
           )}
         </View>
 
         {/* Centered avatar */}
         {vis("photoUrl") && (
-          <View className="items-center mb-3">
+          <View style={styles.avatarWrap}>
             <Avatar
               source={profile.photoUrl}
               name={profile.name}
@@ -93,10 +77,7 @@ export function CardDisplay({
         {/* Name */}
         {vis("name") && (
           <Text
-            className={cn(
-              "text-center font-bold text-sf-text",
-              compact ? "text-title-3" : "text-title-2"
-            )}
+            style={[styles.name, compact ? styles.nameCompact : styles.nameRegular]}
           >
             {profile.name}
           </Text>
@@ -105,7 +86,7 @@ export function CardDisplay({
         {/* Headline / Job Title */}
         {vis("headline") && (
           <Text
-            className="text-center text-subheadline text-sf-text-2 mt-1"
+            style={styles.headline}
             numberOfLines={2}
           >
             {profile.jobTitle
@@ -116,15 +97,11 @@ export function CardDisplay({
 
         {/* Character tag */}
         {vis("character") && profile.character && (
-          <View className="items-center mt-3">
+          <View style={styles.characterWrap}>
             <View
-              className="rounded-full px-3 py-1"
-              style={{ backgroundColor: accentColor + "15" }}
+              style={[styles.characterChip, { backgroundColor: accentColor + "15" }]}
             >
-              <Text
-                className="text-caption-1 font-medium"
-                style={{ color: accentColor }}
-              >
+              <Text style={[styles.characterText, { color: accentColor }]}>
                 {profile.character}
               </Text>
             </View>
@@ -133,21 +110,14 @@ export function CardDisplay({
 
         {/* Bottom bar: Your Links + Direct */}
         <View
-          className="flex-row items-center justify-between mt-5 pt-4"
-          style={{
-            borderTopWidth: 0.5,
-            borderTopColor: "rgba(0,0,0,0.06)",
-          }}
+          style={styles.bottomBar}
         >
-          <Text className="text-subheadline font-medium text-sf-text">
-            LinkCard
-          </Text>
-          <View className="flex-row items-center gap-1.5">
+          <Text style={styles.bottomLabel}>LinkCard</Text>
+          <View style={styles.bottomRight}>
             <View
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: accentColor }}
+              style={[styles.bottomDot, { backgroundColor: accentColor }]}
             />
-            <Text className="text-subheadline font-medium text-sf-text">
+            <Text style={styles.bottomLabel}>
               {version.template.charAt(0).toUpperCase() + version.template.slice(1)}
             </Text>
           </View>
@@ -156,3 +126,122 @@ export function CardDisplay({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  shell: {
+    width: "100%",
+    overflow: "hidden",
+    borderRadius: 24,
+    borderCurve: "continuous" as any,
+    backgroundColor: "#FFFFFF",
+    boxShadow: "0 12px 32px rgba(0,0,0,0.10)",
+  },
+  shellCompact: {
+    borderRadius: 22,
+  },
+  overlay: {
+    position: "absolute",
+    inset: 0,
+    zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.97)",
+  },
+  overlayText: {
+    marginTop: 16,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#6B7280",
+  },
+  surface: {
+    backgroundColor: "#FFFFFF",
+  },
+  surfaceRegular: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  surfaceCompact: {
+    padding: 16,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 18,
+  },
+  versionName: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: "#111111",
+  },
+  metaText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#6B7280",
+  },
+  avatarWrap: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  name: {
+    textAlign: "center",
+    fontWeight: "700",
+    color: "#111111",
+  },
+  nameRegular: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  nameCompact: {
+    fontSize: 20,
+    lineHeight: 25,
+  },
+  headline: {
+    marginTop: 4,
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: "center",
+    color: "#6B7280",
+  },
+  characterWrap: {
+    alignItems: "center",
+    marginTop: 12,
+  },
+  characterChip: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  characterText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  bottomBar: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 0.5,
+    borderTopColor: "rgba(0,0,0,0.06)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  bottomLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: "#111111",
+  },
+  bottomRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bottomDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    marginRight: 6,
+  },
+});

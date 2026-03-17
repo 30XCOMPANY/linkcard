@@ -12,6 +12,9 @@ export default function HomeStackLayout() {
     <Stack
       screenOptions={{
         headerLargeTitle: true,
+        headerTransparent: false,
+        headerLargeTitleShadowVisible: false,
+        headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
       }}
     >

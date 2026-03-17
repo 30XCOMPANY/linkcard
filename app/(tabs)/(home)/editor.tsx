@@ -1,23 +1,24 @@
 /**
  * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, @/src/stores/cardStore,
- *          @/src/components/card/card-display, @/src/lib/haptics, @/src/lib/icons,
- *          react-native Switch/RefreshControl/StyleSheet, segmented-control, slider
- * [OUTPUT]: EditorScreen — Apple Settings-style card editor
- * [POS]: Push screen from home — native grouped list with SegmentedControl, Switch, Slider
+ *          @/src/components/card/card-display, @/src/components/shared/adaptive-glass AdaptiveGlass,
+ *          @/src/lib/haptics, @/src/lib/icons,
+ *          react-native Switch/RefreshControl/StyleSheet, @/src/lib/accent-colors
+ * [OUTPUT]: EditorScreen — Apple Settings-style card editor with glass grouped cards
+ * [POS]: Push screen from home — grouped list with custom segmented buttons and accent chips
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Switch, RefreshControl, StyleSheet } from "react-native";
 import { View, Text, ScrollView, Pressable } from "@/src/tw";
 import { Stack, useRouter } from "expo-router";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import Slider from "@react-native-community/slider";
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import type { LinkedInProfile } from "@/src/types";
+import { accentColors } from "@/src/lib/accent-colors";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -40,6 +41,16 @@ const FIELDS: { key: ToggleableField; label: string }[] = [
 
 const WEIGHTS = ["Regular", "Medium", "Bold"] as const;
 const WEIGHT_KEYS = ["regular", "medium", "bold"] as const;
+const ACCENT_OPTIONS = [
+  accentColors.blue,
+  accentColors.indigo,
+  accentColors.violet,
+  accentColors.pink,
+  accentColors.orange,
+  accentColors.emerald,
+  accentColors.teal,
+  accentColors.slate,
+] as const;
 const GRP = { borderCurve: "continuous" as any };
 
 /* ------------------------------------------------------------------ */
@@ -55,9 +66,12 @@ const SectionHeader = ({ title }: { title: string }) => (
 );
 
 const GroupedCard = ({ children }: { children: React.ReactNode }) => (
-  <View className="bg-sf-card rounded-[10px] overflow-hidden" style={styles.group}>
+  <AdaptiveGlass
+    className="rounded-[10px] overflow-hidden"
+    style={styles.group}
+  >
     {children}
-  </View>
+  </AdaptiveGlass>
 );
 
 function FieldToggleRow({ label, enabled, onToggle }: {
@@ -71,6 +85,62 @@ function FieldToggleRow({ label, enabled, onToggle }: {
   );
 }
 
+function SegmentedRow({
+  values,
+  selectedIndex,
+  onChange,
+}: {
+  values: readonly string[];
+  selectedIndex: number;
+  onChange: (index: number) => void;
+}) {
+  return (
+    <View style={styles.segmentedContainer}>
+      {values.map((value, index) => {
+        const selected = index === selectedIndex;
+        return (
+          <Pressable
+            key={value}
+            style={[styles.segmentedItem, selected && styles.segmentedItemSelected]}
+            onPress={() => {
+              haptic.selection();
+              onChange(index);
+            }}
+          >
+            <Text
+              className={selected ? "text-sf-text" : "text-sf-text-2"}
+              style={[styles.segmentedLabel, selected && styles.segmentedLabelSelected]}
+            >
+              {value}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function AccentChip({
+  color,
+  selected,
+  onPress,
+}: {
+  color: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.accentChip,
+        { backgroundColor: color },
+        selected && styles.accentChipSelected,
+      ]}
+    />
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Editor Screen                                                      */
 /* ------------------------------------------------------------------ */
@@ -80,7 +150,6 @@ export default function EditorScreen() {
   const card = useCardStore((s) => s.card);
   const updateVersion = useCardStore((s) => s.updateVersion);
   const setDefaultVersion = useCardStore((s) => s.setDefaultVersion);
-  const [accentIntensity, setAccentIntensity] = useState(50);
 
   const versionNames = useMemo(() => card?.versions.map((v) => v.name) ?? [], [card?.versions]);
   const versionIdx = useMemo(() => Math.max(card?.versions.findIndex((v) => v.isDefault) ?? 0, 0), [card?.versions]);
@@ -126,7 +195,7 @@ export default function EditorScreen() {
       />
 
       <ScrollView
-        className="flex-1 bg-sf-bg"
+        className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="pb-12"
         refreshControl={<RefreshControl refreshing={false} onRefresh={() => haptic.medium()} />}
@@ -140,12 +209,11 @@ export default function EditorScreen() {
         <SectionHeader title="Card Version" />
         <GroupedCard>
           <View style={styles.groupBody}>
-            <SegmentedControl
+            <SegmentedRow
               values={versionNames}
               selectedIndex={versionIdx}
-              onChange={(e) => {
-                haptic.selection();
-                const t = card.versions[e.nativeEvent.selectedSegmentIndex];
+              onChange={(index) => {
+                const t = card.versions[index];
                 if (t) setDefaultVersion(t.id);
               }}
             />
@@ -172,12 +240,11 @@ export default function EditorScreen() {
         <GroupedCard>
           <View style={styles.groupBody}>
             <Text className="text-sf-text-2" style={styles.helperLabel}>Weight</Text>
-            <SegmentedControl
-              values={[...WEIGHTS]}
+            <SegmentedRow
+              values={WEIGHTS}
               selectedIndex={weightIdx}
-              onChange={(e) => {
-                haptic.selection();
-                const w = WEIGHT_KEYS[e.nativeEvent.selectedSegmentIndex];
+              onChange={(index) => {
+                const w = WEIGHT_KEYS[index];
                 updateVersion(version.id, {
                   fieldStyles: { ...version.fieldStyles, name: { ...version.fieldStyles?.name, fontWeight: w } },
                 });
@@ -190,14 +257,21 @@ export default function EditorScreen() {
         <SectionHeader title="Accent" />
         <GroupedCard>
           <View style={styles.groupBody}>
-            <Text className="text-sf-text-2" style={styles.helperLabel}>Intensity</Text>
-            <Slider
-              minimumValue={0}
-              maximumValue={100}
-              value={accentIntensity}
-              onValueChange={setAccentIntensity}
-              minimumTrackTintColor={version.accentColor}
-            />
+            <Text className="text-sf-text-2" style={styles.helperLabel}>Color</Text>
+            <View style={styles.accentGrid}>
+              {ACCENT_OPTIONS.map((color) => (
+                <AccentChip
+                  key={color}
+                  color={color}
+                  selected={version.accentColor === color}
+                  onPress={() =>
+                    updateVersion(version.id, {
+                      accentColor: color,
+                    })
+                  }
+                />
+              ))}
+            </View>
           </View>
         </GroupedCard>
 
@@ -236,6 +310,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 11,
   },
+  segmentedContainer: {
+    flexDirection: "row",
+    padding: 3,
+    borderRadius: 12,
+    backgroundColor: "rgba(120,120,128,0.12)",
+  },
+  segmentedItem: {
+    flex: 1,
+    minHeight: 32,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentedItemSelected: {
+    backgroundColor: "#FFFFFF",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+  },
+  segmentedLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+  },
+  segmentedLabelSelected: {
+    fontWeight: "600",
+  },
   separator: {
     marginLeft: 16,
   },
@@ -255,6 +355,21 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 13,
     lineHeight: 18,
+  },
+  accentGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  accentChip: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  accentChipSelected: {
+    borderColor: "#000000",
   },
   doneButton: {
     minWidth: 44,

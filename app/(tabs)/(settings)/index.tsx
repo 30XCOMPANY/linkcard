@@ -1,7 +1,8 @@
 /**
  * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, react-native Switch/Alert/StyleSheet,
- *          @/src/stores/cardStore, @/src/lib/haptics, @/src/lib/icons Icon
- * [OUTPUT]: SettingsScreen — Apple grouped list with sync controls and data management
+ *          @/src/stores/cardStore, @/src/components/shared/adaptive-glass AdaptiveGlass,
+ *          @/src/lib/haptics, @/src/lib/icons Icon
+ * [OUTPUT]: SettingsScreen — Apple grouped list with glass material cards, sync controls, data management
  * [POS]: Settings tab — user preferences, sync controls, data management
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -11,6 +12,7 @@ import { Switch, Alert, StyleSheet } from "react-native";
 import { View, Text, ScrollView, Pressable } from "@/src/tw";
 
 import { useCardStore } from "@/src/stores/cardStore";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 
@@ -101,14 +103,14 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-sf-bg"
+      className="flex-1"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-12"
     >
       {/* SYNC */}
       <SectionHeader title="Sync" />
-      <View
-        className="bg-sf-card rounded-[10px] overflow-hidden"
+      <AdaptiveGlass
+        className="rounded-[10px] overflow-hidden"
         style={styles.group}
       >
         <SettingsRow
@@ -130,12 +132,12 @@ export default function SettingsScreen() {
             <Icon web="chevron-right" size={14} color="rgba(0,0,0,0.2)" />
           }
         />
-      </View>
+      </AdaptiveGlass>
 
       {/* DATA */}
       <SectionHeader title="Data" />
-      <View
-        className="bg-sf-card rounded-[10px] overflow-hidden"
+      <AdaptiveGlass
+        className="rounded-[10px] overflow-hidden"
         style={styles.group}
       >
         <SettingsRow
@@ -144,7 +146,7 @@ export default function SettingsScreen() {
           onPress={handleResetCard}
           accessory={<Icon web="trash" size={18} color="#FF383C" />}
         />
-      </View>
+      </AdaptiveGlass>
 
       {/* Footer */}
       <View style={styles.footer}>

@@ -1,9 +1,10 @@
 /**
  * [INPUT]: @/src/tw View/Text/ScrollView/Pressable/Link,
  *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
+ *          @/src/components/shared/adaptive-glass AdaptiveGlass,
  *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn,
  *          react-native RefreshControl
- * [OUTPUT]: HomeScreen — card hero with context menu, pull-to-refresh, version chips, quick actions
+ * [OUTPUT]: HomeScreen — card hero with context menu, pull-to-refresh, version chips, glass quick actions
  * [POS]: Primary tab screen — the card is the hero, everything serves it
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -16,6 +17,7 @@ import { useRouter } from "expo-router";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -96,18 +98,18 @@ function QuickAction({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-[10px] bg-sf-card items-center justify-center"
-        style={{
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          borderCurve: "continuous" as any,
-        }}
         accessibilityLabel={label}
         accessibilityRole="button"
         onPress={onPress}
         onPressIn={() => { scale.value = withSpring(0.95, springs.snappy); }}
         onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
       >
-        <Icon web={icon} size={20} />
+        <AdaptiveGlass
+          className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-[10px] items-center justify-center"
+          style={{ borderCurve: "continuous" as any }}
+        >
+          <Icon web={icon} size={20} />
+        </AdaptiveGlass>
       </Pressable>
     </Animated.View>
   );
@@ -157,7 +159,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-sf-bg"
+      className="flex-1"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-8"
       refreshControl={
@@ -165,7 +167,7 @@ export default function HomeScreen() {
       }
     >
       {/* Card Display — hero with native context menu + preview */}
-      <View className="px-4 pt-4">
+      <View className="px-4 pt-2">
         <Link href="/editor">
           <Link.Trigger>
             <CardDisplay
