@@ -8,7 +8,7 @@ app/               — Expo Router screens (file-based routing)
   (tabs)/          — Tab navigator (NativeTabs iOS / Tabs web)
     (home)/        — Home tab: card hero, editor push, version chips
     (settings)/    — Settings tab: grouped preferences, account card
-    (share)/       — Share tab: field toggles, card preview, share actions
+    (discover)/    — Discover tab: random profile feed, card holder collection
   onboarding/      — 3-step onboarding flow (auth → linkedin → preview)
 src/
   components/      — Shared UI components
@@ -41,7 +41,7 @@ api/               — Express + Vercel serverless API
 - **Apple HIG**: Typography uses system-native fonts (SF Pro / Roboto / system-ui). Color system follows Apple semantic colors with light/dark support.
 - **Debounced sync**: cardStore debounces Supabase writes by 500ms to avoid hammering the backend during rapid edits.
 - **Editor extraction**: Types, constants, and helpers extracted to `src/features/editor/`. The main EditorScreen, sub-components, and styles remain in `app/editor.tsx` for co-location with the route.
-- **v2 routing**: Root layout gates `onboarding/` vs `(tabs)/` based on `cardStore.card`. Tabs use `NativeTabs` (iOS Liquid Glass) with `_layout.web.tsx` fallback. Each tab (`(home)`, `(share)`, `(settings)`) is a separate Stack group with native large title collapse.
+- **v2 routing**: Root layout gates `onboarding/` vs `(tabs)/` based on `cardStore.card`. Tabs use `NativeTabs` (iOS Liquid Glass) with `_layout.web.tsx` fallback. Each tab (`(home)`, `(discover)`, `(settings)`) is a separate Stack group with native large title collapse.
 
 ## Dev
 

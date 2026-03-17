@@ -1,14 +1,14 @@
 /**
  * [INPUT]: expo-router Stack/useRouter, react-native ScrollView/Pressable/Text/Switch/StyleSheet,
- *          @/src/tw View/Text, @/src/stores/cardStore, @/src/components/card/profile-card,
+ *          @/src/tw View/Text, @/src/stores/cardStore, local profile-card-editor,
  *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
- *          @/src/lib/card-presets
+ *          @/src/lib/card-presets, @/src/lib/profile-tags, expo-image-picker
  * [OUTPUT]: EditorScreen — card editor aligned to the shared settings design system
  * [POS]: Push screen from home — editing controls expressed as grouped settings rows and inline controls
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Switch,
   StyleSheet,
@@ -17,17 +17,21 @@ import {
   Text as RNText,
 } from "react-native";
 import { View, Text } from "@/src/tw";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useCardStore } from "@/src/stores/cardStore";
-import { ProfileCard } from "@/src/components/card/profile-card";
+import { parseCustomTagInput, resolveProfileTags } from "@/src/lib/profile-tags";
 import { Icon } from "@/src/lib/icons";
 import { accentColors } from "@/src/lib/accent-colors";
 import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import type { LinkedInProfile } from "@/src/types";
+
+import { ProfileCardEditor } from "./profile-card-editor";
 import {
   SettingsColorGrid,
   SettingsGroup,
   SettingsChevron,
+  SettingsIconTile,
   SettingsRow,
   SettingsSectionHeader,
   SettingsSegmented,
@@ -36,17 +40,17 @@ import {
 
 type ToggleableField = keyof LinkedInProfile | "qrCode" | "character";
 
-const FIELDS: { key: ToggleableField; label: string }[] = [
-  { key: "name", label: "Name" },
-  { key: "headline", label: "Headline" },
-  { key: "jobTitle", label: "Job Title" },
-  { key: "company", label: "Company" },
-  { key: "location", label: "Location" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "website", label: "Website" },
-  { key: "qrCode", label: "QR Code" },
-  { key: "character", label: "Character" },
+const FIELDS: { key: ToggleableField; label: string; icon: string; color: string }[] = [
+  { key: "name", label: "Name", icon: "person", color: "#007AFF" },
+  { key: "headline", label: "Headline", icon: "note-text", color: "#5856D6" },
+  { key: "jobTitle", label: "Job Title", icon: "briefcase", color: "#FF9500" },
+  { key: "company", label: "Company", icon: "briefcase", color: "#34C759" },
+  { key: "location", label: "Location", icon: "location", color: "#FF3B30" },
+  { key: "email", label: "Email", icon: "mail", color: "#007AFF" },
+  { key: "phone", label: "Phone", icon: "phone", color: "#34C759" },
+  { key: "website", label: "Website", icon: "globe", color: "#5AC8FA" },
+  { key: "qrCode", label: "QR Code", icon: "qr-code", color: "#8E8E93" },
+  { key: "character", label: "Character", icon: "star", color: "#FF9500" },
 ];
 
 const WEIGHTS = ["Regular", "Medium", "Bold"] as const;
@@ -65,16 +69,21 @@ const BACKGROUND_LABELS = CARD_BACKGROUND_OPTIONS.map((option) => option.label);
 
 function FieldToggleRow({
   label,
+  icon,
+  color,
   enabled,
   onToggle,
 }: {
   label: string;
+  icon: string;
+  color: string;
   enabled: boolean;
   onToggle: (v: boolean) => void;
 }) {
   return (
     <SettingsRow
       title={label}
+      leading={<SettingsIconTile web={icon} color={color} />}
       trailing={<Switch value={enabled} onValueChange={onToggle} />}
     />
   );
@@ -97,14 +106,25 @@ function LabeledBody({
 
 export default function EditorScreen() {
   const router = useRouter();
+  const { versionId } = useLocalSearchParams<{ versionId?: string }>();
   const card = useCardStore((s) => s.card);
+  const nameFont = useCardStore((s) => s.nameFont) ?? "classic";
+  const addCustomTag = useCardStore((s) => s.addCustomTag);
+  const removeTag = useCardStore((s) => s.removeTag);
+  const renameTag = useCardStore((s) => s.renameTag);
+  const updateProfile = useCardStore((s) => s.updateProfile);
   const updateVersion = useCardStore((s) => s.updateVersion);
 
-  const versionIdx = useMemo(
-    () => Math.max(card?.versions.findIndex((v) => v.isDefault) ?? 0, 0),
-    [card?.versions]
-  );
-  const version = card?.versions[versionIdx] ?? card?.versions[0];
+  const [tagsEditing, setTagsEditing] = useState(false);
+
+  const version = useMemo(() => {
+    if (!card) return undefined;
+    if (versionId) {
+      const found = card.versions.find((v) => v.id === versionId);
+      if (found) return found;
+    }
+    return card.versions.find((v) => v.isDefault) ?? card.versions[0];
+  }, [card, versionId]);
 
   const nameWeight = (version?.fieldStyles?.name?.fontWeight ?? "bold") as string;
   const weightIdx = Math.max(WEIGHT_KEYS.indexOf(nameWeight as any), 0);
@@ -124,6 +144,32 @@ export default function EditorScreen() {
     [updateVersion, version]
   );
 
+  const handleBannerPick = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [16, 9],
+      mediaTypes: ["images"],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      updateProfile({ bannerUrl: result.assets[0].uri });
+    }
+  }, [updateProfile]);
+
+  const handleTagAdd = useCallback(
+    (input: string) => {
+      const parsed = parseCustomTagInput(input);
+      if (!parsed) {
+        return;
+      }
+
+      addCustomTag(parsed);
+      setTagsEditing(true);
+    },
+    [addCustomTag]
+  );
+
   if (!card || !version) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
@@ -133,6 +179,7 @@ export default function EditorScreen() {
   }
 
   const vis = new Set(version.visibleFields as string[]);
+  const tags = resolveProfileTags(card.profile, card.tagState);
 
   return (
     <>
@@ -153,10 +200,20 @@ export default function EditorScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 48 }}
       >
-        {/* Live card preview — same as home */}
+        {/* Editable card preview */}
         <View style={styles.cardWrap}>
-          <ProfileCard
+          <ProfileCardEditor
+            nameFont={nameFont}
+            onBannerPress={handleBannerPick}
+            onHeadlineSave={(value) => updateProfile({ headline: value })}
+            onNameSave={(value) => updateProfile({ name: value })}
+            onTagAdd={handleTagAdd}
+            onTagDelete={removeTag}
+            onTagRename={renameTag}
+            onTagsEditingChange={setTagsEditing}
             profile={card.profile}
+            tags={tags}
+            tagsEditing={tagsEditing}
             version={version}
           />
         </View>
@@ -181,9 +238,11 @@ export default function EditorScreen() {
         <SettingsGroup>
           {FIELDS.map((f, i) => (
             <React.Fragment key={f.key}>
-              {i > 0 ? <SettingsSeparator /> : null}
+              {i > 0 ? <SettingsSeparator inset={60} /> : null}
               <FieldToggleRow
                 label={f.label}
+                icon={f.icon}
+                color={f.color}
                 enabled={vis.has(f.key)}
                 onToggle={(next) => handleToggle(f.key, next)}
               />

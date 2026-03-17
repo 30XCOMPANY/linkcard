@@ -61,7 +61,11 @@ export function ProfileCardEditor({
   version,
 }: ProfileCardEditorProps) {
   const background = resolveCardBackground(version.background);
+  const vis = new Set(version.visibleFields as string[]);
   const bannerFadeColors = ["transparent", "rgba(255,255,255,0.3)", background.surface, background.surface] as const;
+
+  const showWebsite = vis.has("website") && profile.website;
+  const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
 
   return (
     <View style={[styles.card, { backgroundColor: background.surface, borderColor: background.border }]}>
@@ -90,35 +94,39 @@ export function ProfileCardEditor({
         />
       </Pressable>
 
-      <Avatar
-        accentColor={version.accentColor}
-        glassIntensity={18}
-        glassPadding={8}
-        name={profile.name}
-        size={120}
-        source={profile.photoUrl}
-      />
+      {vis.has("photoUrl") && (
+        <Avatar
+          accentColor={version.accentColor}
+          glassIntensity={18}
+          glassPadding={8}
+          name={profile.name}
+          size={120}
+          source={profile.photoUrl}
+        />
+      )}
 
-      <EditableText
-        onSave={onNameSave}
-        placeholder="Your Name"
-        style={[
-          styles.profileName,
-          nameFonts[nameFont].fontFamily
-            ? { fontFamily: nameFonts[nameFont].fontFamily }
-            : undefined,
-        ]}
-        value={profile.name}
-      />
+      {vis.has("name") && (
+        <EditableText
+          onSave={onNameSave}
+          placeholder="Your Name"
+          style={[
+            styles.profileName,
+            nameFonts[nameFont].fontFamily
+              ? { fontFamily: nameFonts[nameFont].fontFamily }
+              : undefined,
+          ]}
+          value={profile.name}
+        />
+      )}
 
-      {profile.website || profile.jobTitle ? (
+      {(showWebsite || showJobTitle) ? (
         <View style={styles.identityLine}>
-          {profile.website ? (
+          {showWebsite ? (
             <Pressable
               onPress={() => {
                 haptic.light();
-                const url = profile.website.startsWith("http")
-                  ? profile.website
+                const url = profile.website!.startsWith("http")
+                  ? profile.website!
                   : `https://${profile.website}`;
                 Linking.openURL(url);
               }}
@@ -126,27 +134,29 @@ export function ProfileCardEditor({
             >
               <Text style={styles.identityEmoji}>🗺</Text>
               <Text style={styles.identityLinkText}>
-                {profile.website.replace(/^https?:\/\//, "")}
+                {profile.website!.replace(/^https?:\/\//, "")}
               </Text>
             </Pressable>
           ) : null}
-          {profile.website && profile.jobTitle ? (
+          {showWebsite && showJobTitle ? (
             <Text style={styles.identitySeparator}> | </Text>
           ) : null}
-          {profile.jobTitle ? (
+          {showJobTitle ? (
             <Text style={styles.identityRole}>{profile.jobTitle}</Text>
           ) : null}
         </View>
       ) : null}
 
-      <EditableText
-        multiline
-        onSave={onHeadlineSave}
-        placeholder="Set a status..."
-        style={styles.statusText}
-        value={profile.headline}
-        wrapperStyle={styles.statusBox}
-      />
+      {vis.has("headline") && (
+        <EditableText
+          multiline
+          onSave={onHeadlineSave}
+          placeholder="Set a status..."
+          style={styles.statusText}
+          value={profile.headline}
+          wrapperStyle={styles.statusBox}
+        />
+      )}
 
       <EditableTagList
         editing={tagsEditing}
@@ -157,21 +167,23 @@ export function ProfileCardEditor({
         tags={tags}
       />
 
-      <View style={styles.contactRow}>
-        <View style={styles.contactPill}>
-          <Text style={styles.contactPillIcon}>✉</Text>
-          <Text style={styles.contactPillText}>
-            {profile.email ?? "No contact set"}
-          </Text>
+      {vis.has("email") && (
+        <View style={styles.contactRow}>
+          <View style={styles.contactPill}>
+            <Text style={styles.contactPillIcon}>✉</Text>
+            <Text style={styles.contactPillText}>
+              {profile.email ?? "No contact set"}
+            </Text>
+          </View>
+          <View style={styles.statsRow}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}> connects </Text>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}> shares</Text>
+          </View>
+          <View style={styles.statsSeparator} />
         </View>
-        <View style={styles.statsRow}>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}> connects </Text>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}> shares</Text>
-        </View>
-        <View style={styles.statsSeparator} />
-      </View>
+      )}
 
       <Pressable
         onPress={() => {

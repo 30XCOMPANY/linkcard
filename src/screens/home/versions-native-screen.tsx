@@ -19,7 +19,6 @@ import {
   foregroundStyle,
   lineLimit,
   listStyle,
-  listRowSeparator,
   moveDisabled,
   onTapGesture,
 } from "@expo/ui/swift-ui/modifiers";
@@ -94,7 +93,6 @@ export default function VersionsNativeScreen() {
                       setDefaultVersion(version.id);
                     }),
                     deleteDisabled(versionCount <= 1),
-                    listRowSeparator("visible", "bottom"),
                     moveDisabled(versionCount <= 1),
                   ]}
                 >

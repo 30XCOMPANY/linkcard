@@ -1,6 +1,6 @@
 /**
- * [INPUT]: react-native StyleSheet/ViewStyle/PlatformColor, @/src/tw View/Text/Pressable, @/src/lib/haptics,
- *          @/src/lib/icons Icon, @/src/components/shared/avatar Avatar
+ * [INPUT]: react-native Platform/PlatformColor/StyleSheet/ViewStyle, @/src/tw View/Text/Pressable,
+ *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/components/shared/avatar Avatar
  * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid,
  *           SettingsChevron, SettingsIconTile, SettingsAccountCard, settingsPageStyle
  * [POS]: design-system entry for iOS grouped settings surfaces, rows, account hero, inline controls, and page background
@@ -13,6 +13,7 @@ import { View, Text, Pressable } from "@/src/tw";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import { Avatar } from "@/src/components/shared/avatar";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 
 const settingsColors = {
   page: Platform.OS === "ios" ? PlatformColor("systemGroupedBackground") : "#F2F2F7",
@@ -36,9 +37,15 @@ export function SettingsIconTile({
   color: string;
 }) {
   return (
-    <View style={[styles.iconTile, { backgroundColor: color }]}>
+    <AdaptiveGlass
+      style={{ ...styles.iconTile, backgroundColor: color }}
+      intensity={12}
+      blurTint="default"
+      fallbackColor={color}
+      glassEffectStyle="clear"
+    >
       <Icon web={web} size={16} color="#FFFFFF" />
-    </View>
+    </AdaptiveGlass>
   );
 }
 
@@ -351,12 +358,13 @@ const styles = StyleSheet.create({
     borderColor: "#000000",
   },
   iconTile: {
-    width: 28,
-    height: 28,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     borderCurve: "continuous" as any,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   accountCard: {
     marginTop: 12,

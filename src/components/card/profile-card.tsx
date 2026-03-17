@@ -60,9 +60,13 @@ export function ProfileCard({
   onBannerPress,
 }: ProfileCardProps) {
   const accent = version.accentColor;
+  const vis = new Set(version.visibleFields as string[]);
   const tags = deriveProfileTags(profile);
   const background = resolveCardBackground(version.background);
   const bannerFadeColors = ["transparent", "rgba(255,255,255,0.3)", background.surface, background.surface] as const;
+
+  const showWebsite = vis.has("website") && profile.website;
+  const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
 
   return (
     <View style={[s.card, { backgroundColor: background.surface, borderColor: background.border }]}>
@@ -93,43 +97,36 @@ export function ProfileCard({
         />
       </Pressable>
 
-      {/* Avatar + Name */}
-      <Avatar
-        source={profile.photoUrl}
-        name={profile.name}
-        size={120}
-        glassPadding={8}
-        glassIntensity={18}
-        accentColor={accent}
-      />
-      <Text
-        style={[
-          s.profileName,
-          nameFonts[nameFont].fontFamily
-            ? { fontFamily: nameFonts[nameFont].fontFamily }
-            : undefined,
-        ]}
-      >
-        {profile.name}
-      </Text>
+      {/* Avatar */}
+      {vis.has("photoUrl") && (
+        <Avatar
+          source={profile.photoUrl}
+          name={profile.name}
+          size={120}
+          glassPadding={8}
+          glassIntensity={18}
+          accentColor={accent}
+        />
+      )}
 
-      {/* Headline */}
-      {profile.headline ? (
-        <View style={s.statusBox}>
-          <Text style={s.statusText} numberOfLines={2}>
-            {profile.headline}
-          </Text>
-        </View>
-      ) : (
-        <View style={s.statusBox}>
-          <Text style={s.statusPlaceholder}>Set a status...</Text>
-        </View>
+      {/* Name */}
+      {vis.has("name") && (
+        <Text
+          style={[
+            s.profileName,
+            nameFonts[nameFont].fontFamily
+              ? { fontFamily: nameFonts[nameFont].fontFamily }
+              : undefined,
+          ]}
+        >
+          {profile.name}
+        </Text>
       )}
 
       {/* Identity Line */}
-      {(profile.website || profile.jobTitle) && (
+      {(showWebsite || showJobTitle) && (
         <View style={s.identityLine}>
-          {profile.website && (
+          {showWebsite && (
             <Pressable
               onPress={() => {
                 haptic.light();
@@ -146,13 +143,28 @@ export function ProfileCard({
               </Text>
             </Pressable>
           )}
-          {profile.website && profile.jobTitle && (
+          {showWebsite && showJobTitle && (
             <Text style={s.identitySep}> | </Text>
           )}
-          {profile.jobTitle && (
+          {showJobTitle && (
             <Text style={s.identityRole}>{profile.jobTitle}</Text>
           )}
         </View>
+      )}
+
+      {/* Headline */}
+      {vis.has("headline") && (
+        profile.headline ? (
+          <View style={s.statusBox}>
+            <Text style={s.statusText} numberOfLines={2}>
+              {profile.headline}
+            </Text>
+          </View>
+        ) : (
+          <View style={s.statusBox}>
+            <Text style={s.statusPlaceholder}>Set a status...</Text>
+          </View>
+        )
       )}
 
       {/* Tags */}
@@ -165,21 +177,23 @@ export function ProfileCard({
       )}
 
       {/* Contact + Stats */}
-      <View style={s.contactRow}>
-        <View style={s.contactPill}>
-          <Text style={s.contactPillIcon}>✉</Text>
-          <Text style={s.contactPillText}>
-            {profile.email ?? "No contact set"}
-          </Text>
+      {vis.has("email") && (
+        <View style={s.contactRow}>
+          <View style={s.contactPill}>
+            <Text style={s.contactPillIcon}>✉</Text>
+            <Text style={s.contactPillText}>
+              {profile.email ?? "No contact set"}
+            </Text>
+          </View>
+          <View style={s.statsRow}>
+            <Text style={s.statNum}>0</Text>
+            <Text style={s.statLabel}> connects </Text>
+            <Text style={s.statNum}>0</Text>
+            <Text style={s.statLabel}> shares</Text>
+          </View>
+          <View style={s.statsSeparator} />
         </View>
-        <View style={s.statsRow}>
-          <Text style={s.statNum}>0</Text>
-          <Text style={s.statLabel}> connects </Text>
-          <Text style={s.statNum}>0</Text>
-          <Text style={s.statLabel}> shares</Text>
-        </View>
-        <View style={s.statsSeparator} />
-      </View>
+      )}
 
       {/* LinkedIn Link */}
       <Pressable

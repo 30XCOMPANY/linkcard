@@ -57,6 +57,8 @@ const SF_ALIASES: Record<string, string> = {
   user: "person",
   "person-outline": "person",
   person: "person",
+  people: "person.2",
+  "people-outline": "person.2",
   bell: "bell",
   "notifications-outline": "bell",
   mail: "envelope",

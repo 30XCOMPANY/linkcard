@@ -1,8 +1,8 @@
 /**
  * [INPUT]: expo-router Stack, react-native PlatformColor
- * [OUTPUT]: Home tab stack with large title and editor push
- * [POS]: Home Stack — native iOS large title with collapse behavior
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [OUTPUT]: Home tab stack with large title, editor push, and native version-management route
+ * [POS]: Home Stack — native iOS large title with collapse behavior and detail pushes
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import { Stack } from "expo-router/stack";
@@ -27,6 +27,15 @@ export default function HomeStackLayout() {
         name="editor"
         options={{
           title: "Edit Card",
+          headerLargeTitle: false,
+          headerTransparent: false,
+          headerBlurEffect: "systemMaterial",
+        }}
+      />
+      <Stack.Screen
+        name="versions"
+        options={{
+          title: "Card Versions",
           headerLargeTitle: false,
           headerTransparent: false,
           headerBlurEffect: "systemMaterial",
