@@ -8,7 +8,7 @@ Tab-based main navigation. Uses `NativeTabs` (iOS Liquid Glass) with web fallbac
 ```
 _layout.tsx:          Native tab navigator — NativeTabs with SF Symbols (Card, Share, Settings)
 _layout.web.tsx:      Web fallback — Tabs with Ionicons icons
-settings.tsx:         Settings screen (stub)
+settings.tsx:         Settings screen — Apple grouped list pattern, sync controls (Switch + chevron), reset card (destructive), version footer
 (index,share)/        Shared stack group — Card + Share tabs share push navigation (e.g. editor)
 ```
 
