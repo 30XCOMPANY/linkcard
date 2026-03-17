@@ -127,7 +127,6 @@ export async function processOfflineQueue(): Promise<void> {
     const queue: QueuedAction[] = JSON.parse(queueJson);
     if (queue.length === 0) return;
 
-    console.log(`[Offline] Processing ${queue.length} queued actions`);
 
     const failedActions: QueuedAction[] = [];
 
@@ -144,7 +143,6 @@ export async function processOfflineQueue(): Promise<void> {
     await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(failedActions));
 
     if (failedActions.length > 0) {
-      console.log(`[Offline] ${failedActions.length} actions failed and will be retried`);
     }
   } catch (error) {
     console.error('[Offline] Failed to process queue:', error);

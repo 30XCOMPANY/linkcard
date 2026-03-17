@@ -14,12 +14,10 @@ const PROFILE_KEY = 'linkcard_current_profile';
  */
 TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
   try {
-    console.log('[BackgroundSync] Starting sync task');
 
     // Get stored profile
     const profileJson = await AsyncStorage.getItem(PROFILE_KEY);
     if (!profileJson) {
-      console.log('[BackgroundSync] No profile to sync');
       return BackgroundFetch.BackgroundFetchResult.NoData;
     }
 
@@ -29,7 +27,6 @@ TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
     const { hasChanges, newProfile } = await checkProfileChanges(profile);
 
     if (hasChanges && newProfile) {
-      console.log('[BackgroundSync] Profile changed, updating...');
 
       // Determine what changed
       const changedFields: string[] = [];
@@ -70,7 +67,6 @@ export async function registerBackgroundSync(): Promise<boolean> {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_SYNC_TASK);
     
     if (isRegistered) {
-      console.log('[BackgroundSync] Task already registered');
       return true;
     }
 
@@ -81,7 +77,6 @@ export async function registerBackgroundSync(): Promise<boolean> {
       startOnBoot: true,
     });
 
-    console.log('[BackgroundSync] Task registered successfully');
     return true;
   } catch (error) {
     console.error('[BackgroundSync] Failed to register:', error);
@@ -98,7 +93,6 @@ export async function unregisterBackgroundSync(): Promise<void> {
     
     if (isRegistered) {
       await BackgroundFetch.unregisterTaskAsync(BACKGROUND_SYNC_TASK);
-      console.log('[BackgroundSync] Task unregistered');
     }
   } catch (error) {
     console.error('[BackgroundSync] Failed to unregister:', error);

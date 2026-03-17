@@ -1,80 +1,106 @@
 /**
- * LinkCard Design System - Typography Tokens (V7 Labs Style)
- * 
- * Key features from V7:
- * - NEGATIVE letter-spacing on headlines (-1.44px for H1)
- * - Tight line-height (1:1 for display)
- * - STK Bureau / Satoshi-like geometric sans
- * - Martina Plantijn for editorial serif accents
+ * [INPUT]: react-native Platform, TextStyle
+ * [OUTPUT]: fontFamily, typeScale, fontSize, fontWeight, lineHeight, letterSpacing, typography
+ * [POS]: Token layer — Apple HIG type system with platform-native fonts
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
+import { Platform, TextStyle } from 'react-native';
+
+/* ================================================================
+ * FONT FAMILIES — System native
+ * iOS: SF Pro (via "System"), Android: Roboto, Web: system-ui
+ * ================================================================ */
+
 export const fontFamily = {
-    // Display - Use DM Sans as closest to STK Bureau
-    display: 'DMSans_600SemiBold',
-    displayMedium: 'DMSans_500Medium',
-    displayLight: 'DMSans_400Regular',
+    regular:   Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' })!,
+    medium:    Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' })!,
+    semibold:  Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' })!,
+    bold:      Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif' })!,
+    monospace: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace, SFMono-Regular, monospace' })!,
 
-    // Editorial serif - Cormorant Garamond as Martina Plantijn alternative
-    serif: 'CormorantGaramond_400Regular',
-    serifItalic: 'CormorantGaramond_400Regular_Italic',
-    serifBold: 'CormorantGaramond_700Bold',
-
-    // Body - DM Sans
-    body: 'DMSans_400Regular',
-    bodyMedium: 'DMSans_500Medium',
-    bodySemibold: 'DMSans_600SemiBold',
-    bodyBold: 'DMSans_700Bold',
-
-    // Mono
-    mono: 'JetBrainsMono_400Regular',
-    monoMedium: 'JetBrainsMono_500Medium',
+    // Legacy aliases — map to system font so old imports don't break
+    display:        Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    displayMedium:  Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    displayLight:   Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    body:           Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    bodyMedium:     Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    bodySemibold:   Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    bodyBold:       Platform.select({ ios: 'System', android: 'Roboto', default: 'system-ui' })!,
+    serif:          Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia, serif' })!,
+    serifItalic:    Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia, serif' })!,
+    serifBold:      Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia, serif' })!,
+    mono:           Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' })!,
+    monoMedium:     Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' })!,
 } as const;
 
-// V7 Labs exact type scale
+/* ================================================================
+ * APPLE HIG TYPE SCALE
+ * ================================================================ */
+
+export const typeScale = {
+    largeTitle:  { fontSize: 34, lineHeight: 41, fontWeight: '700' as TextStyle['fontWeight'] },
+    title1:      { fontSize: 28, lineHeight: 34, fontWeight: '700' as TextStyle['fontWeight'] },
+    title2:      { fontSize: 22, lineHeight: 28, fontWeight: '700' as TextStyle['fontWeight'] },
+    title3:      { fontSize: 20, lineHeight: 25, fontWeight: '600' as TextStyle['fontWeight'] },
+    headline:    { fontSize: 17, lineHeight: 22, fontWeight: '600' as TextStyle['fontWeight'] },
+    body:        { fontSize: 17, lineHeight: 22, fontWeight: '400' as TextStyle['fontWeight'] },
+    callout:     { fontSize: 16, lineHeight: 21, fontWeight: '400' as TextStyle['fontWeight'] },
+    subheadline: { fontSize: 15, lineHeight: 20, fontWeight: '400' as TextStyle['fontWeight'] },
+    footnote:    { fontSize: 13, lineHeight: 18, fontWeight: '400' as TextStyle['fontWeight'] },
+    caption1:    { fontSize: 12, lineHeight: 16, fontWeight: '400' as TextStyle['fontWeight'] },
+    caption2:    { fontSize: 11, lineHeight: 13, fontWeight: '400' as TextStyle['fontWeight'] },
+} as const;
+
+export type TypeScaleKey = keyof typeof typeScale;
+
+/* ================================================================
+ * INDIVIDUAL TOKEN SCALES — direct access + legacy compat
+ * ================================================================ */
+
 export const fontSize = {
-    xs: 12,      // UI elements
-    sm: 14,      // Body standard
-    base: 16,    // Body large
-    lg: 18,
-    xl: 20,
-    '2xl': 24,   // H3/Subheading
-    '3xl': 32,
-    '4xl': 36,   // H2/Heading
-    '5xl': 48,   // H1/Display (V7 hero)
-    '6xl': 64,
-    '7xl': 72,
-    '8xl': 96,
+    xs:    12,
+    sm:    13,
+    base:  15,
+    md:    16,
+    lg:    17,
+    xl:    20,
+    '2xl': 22,
+    '3xl': 28,
+    '4xl': 34,
+    '5xl': 40,
+    '6xl': 48,
+    '7xl': 56,
+    '8xl': 64,
 } as const;
 
 export const fontWeight = {
-    regular: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
+    regular:  '400' as TextStyle['fontWeight'],
+    medium:   '500' as TextStyle['fontWeight'],
+    semibold: '600' as TextStyle['fontWeight'],
+    bold:     '700' as TextStyle['fontWeight'],
 } as const;
 
-// V7 uses very tight line heights
 export const lineHeight = {
-    none: 1,         // Display headlines (48/48 = 1)
-    tight: 1.05,     // Tight headlines
-    snug: 1.2,       // H2, H3
-    normal: 1.4,     // Subheadings
-    relaxed: 1.5,    // Body text (24/16 = 1.5)
-    loose: 1.75,
+    none:    1,
+    tight:   1.1,
+    snug:    1.25,
+    normal:  1.3,
+    relaxed: 1.5,
+    loose:   1.75,
 } as const;
 
-// V7's SIGNATURE: Negative letter spacing on headlines
 export const letterSpacing = {
-    tightest: -0.03,  // -1.44px at 48px = -0.03em (H1)
-    tighter: -0.025,  // -0.9px at 36px
-    tight: -0.01,     // -0.14px at 14px (body)
-    normal: 0,
-    wide: 0.025,
-    wider: 0.05,
+    tighter:  -0.03,
+    tight:    -0.01,
+    normal:   0,
+    wide:     0.02,
+    wider:    0.05,
 } as const;
 
 export const typography = {
     fontFamily,
+    typeScale,
     fontSize,
     fontWeight,
     lineHeight,

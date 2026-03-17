@@ -1,34 +1,39 @@
 /**
- * LinkCard Design System - Spacing Tokens (V7 Labs Style)
- * 
- * V7 uses generous spacing with large section padding (120px+)
+ * [INPUT]: None (leaf module)
+ * [OUTPUT]: spacing
+ * [POS]: Token layer — Apple 8pt grid spacing system
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 export const spacing = {
+    /** 2px — hairline gaps */
+    '2xs': 2,
     /** 4px */
     xs: 4,
-    /** 8px */
+    /** 8px — tight element spacing */
     sm: 8,
-    /** 12px */
+    /** 12px — compact padding */
     md: 12,
-    /** 16px */
+    /** 16px — standard padding (Apple default) */
     lg: 16,
-    /** 20px */
+    /** 20px — generous padding */
     xl: 20,
-    /** 24px - V7 card padding */
+    /** 24px — section inner padding */
     '2xl': 24,
-    /** 32px */
+    /** 32px — section gaps */
     '3xl': 32,
-    /** 40px - V7 large card padding */
+    /** 40px — large section gaps */
     '4xl': 40,
-    /** 44px - V7 grid gap */
-    '5xl': 44,
-    /** 64px */
+    /** 48px — screen-level spacing */
+    '5xl': 48,
+    /** 64px — hero spacing */
     '6xl': 64,
-    /** 80px */
+    /** 80px — legacy large spacing */
     '7xl': 80,
-    /** 120px - V7 section top padding */
+    /** 120px — legacy section padding */
     '8xl': 120,
+    /** 160px — full section spacing */
+    section: 160,
 } as const;
 
 export type SpacingToken = keyof typeof spacing;

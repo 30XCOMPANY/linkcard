@@ -1,123 +1,51 @@
 /**
- * LinkCard Design System - Text Primitive (V7 Labs Style)
- * 
- * Features:
- * - NEGATIVE letter-spacing on headlines (-0.03em)
- * - Tight line heights (1:1 for display)
- * - Bold geometric sans for headlines
+ * [INPUT]: react-native Text, ../tokens/colors, ../tokens/typography
+ * [OUTPUT]: Text component, TextVariant, TextProps
+ * [POS]: Primitive — unified text component with Apple HIG type scale
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from 'react';
-import { Text as RNText, TextStyle, TextProps as RNTextProps, Platform } from 'react-native';
+import { Text as RNText, TextStyle, TextProps as RNTextProps } from 'react-native';
 import { colors } from '../tokens/colors';
-import { fontFamily, fontSize, lineHeight, letterSpacing } from '../tokens/typography';
+import { fontFamily, typeScale, fontSize } from '../tokens/typography';
 
 type ColorToken = keyof typeof colors;
 
-// V7 Labs style text variants
-const textVariants = {
-    // Display - Large hero headlines with NEGATIVE letter-spacing
-    displayLarge: {
-        fontFamily: fontFamily.display,
-        fontSize: fontSize['5xl'],        // 48px
-        lineHeight: fontSize['5xl'],      // 1:1 ratio (V7 style)
-        letterSpacing: -1.44,             // -1.44px (V7 exact value)
-    },
-    displayMedium: {
-        fontFamily: fontFamily.display,
-        fontSize: fontSize['4xl'],        // 36px
-        lineHeight: fontSize['4xl'] * 1.05,
-        letterSpacing: -1.08,             // V7 exact
-    },
-    displaySmall: {
-        fontFamily: fontFamily.displayMedium,
-        fontSize: fontSize['3xl'],
-        lineHeight: fontSize['3xl'] * 1.1,
-        letterSpacing: -0.66,
-    },
+/* ================================================================
+ * TEXT VARIANTS — Apple HIG type scale
+ * ================================================================ */
 
-    // Editorial serif (Martina Plantijn style)
-    editorial: {
-        fontFamily: fontFamily.serifItalic,
-        fontSize: fontSize['3xl'],
-        lineHeight: fontSize['3xl'] * 1.2,
-        letterSpacing: 0,
-    },
+const textVariants: Record<string, TextStyle> = {
+    // Apple HIG Display
+    largeTitle:    { fontFamily: fontFamily.bold,     ...typeScale.largeTitle },
+    title1:        { fontFamily: fontFamily.bold,     ...typeScale.title1 },
+    title2:        { fontFamily: fontFamily.bold,     ...typeScale.title2 },
+    title3:        { fontFamily: fontFamily.semibold, ...typeScale.title3 },
+    headline:      { fontFamily: fontFamily.semibold, ...typeScale.headline },
+    body:          { fontFamily: fontFamily.regular,  ...typeScale.body },
+    callout:       { fontFamily: fontFamily.regular,  ...typeScale.callout },
+    subheadline:   { fontFamily: fontFamily.regular,  ...typeScale.subheadline },
+    footnote:      { fontFamily: fontFamily.regular,  ...typeScale.footnote },
+    caption1:      { fontFamily: fontFamily.regular,  ...typeScale.caption1 },
+    caption2:      { fontFamily: fontFamily.regular,  ...typeScale.caption2 },
 
-    // Headings - DM Sans Bold
-    h1: {
-        fontFamily: fontFamily.display,
-        fontSize: fontSize['4xl'],
-        lineHeight: fontSize['4xl'] * 1.1,
-        letterSpacing: -0.8,
-    },
-    h2: {
-        fontFamily: fontFamily.display,
-        fontSize: fontSize['3xl'],
-        lineHeight: fontSize['3xl'] * 1.15,
-        letterSpacing: -0.5,
-    },
-    h3: {
-        fontFamily: fontFamily.displayMedium,
-        fontSize: fontSize['2xl'],         // 24px
-        lineHeight: 26,                    // V7 exact
-        letterSpacing: -0.66,              // V7 exact
-    },
-    h4: {
-        fontFamily: fontFamily.bodySemibold,
-        fontSize: fontSize.xl,
-        lineHeight: fontSize.xl * 1.3,
-        letterSpacing: -0.3,
-    },
-
-    // Body - V7 uses 16px/24px with slight negative tracking
-    bodyLarge: {
-        fontFamily: fontFamily.body,
-        fontSize: fontSize.base,           // 16px
-        lineHeight: 24,                    // V7 exact
-        letterSpacing: -0.14,              // V7 exact
-    },
-    body: {
-        fontFamily: fontFamily.body,
-        fontSize: fontSize.sm,             // 14px
-        lineHeight: 20,                    // V7 exact
-        letterSpacing: -0.14,              // V7 exact
-    },
-    bodySmall: {
-        fontFamily: fontFamily.body,
-        fontSize: fontSize.xs,
-        lineHeight: fontSize.xs * 1.5,
-        letterSpacing: 0,
-    },
-
-    // UI Elements
-    label: {
-        fontFamily: fontFamily.bodySemibold,
-        fontSize: fontSize.xs,             // 12px
-        lineHeight: fontSize.xs * 1.4,
-        letterSpacing: 0,
-    },
-    button: {
-        fontFamily: fontFamily.bodySemibold,
-        fontSize: fontSize.xs,             // 12px (V7 buttons)
-        lineHeight: fontSize.xs,
-        letterSpacing: 0,
-    },
-    caption: {
-        fontFamily: fontFamily.body,
-        fontSize: fontSize.xs,
-        lineHeight: fontSize.xs * 1.4,
-        letterSpacing: 0,
-    },
-
-    // Mono
-    mono: {
-        fontFamily: fontFamily.mono,
-        fontSize: fontSize.sm,
-        lineHeight: fontSize.sm * 1.5,
-        letterSpacing: 0,
-    },
-} as const;
+    // Legacy aliases — map to closest Apple equivalent
+    displayLarge:  { fontFamily: fontFamily.bold,     fontSize: fontSize['5xl'], lineHeight: fontSize['5xl'] * 1.1, fontWeight: '700' },
+    displayMedium: { fontFamily: fontFamily.bold,     fontSize: fontSize['4xl'], lineHeight: fontSize['4xl'] * 1.1, fontWeight: '700' },
+    displaySmall:  { fontFamily: fontFamily.semibold, fontSize: fontSize['3xl'], lineHeight: fontSize['3xl'] * 1.15, fontWeight: '600' },
+    h1:            { fontFamily: fontFamily.bold,     ...typeScale.title1 },
+    h2:            { fontFamily: fontFamily.bold,     ...typeScale.title2 },
+    h3:            { fontFamily: fontFamily.semibold, ...typeScale.title3 },
+    h4:            { fontFamily: fontFamily.semibold, ...typeScale.headline },
+    bodyLarge:     { fontFamily: fontFamily.regular,  ...typeScale.body },
+    bodySmall:     { fontFamily: fontFamily.regular,  ...typeScale.footnote },
+    label:         { fontFamily: fontFamily.semibold, ...typeScale.caption1 },
+    button:        { fontFamily: fontFamily.semibold, ...typeScale.subheadline },
+    caption:       { fontFamily: fontFamily.regular,  ...typeScale.caption1 },
+    editorial:     { fontFamily: fontFamily.regular,  ...typeScale.title2, fontStyle: 'italic' },
+    mono:          { fontFamily: fontFamily.monospace, ...typeScale.footnote },
+};
 
 export type TextVariant = keyof typeof textVariants;
 
@@ -126,9 +54,10 @@ export interface TextProps extends RNTextProps {
     color?: ColorToken;
     align?: 'left' | 'center' | 'right';
     weight?: 'regular' | 'medium' | 'semibold' | 'bold';
+    children?: React.ReactNode;
 }
 
-export const Text: React.FC<TextProps> = ({
+export function Text({
     children,
     variant = 'body',
     color = 'text',
@@ -136,16 +65,23 @@ export const Text: React.FC<TextProps> = ({
     weight,
     style,
     ...props
-}) => {
-    const variantStyle = textVariants[variant];
+}: TextProps) {
+    const variantStyle = textVariants[variant] ?? textVariants.body;
+
+    const resolvedWeight = weight
+        ? ({
+            regular:  '400' as const,
+            medium:   '500' as const,
+            semibold: '600' as const,
+            bold:     '700' as const,
+        })[weight]
+        : undefined;
 
     const textStyle: TextStyle = {
         ...variantStyle,
         color: colors[color],
         textAlign: align,
-        ...(weight === 'medium' && { fontFamily: fontFamily.bodyMedium }),
-        ...(weight === 'semibold' && { fontFamily: fontFamily.bodySemibold }),
-        ...(weight === 'bold' && { fontFamily: fontFamily.bodyBold }),
+        ...(resolvedWeight && { fontWeight: resolvedWeight }),
     };
 
     return (
@@ -153,4 +89,4 @@ export const Text: React.FC<TextProps> = ({
             {children}
         </RNText>
     );
-};
+}

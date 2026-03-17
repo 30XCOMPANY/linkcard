@@ -14,7 +14,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { spacing, typography, colors, shadows, animations, radius } from '@/src/constants/theme';
+import { spacing, typography, colors, shadows, animation, radii } from '@/src/design-system/tokens';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -59,12 +59,12 @@ export const Button: React.FC<ButtonProps> = ({
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.98, animations.spring.snappy);
+    scale.value = withSpring(0.98, animation.springs.snappy);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, animations.spring.snappy);
+    scale.value = withSpring(1, animation.springs.snappy);
   };
 
   const sizeStyles = {
@@ -163,7 +163,7 @@ export const Button: React.FC<ButtonProps> = ({
         {
           paddingVertical: currentSize.paddingVertical,
           paddingHorizontal: currentSize.paddingHorizontal,
-          borderRadius: radius.full,
+          borderRadius: radii.full,
         },
         fullWidth && styles.fullWidth,
         animatedStyle,
@@ -228,11 +228,11 @@ const styles = StyleSheet.create({
   },
   // Primary button - sunburst style
   primaryButton: {
-    borderRadius: radius.full,
+    borderRadius: radii.full,
     overflow: 'hidden',
   },
   gradientInner: {
-    borderRadius: radius.full,
+    borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { radius, spacing, shadows } from '@/src/constants/theme';
+import { radii, spacing, shadows } from '@/src/design-system/tokens';
 
 type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | number;
 
@@ -59,7 +59,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   if (source) {
-    console.log('[Avatar] Loading image from:', source);
     return (
       <View
         style={[
@@ -75,8 +74,6 @@ export const Avatar: React.FC<AvatarProps> = ({
           style={styles.image}
           contentFit="cover"
           transition={300}
-          onLoad={() => console.log('[Avatar] Image loaded successfully')}
-          onError={(error) => console.error('[Avatar] Image load error:', error)}
         />
       </View>
     );

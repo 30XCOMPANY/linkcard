@@ -23,7 +23,7 @@ import Animated, {
   FlipInXUp,
   FlipOutXUp,
 } from 'react-native-reanimated';
-import { animations } from '@/src/constants/theme';
+import { animation } from '@/src/design-system/tokens';
 
 // Export entering animations for easy access
 export const EnteringAnimations = {
@@ -246,11 +246,11 @@ export const useScaleAnimation = (targetScale: number = 0.95) => {
   const scale = useSharedValue(1);
 
   const onPressIn = () => {
-    scale.value = withSpring(targetScale, animations.spring.snappy);
+    scale.value = withSpring(targetScale, animation.springs.snappy);
   };
 
   const onPressOut = () => {
-    scale.value = withSpring(1, animations.spring.snappy);
+    scale.value = withSpring(1, animation.springs.snappy);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -273,8 +273,8 @@ export const useSlideInAnimation = (
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    translateX.value = withDelay(delay, withSpring(0, animations.spring.snappy));
-    translateY.value = withDelay(delay, withSpring(0, animations.spring.snappy));
+    translateX.value = withDelay(delay, withSpring(0, animation.springs.snappy));
+    translateY.value = withDelay(delay, withSpring(0, animation.springs.snappy));
     opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
   }, []);
 
@@ -297,7 +297,7 @@ export const useFlipAnimation = () => {
   const isFlipped = useSharedValue(false);
 
   const flip = () => {
-    rotateY.value = withSpring(isFlipped.value ? 0 : 180, animations.spring.snappy);
+    rotateY.value = withSpring(isFlipped.value ? 0 : 180, animation.springs.snappy);
     isFlipped.value = !isFlipped.value;
   };
 

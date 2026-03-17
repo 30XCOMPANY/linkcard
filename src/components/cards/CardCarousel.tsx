@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BusinessCard } from './BusinessCard';
 import { LinkedInProfile, CardVersion } from '@/src/types';
-import { spacing, typography, radius } from '@/src/constants/theme';
+import { spacing, typography, radii } from '@/src/design-system/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

@@ -3,7 +3,7 @@
  * Drag & Drop components from sidebar to editable card canvas
  */
 
-import React, { useState, useRef, useMemo, useLayoutEffect, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,390 +11,43 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Platform,
-  Dimensions,
   TextInput,
-  Modal,
   Text as RNText,
-  PanResponder,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, Redirect } from 'expo-router';
-import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 // Design System
-import {
-  colors,
-  spacing,
-  radii,
-} from '@/src/design-system/tokens';
-import { Text, VStack, HStack } from '@/src/design-system/primitives';
+import { colors, spacing, radii } from '@/src/design-system/tokens';
+import { Text, VStack } from '@/src/design-system/primitives';
 import { Button } from '@/src/design-system/patterns';
-import { fontFamily, fontSize, letterSpacing, lineHeight } from '@/src/design-system/tokens/typography';
+import { fontFamily, fontSize } from '@/src/design-system/tokens/typography';
 
 import { useCardStore } from '@/src/stores/cardStore';
-import { CardVersion, CardTemplate, FieldStyle } from '@/src/types';
+import { CardTemplate, FieldStyle } from '@/src/types';
 import { CardComponent, extractComponentsFromProfile } from '@/src/types/cardComponents';
 import { QRCode } from '@/src/components/qr/QRCode';
-import { Avatar } from '@/src/components/ui/Avatar';
 
-// ============== Types ==============
-interface CanvasElement {
-  id: string;
-  type: 'text' | 'image' | 'qr' | 'avatar' | 'divider' | 'shape';
-  fieldKey: string; // Maps to profile field or special keys
-  x: number; // Percentage 0-100
-  y: number; // Percentage 0-100
-  width: number; // Percentage 0-100
-  height: number; // Auto or fixed
-  style: FieldStyle;
-  locked?: boolean;
-  visible: boolean;
-}
-
-// ============== Constants ==============
-
-// Available fonts for the dropdown
-interface FontOption {
-  id: string;
-  name: string;
-  stack: string;
-  category?: string;
-}
-
-const AVAILABLE_FONTS: FontOption[] = [
-  { id: 'System', name: 'System', stack: 'System', category: 'System' },
-  { id: 'DMSans', name: 'DM Sans', stack: 'DMSans_400Regular', category: 'Sans Serif' },
-  { id: 'CormorantGaramond', name: 'Garamond', stack: 'CormorantGaramond_400Regular', category: 'Serif' },
-  { id: 'JetBrainsMono', name: 'Mono', stack: 'JetBrainsMono_400Regular', category: 'Monospace' },
-];
-
-const CARD_LAYOUTS = {
-  portrait: { width: 320, height: 520, label: 'Portrait', icon: 'phone-portrait-outline' },
-  landscape: { width: 520, height: 320, label: 'Landscape', icon: 'phone-landscape-outline' },
-  square: { width: 400, height: 400, label: 'Square', icon: 'square-outline' },
-};
-
-const CARD_BASE_WIDTH = 320; // Fallback
-const CARD_BASE_HEIGHT = 520; // Fallback
-const getFontStack = (fontId: string): string => {
-  const font = AVAILABLE_FONTS.find(f => f.id === fontId || f.name === fontId);
-  return font?.stack || 'System';
-};
-
-// Template styles - each template has a unique visual identity
-interface TemplateStyle {
-  background: string;
-  gradient?: string;
-  borderRadius: number;
-  shadowColor?: string;
-  shadowBlur?: number;
-  accentPosition?: 'top' | 'left' | 'bottom' | 'none';
-  accentWidth?: number;
-}
-
-const TEMPLATE_STYLES: Record<string, any> = {
-
-  bento: {
-    // "Dopamine" - Playful, colorful, energetic - MULTI-COLOR design
-    background: '#FFFFFF', // Base white, we'll add colorful elements on top
-    borderRadius: 24,
-    shadowColor: 'rgba(255, 154, 158, 0.3)',
-    shadowBlur: 20,
-    shadowOffset: { width: 0, height: 8 },
-    accentPosition: 'none',
-    borderWidth: 0, // No border, colorful blocks will provide visual separation
-    borderColor: 'transparent',
-    defaultTextColor: '#1A1A1A',
-  },
-  modern: {
-    // "Swiss Clean" - Editorial, precise, timeless.
-    background: '#FFFFFF', // Pure white background
-    borderRadius: 24, // Rounded for a softer look
-    shadowColor: 'rgba(0,0,0,0.06)',
-    shadowBlur: 20,
-    shadowOffset: { width: 0, height: 4 },
-    accentPosition: 'none', // EXPLICITLY REMOVE ACCENT
-    borderWidth: 0,
-    borderColor: 'transparent',
-    defaultTextColor: '#1A1A1A',
-  },
-  minimal: {
-    // "Frosted Ether" - Holographic, airy, premium.
-    background: 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)', // Cloudy Knoxville
-    borderRadius: 24,
-    shadowColor: 'rgba(172, 203, 238, 0.5)',
-    shadowBlur: 30,
-    shadowOffset: { width: 0, height: 8 },
-    accentPosition: 'none',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    defaultTextColor: '#2C3E50',
-  },
-  classic: {
-    // "Neo-Brutalism" - High fashion, bold, distinct.
-    background: '#FFF500', // Cyber Yellow
-    borderRadius: 12,
-    shadowColor: '#1A1A1A',
-    shadowOpacity: 1,
-    shadowBlur: 0,
-    shadowOffset: { width: 6, height: 6 },
-    accentPosition: 'none',
-    borderWidth: 4,
-    borderColor: '#000000',
-    defaultTextColor: '#1A1A1A',
-  },
-
-  // Aurora removed - not in final 4
-
-  // ==========================================
-  // SUNSET - Warm Gradient Paradise
-  // ==========================================
-  sunset: {
-    background: 'linear-gradient(135deg, #ff6b9d 0%, #ffa06b 40%, #ff9a76 70%, #c471ed 100%)',
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    shadowColor: 'rgba(255, 107, 157, 0.4)',
-    shadowBlur: 40,
-    shadowOffset: { width: 0, height: 16 },
-    hasGlassOverlay: true,
-    glassOpacity: 0.12,
-    glassBlur: 30,
-    defaultTextColor: '#FFFFFF',
-    secondaryTextColor: 'rgba(255, 255, 255, 0.85)',
-    accentColor: '#ff6b9d',
-    accentPosition: 'none',
-    layout: 'sunset',
-  },
-
-  // ==========================================
-  // MIDNIGHT - Deep Space Elegance
-  // ==========================================
-  midnight: {
-    background: 'linear-gradient(160deg, #0a0a14 0%, #1a1a2e 30%, #16213e 60%, #0f3460 100%)',
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-    shadowColor: 'rgba(99, 102, 241, 0.3)',
-    shadowBlur: 50,
-    shadowOffset: { width: 0, height: 20 },
-    hasGlassOverlay: true,
-    glassOpacity: 0.08,
-    glassBlur: 40,
-    innerGlow: 'rgba(99, 102, 241, 0.1)',
-    defaultTextColor: '#FFFFFF',
-    secondaryTextColor: 'rgba(255, 255, 255, 0.7)',
-    accentColor: '#6366f1',
-    accentPosition: 'none',
-    layout: 'midnight',
-  },
-
-  // Cream removed - not in final 4
-
-  // ==========================================
-  // OCEAN - Apple Frosted Glass (Flagship)
-  // ==========================================
-  ocean: {
-    background: 'rgba(255, 255, 255, 0.40)',
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: 'rgba(0, 0, 0, 0.08)',
-    shadowBlur: 35,
-    shadowOffset: { width: 0, height: 12 },
-    hasGlassOverlay: true,
-    glassOpacity: 0.12,
-    glassBlur: 45,
-    defaultTextColor: '#1a1a1a',
-    secondaryTextColor: '#6b7280',
-    accentTextColor: '#0066CC',
-    accentPosition: 'none',
-    layout: 'ocean',
-  },
-
-  // ==========================================
-  // SLEEK - Modern Minimal White
-  // ==========================================
-  sleek: {
-    background: '#FFFFFF',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: 'rgba(0, 0, 0, 0.06)',
-    shadowBlur: 25,
-    shadowOffset: { width: 0, height: 8 },
-    hasGlassOverlay: false,
-    defaultTextColor: '#111827',
-    secondaryTextColor: '#6b7280',
-    accentColor: '#6366f1',
-    accentPosition: 'none',
-    layout: 'modern',
-  },
-};
+// Editor module
+import type { CanvasElement } from '@/src/features/editor/types';
+import {
+  AVAILABLE_FONTS,
+  CARD_LAYOUTS,
+  TEMPLATE_STYLES,
+  getFontStack,
+} from '@/src/features/editor/constants';
+import { getDefaultElements, getComponentIcon } from '@/src/features/editor/helpers';
 
 
-// ============== Helper Functions ==============
-const getDefaultElements = (profile: any, visibleFields: string[]): CanvasElement[] => {
-  const elements: CanvasElement[] = [];
-
-  // Used for styles if needed, otherwise hardcoded for the "Final" layout
-  const styles: any = {};
-
-  // Header Cluster (FINAL VERTICAL STACK)
-  // 1. Avatar
-  if (visibleFields.includes('photoUrl') && profile.photoUrl) {
-    elements.push({
-      id: 'photo-element',
-      type: 'avatar',
-      fieldKey: 'photoUrl',
-      x: 10,
-      y: 8,
-      width: 20,
-      height: 0,
-      style: { borderRadius: 100 },
-      visible: true,
-    });
-  }
-
-  // 2. Name
-  if (visibleFields.includes('name')) {
-    elements.push({
-      id: 'name-element',
-      type: 'text',
-      fieldKey: 'name',
-      x: 10,
-      y: 30,
-      width: 80,
-      height: 0,
-      style: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#000000',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  // 3. Job Title
-  if (visibleFields.includes('jobTitle')) {
-    elements.push({
-      id: 'job-title-element',
-      type: 'text',
-      fieldKey: 'jobTitle',
-      x: 10,
-      y: 38,
-      width: 80,
-      height: 0,
-      style: {
-        fontSize: 13,
-        fontWeight: 'medium',
-        color: '#666666',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  // 4. Headline (Pushed tight to name)
-  if (visibleFields.includes('headline')) {
-    elements.push({
-      id: 'headline-element',
-      type: 'text',
-      fieldKey: 'headline',
-      x: 10,
-      y: 46,
-      width: 80,
-      height: 0,
-      style: {
-        fontSize: 15,
-        lineHeight: 22,
-        fontWeight: 'regular',
-        color: '#1a1a1a',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  // 5. Character
-  if (visibleFields.includes('character') && profile.character) {
-    elements.push({
-      id: 'character-element',
-      type: 'text',
-      fieldKey: 'character',
-      x: 10,
-      y: 58,
-      width: 80,
-      height: 0,
-      style: {
-        fontSize: 12,
-        fontWeight: 'regular',
-        color: '#999999',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  // Footer / Bottom Section
-  if (visibleFields.includes('company')) {
-    elements.push({
-      id: 'company-element',
-      type: 'text',
-      fieldKey: 'company',
-      x: 10,
-      y: 76,
-      width: 50,
-      height: 0,
-      style: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#000000',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  if (visibleFields.includes('location')) {
-    elements.push({
-      id: 'location-element',
-      type: 'text',
-      fieldKey: 'location',
-      x: 10,
-      y: 84,
-      width: 50,
-      height: 0,
-      style: {
-        fontSize: 12,
-        fontWeight: 'regular',
-        color: '#666666',
-        textAlign: 'left',
-      },
-      visible: true,
-    });
-  }
-
-  if (visibleFields.includes('qrCode')) {
-    elements.push({
-      id: 'qr-element',
-      type: 'qr',
-      fieldKey: 'qrCode',
-      x: 74,
-      y: 76,
-      width: 16,
-      height: 0,
-      style: {},
-      visible: true,
-    });
-  }
-
-  return elements;
+// Template background defaults used by init effect
+const TEMPLATE_BG_DEFAULTS: Record<string, string> = {
+  minimal: 'linear-gradient(to top, #accbee 0%, #e2ebf0 100%)',
+  bento: '#FFFFFF',
+  modern: '#FFFFFF',
+  classic: '#FFF500',
 };
 
 // ============== Editor Screen ==============
@@ -460,22 +113,13 @@ export default function EditorScreen() {
   // Initialize card background color based on template
   useEffect(() => {
     if (selectedVersion) {
-      const templateDefaults: Record<string, string> = {
-        'minimal': 'linear-gradient(to top, #accbee 0%, #e2ebf0 100%)',
-        'bento': '#FFFFFF', // White base for colorful blocks overlay
-        'modern': '#FFFFFF',
-        'classic': '#FFF500',
-      };
-      const defaultBg = templateDefaults[selectedVersion.template] || '#FFFFFF';
-      setCardBgColor(defaultBg);
+      setCardBgColor(TEMPLATE_BG_DEFAULTS[selectedVersion.template] || '#FFFFFF');
     }
   }, [selectedVersion?.template]);
 
   useEffect(() => {
     if (card && selectedVersion) {
-      console.log('[Editor] useEffect triggered, visibleFields:', selectedVersion.visibleFields);
       const newElements = getDefaultElements(card.profile, selectedVersion.visibleFields as string[]);
-      console.log('[Editor] Generated elements:', newElements.map(e => e.fieldKey));
 
       // Merge with saved fieldStyles if any
       if (selectedVersion.fieldStyles) {
@@ -583,7 +227,6 @@ export default function EditorScreen() {
       }
 
       if (shouldBeAvatar && el.type !== 'avatar') {
-        console.log('[Editor] Fixing corrupted Photo element type (text -> avatar)', el.id);
         hasChanges = true;
         // Force mapping to 'photoUrl' if we detected it's a photo
         const newFieldKey = 'photoUrl';
@@ -601,7 +244,6 @@ export default function EditorScreen() {
     });
 
     if (hasChanges) {
-      console.log('[Editor] Applying auto-fixes to canvas elements');
       // Don't add auto-fixes to history, they're internal corrections
       isUndoRedoRef.current = true;
       setCanvasElements(newElements);
@@ -803,7 +445,6 @@ export default function EditorScreen() {
   };
 
   const handleComponentDrop = (component: CardComponent, dropX: number, dropY: number) => {
-    console.log('[Editor] handleComponentDrop called:', component.id, 'type:', component.type);
 
     // Check if already on canvas (Handle aliases)
     const existingElement = canvasElements.find(el => {
@@ -814,7 +455,6 @@ export default function EditorScreen() {
     });
 
     if (existingElement) {
-      console.log('[Editor] Element already exists, selecting it:', existingElement.id);
       setSelectedElementId(existingElement.id);
       return;
     }
@@ -832,13 +472,11 @@ export default function EditorScreen() {
         if (component.id === 'location' && (card.profile as any).city) {
           // Allow it
         } else {
-          console.log('[Editor] No profile data for:', component.id);
           return;
         }
       }
     }
 
-    console.log('[Editor] Adding new element for:', component.id);
 
     // Determine element type and position based on component type
     let elementType: CanvasElement['type'] = 'text';
@@ -893,7 +531,6 @@ export default function EditorScreen() {
     };
 
     updateCanvasElements(prev => {
-      console.log('[Editor] Adding element to canvas, new count:', prev.length + 1);
       return [...prev, newElement];
     });
 
@@ -966,14 +603,6 @@ export default function EditorScreen() {
     return (card.profile as any)[fieldKey] || '';
   };
 
-  const getElementType = (componentType: string): CanvasElement['type'] => {
-    switch (componentType) {
-      case 'image': return 'avatar';
-      case 'qr': return 'qr';
-      default: return 'text';
-    }
-  };
-
   // ============== Render ==============
 
   return (
@@ -1006,14 +635,6 @@ export default function EditorScreen() {
       {/* Element Toolbar (shown when element selected) */}
       {selectedElement && (
         <View style={styles.elementToolbar}>
-          {/* Delete Button REMOVED as per user request */}
-          {/* <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleElementDelete(selectedElement.id)}
-          >
-            <Ionicons name="trash-outline" size={20} color="#DC2626" />
-          </TouchableOpacity> */}
-
           {/* Text editing controls - Only for text elements */}
           {selectedElement.type === 'text' && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -1050,7 +671,6 @@ export default function EditorScreen() {
                           isActive && styles.toolbarPillActive,
                         ]}
                         onPress={() => {
-                          console.log('[Toolbar] Setting fontWeight to:', weight);
                           handleElementStyleChange('fontWeight', weight);
                         }}
                       >
@@ -1325,9 +945,11 @@ export default function EditorScreen() {
                     backgroundColor: `rgba(255, 255, 255, ${templateStyle.glassOpacity || 0.05})`,
                     borderWidth: 1,
                     borderColor: 'rgba(255, 255, 255, 0.1)',
-                    // @ts-ignore - web only
-                    backdropFilter: `blur(${templateStyle.glassBlur || 10}px)`,
-                    WebkitBackdropFilter: `blur(${templateStyle.glassBlur || 10}px)`,
+                    // @ts-ignore - web only CSS properties
+                    ...(typeof window !== 'undefined' ? {
+                      backdropFilter: `blur(${templateStyle.glassBlur || 10}px)`,
+                      WebkitBackdropFilter: `blur(${templateStyle.glassBlur || 10}px)`,
+                    } : {}),
                     pointerEvents: 'none' as const,
                   }} />
                 )}
@@ -1460,23 +1082,13 @@ export default function EditorScreen() {
                 onCardBgColorChange={setCardBgColor}
                 accentColor={selectedVersion.accentColor}
                 onAccentColorChange={(color) => {
-                  console.log('Changing accent color to:', color);
                   updateVersion(selectedVersionId, { accentColor: color });
                 }}
                 template={selectedVersion.template}
                 currentLayout={selectedVersion.layout || 'portrait'}
                 onLayoutChange={(layout) => updateVersion(selectedVersionId, { layout })}
                 onTemplateChange={(template) => {
-                  console.log('Changing template to:', template);
-                  // Auto-update background color based on template defaults
-                  const templateDefaults: Record<string, string> = {
-                    'minimal': 'linear-gradient(to top, #accbee 0%, #e2ebf0 100%)',
-                    'bento': 'linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)',
-                    'modern': '#FFFFFF',
-                    'classic': '#FFF500',
-                    'ocean': 'rgba(255, 255, 255, 0.65)',
-                  };
-                  setCardBgColor(templateDefaults[template] || '#FFFFFF');
+                  setCardBgColor(TEMPLATE_BG_DEFAULTS[template] || '#FFFFFF');
 
                   // Premium Auto-Layout Engine (Strict Stacking & Dynamic Flow)
                   if (['modern', 'minimal', 'classic', 'bento', 'ocean'].includes(template)) {
@@ -1729,7 +1341,6 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   if (element.type === 'avatar' || element.fieldKey === 'photoUrl') {
     // For avatar, always use photoUrl from profile
     content = profile.photoUrl || '';
-    console.log('[Avatar] Loading photo:', content, 'for element:', element.id);
   } else if (element.fieldKey === 'qrCode') {
     content = '';
   } else {
@@ -1829,7 +1440,6 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     const handleDblClick = (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('[CanvasElement] Double-click detected for:', element.fieldKey);
       onSelect(true);
     };
 
@@ -1856,7 +1466,7 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isResizing) {
         const startPos = startPosRef.current;
-        const dx = ((e.clientX - startPos.x) / (CARD_BASE_WIDTH * scale)) * 100;
+        const dx = ((e.clientX - startPos.x) / (CARD_LAYOUTS.portrait.width * scale)) * 100;
         onResize(dx);
         startPosRef.current = { x: e.clientX, y: e.clientY };
         return;
@@ -1864,8 +1474,8 @@ const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       if (!isDragging) return;
 
       const startPos = startPosRef.current;
-      const dx = ((e.clientX - startPos.x) / (CARD_BASE_WIDTH * scale)) * 100;
-      const dy = ((e.clientY - startPos.y) / (CARD_BASE_HEIGHT * scale)) * 100;
+      const dx = ((e.clientX - startPos.x) / (CARD_LAYOUTS.portrait.width * scale)) * 100;
+      const dy = ((e.clientY - startPos.y) / (CARD_LAYOUTS.portrait.height * scale)) * 100;
 
       // Use requestAnimationFrame for smoother updates
       requestAnimationFrame(() => {
@@ -2320,105 +1930,6 @@ const StylePanel: React.FC<StylePanelProps> = ({
   );
 };
 
-// ============== Settings Panel ==============
-interface SettingsPanelProps {
-  versions: CardVersion[];
-  selectedVersionId: string;
-  onVersionSelect: (id: string) => void;
-  currentLayout: 'portrait' | 'landscape' | 'square';
-  onLayoutChange: (layout: 'portrait' | 'landscape' | 'square') => void;
-}
-
-const SettingsPanel: React.FC<SettingsPanelProps> = ({
-  versions,
-  selectedVersionId,
-  onVersionSelect,
-  currentLayout,
-  onLayoutChange,
-}) => {
-  return (
-    <View style={styles.panel}>
-      <Text style={styles.panelTitle}>Card Layout</Text>
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 24 }}>
-        {(Object.keys(CARD_LAYOUTS) as Array<keyof typeof CARD_LAYOUTS>).map((layoutKey) => (
-          <TouchableOpacity
-            key={layoutKey}
-            style={[
-              {
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 12,
-                borderRadius: 8,
-                backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.border,
-              },
-              currentLayout === layoutKey && {
-                backgroundColor: colors.info + '10',
-                borderColor: colors.info,
-              }
-            ]}
-            onPress={() => onLayoutChange(layoutKey)}
-          >
-            <Ionicons
-              name={CARD_LAYOUTS[layoutKey].icon as any}
-              size={24}
-              color={currentLayout === layoutKey ? colors.info : colors.textMuted}
-            />
-            <Text style={[
-              { fontSize: 12, marginTop: 4, color: colors.textMuted },
-              currentLayout === layoutKey && { color: colors.info, fontWeight: '600' }
-            ]}>
-              {CARD_LAYOUTS[layoutKey].label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.panelTitle}>Versions</Text>
-      <Text style={styles.panelSubtitle}>Switch between different card layouts</Text>
-
-      <VStack gap="md" style={{ marginTop: spacing.lg }}>
-        {versions.map(version => (
-          <TouchableOpacity
-            key={version.id}
-            style={[
-              styles.versionItem,
-              selectedVersionId === version.id && styles.versionItemActive,
-            ]}
-            onPress={() => onVersionSelect(version.id)}
-          >
-            <View style={[styles.versionDot, { backgroundColor: version.accentColor }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.versionName}>{version.name}</Text>
-              {version.description && (
-                <Text style={styles.versionDesc}>{version.description}</Text>
-              )}
-            </View>
-            {selectedVersionId === version.id && (
-              <Ionicons name="checkmark-circle" size={20} color={colors.dark} />
-            )}
-          </TouchableOpacity>
-        ))}
-      </VStack>
-    </View>
-  );
-};
-
-// ============== Helper Functions ==============
-function getComponentIcon(type: string): any {
-  const iconMap: Record<string, any> = {
-    heading: 'text',
-    text: 'document-text-outline',
-    image: 'image-outline',
-    contact: 'person-outline',
-    social: 'share-social-outline',
-    qr: 'qr-code-outline',
-    divider: 'remove-outline',
-  };
-  return iconMap[type] || 'square-outline';
-}
 
 // ============== Styles ==============
 const styles = StyleSheet.create({

@@ -2,8 +2,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BusinessCard, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
-import { accentColors, AccentColorKey } from '@/src/constants/theme';
+import { accentColors, AccentColorKey } from '@/src/design-system/tokens/colors';
 import { cardService } from '@/src/services/supabase';
+
+// Debounced cloud sync — avoids hammering Supabase on rapid edits
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+const debouncedSync = (card: BusinessCard) => {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+        cardService.upsertCard(card).catch(console.error);
+    }, 500);
+};
 
 interface CardState {
     // Card data
@@ -88,8 +97,7 @@ export const useCardStore = create<CardState>()(
 
             setCard: (card) => {
                 set({ card, error: null });
-                // Sync to cloud in background
-                cardService.upsertCard(card).catch(console.error);
+                debouncedSync(card);
             },
 
             updateProfile: (profile) => {
@@ -104,7 +112,7 @@ export const useCardStore = create<CardState>()(
 
                 set({ card: updatedCard });
                 // Sync to cloud in background
-                cardService.upsertCard(updatedCard).catch(console.error);
+                debouncedSync(updatedCard);
             },
 
             addVersion: (version) => {
@@ -118,7 +126,7 @@ export const useCardStore = create<CardState>()(
                 };
 
                 set({ card: updatedCard });
-                cardService.upsertCard(updatedCard).catch(console.error);
+                debouncedSync(updatedCard);
             },
 
             updateVersion: (versionId, updates) => {
@@ -134,7 +142,7 @@ export const useCardStore = create<CardState>()(
                 };
 
                 set({ card: updatedCard });
-                cardService.upsertCard(updatedCard).catch(console.error);
+                debouncedSync(updatedCard);
             },
 
             deleteVersion: (versionId) => {
@@ -158,7 +166,7 @@ export const useCardStore = create<CardState>()(
                 };
 
                 set({ card: updatedCard });
-                cardService.upsertCard(updatedCard).catch(console.error);
+                debouncedSync(updatedCard);
             },
 
             setDefaultVersion: (versionId) => {
@@ -175,7 +183,7 @@ export const useCardStore = create<CardState>()(
                 };
 
                 set({ card: updatedCard });
-                cardService.upsertCard(updatedCard).catch(console.error);
+                debouncedSync(updatedCard);
             },
 
             setThemeMode: (mode) => set({ themeMode: mode }),

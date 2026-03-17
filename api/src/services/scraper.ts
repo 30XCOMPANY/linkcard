@@ -376,26 +376,6 @@ async function parseRapidAPIResponse(data: any, username: string): Promise<Linke
 }
 
 /**
- * Generate mock profile data for demo purposes
- * In production, replace this with actual scraping logic
- */
-function generateMockProfile(username: string): LinkedInProfileData {
-  // Create somewhat realistic mock data based on username
-  const formattedName = username
-    .split(/[-_]/)
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-
-  return {
-    name: formattedName,
-    headline: 'Software Engineer | Building the future',
-    company: 'Tech Company',
-    location: 'San Francisco Bay Area',
-    photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(formattedName)}&size=200&background=6366F1&color=fff`,
-  };
-}
-
-/**
  * Validate LinkedIn username format
  */
 export function isValidUsername(username: string): boolean {

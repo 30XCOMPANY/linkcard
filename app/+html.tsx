@@ -1,6 +1,7 @@
 /**
  * Custom HTML Head for Web
- * Add Inter font from Google Fonts
+ * Load DM Sans, Cormorant Garamond, JetBrains Mono from Google Fonts
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { ScrollViewStyleReset } from 'expo-router/html';
@@ -14,11 +15,11 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        {/* Inter Font from Google Fonts */}
+        {/* Google Fonts: DM Sans + Cormorant Garamond + JetBrains Mono */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
 
@@ -30,20 +31,19 @@ export default function Root({ children }: PropsWithChildren) {
               -webkit-font-smoothing: antialiased;
               -moz-osx-font-smoothing: grayscale;
             }
-            
-            /* Remove blue focus ring/outline on web */
+
             input:focus, textarea:focus, select:focus {
               outline: none !important;
               box-shadow: none !important;
             }
-            
+
             body {
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+              font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
               margin: 0;
               padding: 0;
               overflow-x: hidden;
             }
-            
+
             html, body, #root {
               height: 100%;
               width: 100%;

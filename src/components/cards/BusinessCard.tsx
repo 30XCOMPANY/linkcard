@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 import { Avatar } from '@/src/components/ui/Avatar';
 import { QRCode } from '@/src/components/qr/QRCode';
 import { LinkedInProfile, CardVersion, CardTemplate } from '@/src/types';
-import { radius, spacing, shadows, typography } from '@/src/constants/theme';
+import { radii, spacing, shadows, typography } from '@/src/design-system/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - spacing['2xl'] * 2;
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     minHeight: CARD_HEIGHT,
-    borderRadius: radius.xl,
+    borderRadius: radii.xl,
     overflow: 'hidden',
     alignSelf: 'center',
   },
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   bentoCard: {
-    borderRadius: radius.lg,
+    borderRadius: radii.lg,
     overflow: 'hidden',
   },
   bentoMain: {

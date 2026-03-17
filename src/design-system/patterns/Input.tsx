@@ -21,7 +21,6 @@ import Animated, {
 import { colors } from '../tokens/colors';
 import { fontFamily, fontSize } from '../tokens/typography';
 import { spacing } from '../tokens/spacing';
-import { radii } from '../tokens/radii';
 
 export interface InputProps extends Omit<TextInputProps, 'style'> {
     label?: string;
@@ -32,7 +31,7 @@ export interface InputProps extends Omit<TextInputProps, 'style'> {
     style?: ViewStyle;
 }
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+// Use Animated.View directly for better type compat with RN 0.83+
 
 export const Input: React.FC<InputProps> = ({
     label,
@@ -68,7 +67,7 @@ export const Input: React.FC<InputProps> = ({
         <View style={[styles.container, style]}>
             {label && <Text style={styles.label}>{label}</Text>}
 
-            <AnimatedView style={[styles.inputContainer, animatedBorderStyle]}>
+            <Animated.View style={[styles.inputContainer, animatedBorderStyle]}>
                 {icon && <View style={styles.iconContainer}>{icon}</View>}
 
                 <TextInput
@@ -84,7 +83,7 @@ export const Input: React.FC<InputProps> = ({
                         disabled ? styles.disabledInput : null,
                     ]}
                 />
-            </AnimatedView>
+            </Animated.View>
 
             {(error || helper) && (
                 <Text style={[styles.helperText, error ? styles.errorText : null]}>
@@ -128,8 +127,7 @@ const styles = StyleSheet.create({
         fontSize: 15, // Legible standard size
         fontFamily: fontFamily.body,
         color: colors.text,
-        // @ts-ignore - web only
-        outlineStyle: 'none',
+        // Web outline handled via Platform.select in component
     },
     inputWithIcon: {
         paddingLeft: spacing.md,

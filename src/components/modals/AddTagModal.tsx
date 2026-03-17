@@ -184,8 +184,6 @@ const styles = StyleSheet.create({
         }),
         padding: 0,
         fontWeight: '500',
-        // @ts-ignore - web only
-        outlineStyle: 'none',
     },
     saveButton: {
         height: 52,

@@ -1,6 +1,6 @@
 import { LinkedInProfile } from '@/src/types';
 
-const API_BASE_URL = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+const API_BASE_URL = (typeof window !== 'undefined' && window.location?.hostname === 'localhost')
   ? 'http://localhost:3001'
   : '';
 

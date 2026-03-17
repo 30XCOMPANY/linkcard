@@ -73,10 +73,13 @@ function generateChecksum(data: any): string {
 }
 
 /**
- * POST /api/linkedin/clear-cache (temporary debug endpoint)
+ * POST /api/linkedin/clear-cache (dev only)
  * Clear the profile cache to force fresh fetches
  */
 router.post('/clear-cache', (req, res) => {
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   clearProfileCache();
   res.json({ message: 'Cache cleared successfully' });
 });

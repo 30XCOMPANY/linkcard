@@ -18,7 +18,7 @@ import { spacing } from '@/src/design-system/tokens/spacing';
 import { BusinessCard } from '@/src/components/cards';
 import { useCardStore } from '@/src/stores/cardStore';
 import { CardVersion } from '@/src/types';
-import { accentColors } from '@/src/constants/theme';
+import { accentColors } from '@/src/design-system/tokens/colors';
 
 export default function VersionsScreen() {
   const { card, accentColor, currentGradient, addVersion, deleteVersion, setDefaultVersion } = useCardStore();

@@ -384,8 +384,6 @@ const styles = StyleSheet.create({
         }),
         padding: 0,
         fontWeight: '500',
-        // @ts-ignore - web only
-        outlineStyle: 'none',
     },
     footer: {
         padding: spacing['2xl'],

@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
-import { Button } from '@/src/components/ui';
-import { Input } from '@/src/components/ui/Input';
-import { getTheme, spacing, typography, radius, shadows } from '@/src/constants/theme';
+import { Button } from '@/src/design-system/patterns';
+import { Input } from '@/src/design-system/patterns/Input';
+import { getTheme, spacing, typography } from '@/src/design-system/tokens';
 import * as Haptics from 'expo-haptics';
 
 type AuthMode = 'signin' | 'signup';
@@ -20,7 +20,7 @@ type AuthMode = 'signin' | 'signup';
 export default function AuthScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const theme = getTheme('light', colorScheme || 'light');
+  const theme = getTheme('light', (colorScheme === 'dark' ? 'dark' : 'light'));
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

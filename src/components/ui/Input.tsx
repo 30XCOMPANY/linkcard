@@ -11,7 +11,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { spacing, typography, colors, animations, radius } from '@/src/constants/theme';
+import { spacing, typography, colors, animation, radii } from '@/src/design-system/tokens';
 
 interface InputProps {
   value: string;
@@ -59,12 +59,12 @@ export const Input: React.FC<InputProps> = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-    focusProgress.value = withTiming(1, { duration: animations.duration.normal });
+    focusProgress.value = withTiming(1, { duration: animation.duration.normal });
   };
 
   const handleBlur = () => {
     setIsFocused(false);
-    focusProgress.value = withTiming(0, { duration: animations.duration.normal });
+    focusProgress.value = withTiming(0, { duration: animation.duration.normal });
   };
 
   const animatedBorderStyle = useAnimatedStyle(() => {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: colors.white,
-    borderRadius: radius.md,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',

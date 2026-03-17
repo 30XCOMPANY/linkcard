@@ -10,9 +10,9 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '@/src/components/ui';
+import { Button } from '@/src/design-system/patterns';
 import { BusinessCard } from '@/src/components/cards';
-import { getTheme, spacing, typography, radius, shadows } from '@/src/constants/theme';
+import { getTheme, spacing, typography, radii, shadows } from '@/src/design-system/tokens';
 import * as Haptics from 'expo-haptics';
 import { LinkedInProfile, CardVersion } from '@/src/types';
 
@@ -44,7 +44,7 @@ const defaultVersion: CardVersion = {
 export default function PreviewScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const theme = getTheme('light', colorScheme || 'light');
+  const theme = getTheme('light', (colorScheme === 'dark' ? 'dark' : 'light'));
   const params = useLocalSearchParams();
   const [profile, setProfile] = useState<LinkedInProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -266,12 +266,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
   },
   cardPreview: {
-    borderRadius: radius['2xl'],
+    borderRadius: radii['2xl'],
     padding: spacing.lg,
     marginBottom: spacing['2xl'],
   },
   dataCard: {
-    borderRadius: radius.lg,
+    borderRadius: radii.lg,
     padding: spacing['2xl'],
   },
   dataTitle: {

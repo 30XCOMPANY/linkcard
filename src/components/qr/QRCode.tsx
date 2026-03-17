@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import QRCodeSVG from 'react-native-qrcode-svg';
-import { radius, shadows } from '@/src/constants/theme';
+import { radii, shadows } from '@/src/design-system/tokens';
 
 interface QRCodeProps {
   value: string;
@@ -52,7 +52,7 @@ export const QRCode: React.FC<QRCodeProps> = ({
         logo={logo ? { uri: logo } : undefined}
         logoSize={logo ? calculatedLogoSize : undefined}
         logoBackgroundColor={backgroundColor}
-        logoBorderRadius={radius.sm}
+        logoBorderRadius={radii.sm}
       />
     </View>
   );
@@ -93,7 +93,7 @@ export const LinkedInQR: React.FC<LinkedInQRProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: radius.lg,
+    borderRadius: radii.lg,
     alignSelf: 'center',
   },
   linkedInContainer: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   linkedInFrame: {
     borderWidth: 4,
-    borderRadius: radius.xl,
+    borderRadius: radii.xl,
     padding: 16,
     backgroundColor: '#FFFFFF',
   },
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     bottom: -12,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: radius.full,
+    borderRadius: radii.full,
   },
   linkedInLogo: {
     width: 20,

@@ -42,7 +42,7 @@ const gradientOptions: Array<{ key: GradientKey; name: string }> = [
     { key: 'rose', name: 'Soft Pink' },
     { key: 'white', name: 'Pure White' },
     { key: 'black', name: 'Pure Black' },
-    { key: 'mesh', name: 'V7 Classic' },
+    { key: 'v7Classic', name: 'V7 Classic' },
 ];
 
 export const BackgroundPicker: React.FC<BackgroundPickerProps> = ({

@@ -400,7 +400,6 @@ export default function GlassHomeScreen() {
             // TODO: Upload image to server and update profile
             // For now, just show success
             Alert.alert('Success', 'Avatar updated! (Image upload to be implemented)');
-            console.log('Selected image:', result.assets[0].uri);
         }
     };
 

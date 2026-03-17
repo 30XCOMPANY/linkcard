@@ -25,11 +25,11 @@ export interface LinkedInProfile {
 }
 
 // Card template types
-export type CardTemplate = 'classic' | 'modern' | 'minimal' | 'bento';
+export type CardTemplate = 'classic' | 'modern' | 'minimal' | 'bento' | 'ocean' | 'midnight' | 'sunset' | 'sleek';
 
 // Field-level typography styles
 export interface FieldStyle {
-  fontFamily?: 'System' | 'Inter' | 'Roboto' | 'Poppins' | 'Montserrat' | 'Playfair' | 'Georgia' | 'Lora';
+  fontFamily?: 'System' | 'DMSans' | 'CormorantGaramond' | 'JetBrainsMono' | string;
   fontSize?: number;
   lineHeight?: number;
   fontWeight?: 'regular' | 'medium' | 'bold';

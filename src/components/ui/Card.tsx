@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { spacing, colors, animations } from '@/src/constants/theme';
+import { spacing, colors, animation } from '@/src/design-system/tokens';
 
 type CardVariant = 'default' | 'bordered' | 'inverted';
 
@@ -48,14 +48,14 @@ export const Card: React.FC<CardProps> = ({
 
   const handlePressIn = () => {
     if (onPress) {
-      isPressed.value = withTiming(1, { duration: animations.duration.fast });
+      isPressed.value = withTiming(1, { duration: animation.duration.fast });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const handlePressOut = () => {
     if (onPress) {
-      isPressed.value = withTiming(0, { duration: animations.duration.fast });
+      isPressed.value = withTiming(0, { duration: animation.duration.fast });
     }
   };
 
