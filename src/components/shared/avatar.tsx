@@ -1,17 +1,39 @@
 /**
- * [INPUT]: @/src/tw View/Text, @/src/tw/image Image, expo-linear-gradient
- * [OUTPUT]: Avatar component with image source or initials-gradient fallback
- * [POS]: Shared avatar — Tailwind-styled port of ui/Avatar with boxShadow + tw Image
+ * [INPUT]: react-native View/Image/ViewStyle, assets/avatars/*.png
+ * [OUTPUT]: Avatar component — photo, or stable illustration fallback from 11 avatars
+ * [POS]: Shared avatar — shows LinkedIn photo or deterministic illustrated avatar
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { ViewStyle } from "react-native";
-import { View, Text } from "@/src/tw";
-import { Image } from "@/src/tw/image";
-import { LinearGradient } from "expo-linear-gradient";
+import { View, Image, ViewStyle } from "react-native";
 
-// ── Size presets ──────────────────────────────────────────────
+// ── Illustration fallbacks ──────────────────────────────────────
+
+const ILLUSTRATIONS = [
+  require("@/assets/avatars/Oval.png"),
+  require("@/assets/avatars/Oval-1.png"),
+  require("@/assets/avatars/Oval-2.png"),
+  require("@/assets/avatars/Oval-3.png"),
+  require("@/assets/avatars/Oval-4.png"),
+  require("@/assets/avatars/Oval-5.png"),
+  require("@/assets/avatars/Oval-6.png"),
+  require("@/assets/avatars/Oval-7.png"),
+  require("@/assets/avatars/Oval-8.png"),
+  require("@/assets/avatars/Oval-9.png"),
+  require("@/assets/avatars/Oval-10.png"),
+];
+
+function stableHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+// ── Size presets ────────────────────────────────────────────────
 
 type AvatarSize = "sm" | "md" | "lg" | "xl" | "2xl" | number;
 
@@ -23,15 +45,7 @@ const sizeMap: Record<string, number> = {
   "2xl": 128,
 };
 
-const fontSizeMap: Record<string, number> = {
-  sm: 12,
-  md: 16,
-  lg: 24,
-  xl: 36,
-  "2xl": 48,
-};
-
-// ── Props ─────────────────────────────────────────────────────
+// ── Props ───────────────────────────────────────────────────────
 
 interface AvatarProps {
   source?: string | null;
@@ -39,75 +53,53 @@ interface AvatarProps {
   size?: AvatarSize;
   accentColor?: string;
   showBorder?: boolean;
-  className?: string;
+  style?: ViewStyle;
 }
 
-// ── Component ─────────────────────────────────────────────────
+// ── Component ───────────────────────────────────────────────────
 
 export function Avatar({
   source,
   name = "",
   size = "md",
-  accentColor = "#6366F1",
+  accentColor,
   showBorder = false,
-  className,
+  style,
 }: AvatarProps) {
   const dim = typeof size === "number" ? size : sizeMap[size] ?? 48;
-  const fs = typeof size === "number" ? Math.round(size * 0.375) : fontSizeMap[size as string] ?? 16;
 
   const container: ViewStyle = {
     width: dim,
     height: dim,
     borderRadius: dim / 2,
     overflow: "hidden",
-    boxShadow: "0px 1px 3px rgba(0,0,0,0.12)",
-    ...(showBorder && { borderWidth: 3, borderColor: accentColor }),
+    backgroundColor: "#F2F2F7",
+    ...(showBorder && accentColor && { borderWidth: 3, borderColor: accentColor }),
   };
 
+  // LinkedIn photo
   if (source) {
     return (
-      <View className={className} style={container}>
+      <View style={[container, style]}>
         <Image
-          source={source}
-          className="w-full h-full"
-          style={{ objectFit: "cover" } as any}
-          transition={300}
+          source={{ uri: source }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
         />
       </View>
     );
   }
 
+  // Illustrated fallback — same name always picks same avatar
+  const index = stableHash(name) % ILLUSTRATIONS.length;
+
   return (
-    <View className={className} style={container}>
-      <LinearGradient
-        colors={[accentColor, adjustColor(accentColor, -30)]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: fs }}>
-          {getInitials(name)}
-        </Text>
-      </LinearGradient>
+    <View style={[container, style]}>
+      <Image
+        source={ILLUSTRATIONS[index]}
+        style={{ width: "100%", height: "100%" }}
+        resizeMode="cover"
+      />
     </View>
   );
-}
-
-// ── Helpers ───────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(" ");
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
-
-function adjustColor(color: string, amount: number): string {
-  const hex = color.replace("#", "");
-  const num = parseInt(hex, 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + amount));
-  const b = Math.min(255, Math.max(0, (num & 0x0000ff) + amount));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
