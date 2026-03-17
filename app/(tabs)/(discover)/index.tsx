@@ -2,6 +2,7 @@
  * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
  *          expo-router Stack/useRouter, react-native-reanimated Animated/FadeInRight/FadeOutLeft,
  *          @/src/stores/contactsStore, @/src/components/card/profile-card ProfileCard,
+ *          @/src/components/shared/adaptive-glass AdaptiveGlass,
  *          @/src/lib/haptics, @/src/lib/springs, @/src/lib/icons Icon,
  *          @/src/lib/contact-actions, @/src/types CardVersion
  * [OUTPUT]: DiscoverScreen — discover feed with card browsing and actions
@@ -24,6 +25,7 @@ import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
@@ -158,19 +160,6 @@ export default function DiscoverScreen() {
                 color={saved ? "#FF9500" : (PlatformColor("secondaryLabel") as unknown as string)}
               />
             </Pressable>
-
-            {/* Action buttons */}
-            <View style={styles.actions}>
-              <Pressable style={styles.btnSecondary} onPress={handleNext}>
-                <Text style={styles.btnSecondaryLabel}>Next</Text>
-              </Pressable>
-              <View style={styles.btnSpacer} />
-              <Pressable style={styles.btnPrimary} onPress={handleSayHi}>
-                <Text style={styles.btnPrimaryLabel}>
-                  {current.contactAction?.label ?? "Say Hi"}
-                </Text>
-              </Pressable>
-            </View>
           </>
         ) : status === "batch_exhausted" ? (
           <View style={styles.emptyState}>
@@ -202,6 +191,31 @@ export default function DiscoverScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* ── Floating action bar — liquid glass ──────────────── */}
+      {status === "browsing" && current ? (
+        <View style={styles.floatingBar}>
+          <AdaptiveGlass
+            style={styles.glassBar}
+            glassEffectStyle="regular"
+            intensity={60}
+            blurTint="light"
+            fallbackColor="rgba(255,255,255,0.85)"
+          >
+            <View style={styles.actions}>
+              <Pressable style={styles.btnSecondary} onPress={handleNext}>
+                <Text style={styles.btnSecondaryLabel}>Next</Text>
+              </Pressable>
+              <View style={styles.btnSpacer} />
+              <Pressable style={styles.btnPrimary} onPress={handleSayHi}>
+                <Text style={styles.btnPrimaryLabel}>
+                  {current.contactAction?.label ?? "Say Hi"}
+                </Text>
+              </Pressable>
+            </View>
+          </AdaptiveGlass>
+        </View>
+      ) : null}
     </>
   );
 }
@@ -209,7 +223,21 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 16,
-    paddingBottom: 120,
+    paddingBottom: 160,
+  },
+  floatingBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+  glassBar: {
+    borderRadius: 28,
+    borderCurve: "continuous" as any,
+    overflow: "hidden",
+    padding: 6,
   },
   toolbarBtn: {
     minHeight: 32,
