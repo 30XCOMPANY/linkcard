@@ -1,5 +1,5 @@
 /**
- * [INPUT]: @/src/tw Text, @/src/types FieldStyle
+ * [INPUT]: @/src/tw Text, @/src/types FieldStyle, @/src/lib/cn
  * [OUTPUT]: CardField component — renders a single card field with typography
  * [POS]: Card subcomponent — maps field names to Tailwind styles, respects FieldStyle overrides
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
@@ -19,13 +19,13 @@ interface CardFieldProps {
 
 const fieldTypeMap: Record<string, string> = {
   name: "text-2xl font-bold text-sf-text",
-  headline: "text-base text-sf-text leading-relaxed",
+  headline: "text-[15px] leading-relaxed text-sf-text",
   jobTitle: "text-sm font-medium text-sf-text-2",
-  company: "text-sm font-bold text-sf-text",
+  company: "text-sm font-semibold text-sf-text",
   location: "text-sm text-sf-text-2",
   email: "text-sm text-sf-blue",
   phone: "text-sm text-sf-blue",
-  website: "text-sm text-sf-blue underline",
+  website: "text-sm text-sf-blue",
   character: "text-xs text-sf-text-2",
 };
 
@@ -34,7 +34,6 @@ export function CardField({ field, value, fieldStyle, className }: CardFieldProp
 
   const baseClass = fieldTypeMap[field] ?? "text-sm text-sf-text";
 
-  // Apply fieldStyle overrides as inline style
   const overrideStyle: Record<string, any> = {};
   if (fieldStyle?.fontSize) overrideStyle.fontSize = fieldStyle.fontSize;
   if (fieldStyle?.fontWeight) {

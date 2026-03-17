@@ -5,7 +5,7 @@ Pure presentational card rendering — Tailwind-styled business card display wit
 
 ## Members
 
-- `card-field.tsx`: Single field renderer — maps field name to Tailwind class, applies FieldStyle overrides as inline style
-- `card-display.tsx`: Complete card renderer — composes Avatar, QRCode, CardField into a rounded card layout with QR overlay support
+- `card-field.tsx`: Single field renderer — editorial typography map (extreme weight contrast), applies FieldStyle overrides as inline style
+- `card-display.tsx`: Editorial full-bleed card — accent strip left edge, avatar right-aligned (48px, ring border), middot-separated character/contact/meta lines, no boxShadow
 
 [PROTOCOL]: Update this header on change, then check CLAUDE.md

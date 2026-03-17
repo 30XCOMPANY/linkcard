@@ -12,8 +12,6 @@ export default function HomeStackLayout() {
     <Stack
       screenOptions={{
         headerLargeTitle: true,
-        headerTransparent: true,
-        headerBlurEffect: "regular",
         headerBackButtonDisplayMode: "minimal",
       }}
     >

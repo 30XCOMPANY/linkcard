@@ -5,8 +5,6 @@ export default function ShareLayout() {
     <Stack
       screenOptions={{
         headerLargeTitle: true,
-        headerTransparent: true,
-        headerBlurEffect: "regular",
       }}
     >
       <Stack.Screen name="index" options={{ title: "Smart Share" }} />

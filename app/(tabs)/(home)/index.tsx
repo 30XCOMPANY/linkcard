@@ -1,16 +1,15 @@
 /**
- * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, @/src/tw/animated Animated,
+ * [INPUT]: @/src/tw View/Text/ScrollView/Pressable,
  *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
- *          @/src/lib/haptics haptic, @/src/lib/springs springs, @/src/lib/icons Icon, @/src/lib/cn cn
- * [OUTPUT]: HomeScreen — card hero display, version selector, quick actions
+ *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn
+ * [OUTPUT]: HomeScreen — card hero display, version chips, quick actions
  * [POS]: Primary tab screen — the card is the hero, everything serves it
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, Pressable } from "@/src/tw";
-import { Animated } from "@/src/tw/animated";
-import { FadeInDown, useSharedValue, withSpring } from "react-native-reanimated";
+import { useSharedValue, withSpring } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 
 import { useCardStore } from "@/src/stores/cardStore";
@@ -20,6 +19,7 @@ import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
 import { cn } from "@/src/lib/cn";
 import type { CardVersion } from "@/src/types";
+import { Animated } from "@/src/tw/animated";
 
 /* ------------------------------------------------------------------ */
 /*  Version Chip                                                       */
@@ -40,7 +40,7 @@ function VersionChip({
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
         className={cn(
-          "h-[40px] px-4 rounded-full flex-row items-center gap-2 min-h-[44px] min-w-[44px]",
+          "h-[40px] px-4 rounded-full flex-row items-center gap-2 min-h-[44px]",
           selected
             ? "bg-sf-card border-2"
             : "bg-sf-bg-2 border border-sf-card-border"
@@ -55,12 +55,8 @@ function VersionChip({
           haptic.selection();
           onPress();
         }}
-        onPressIn={() => {
-          scale.value = withSpring(0.97, springs.snappy);
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, springs.snappy);
-        }}
+        onPressIn={() => { scale.value = withSpring(0.97, springs.snappy); }}
+        onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
       >
         <View
           className="w-2.5 h-2.5 rounded-full"
@@ -71,7 +67,6 @@ function VersionChip({
             "text-sm text-sf-text",
             selected ? "font-semibold" : "font-medium"
           )}
-          selectable
         >
           {version.name}
         </Text>
@@ -85,13 +80,11 @@ function VersionChip({
 /* ------------------------------------------------------------------ */
 
 function QuickAction({
-  ios,
-  web,
+  icon,
   label,
   onPress,
 }: {
-  ios: string;
-  web: string;
+  icon: string;
   label: string;
   onPress: () => void;
 }) {
@@ -100,19 +93,18 @@ function QuickAction({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        className="w-[44px] h-[44px] min-h-[44px] min-w-[44px] rounded-full bg-sf-card items-center justify-center"
-        style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
+        className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-2xl bg-sf-card items-center justify-center"
+        style={{
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          borderCurve: "continuous" as any,
+        }}
         accessibilityLabel={label}
         accessibilityRole="button"
         onPress={onPress}
-        onPressIn={() => {
-          scale.value = withSpring(0.97, springs.snappy);
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, springs.snappy);
-        }}
+        onPressIn={() => { scale.value = withSpring(0.95, springs.snappy); }}
+        onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
       >
-        <Icon ios={ios} web={web} size={20} />
+        <Icon web={icon} size={20} />
       </Pressable>
     </Animated.View>
   );
@@ -124,26 +116,23 @@ function QuickAction({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const card = useCardStore((s) => s.card);
+  const card = useCardStore((s: any) => s.card);
 
-  // Find default version, fall back to first
   const defaultVersion =
-    card?.versions.find((v) => v.isDefault) ?? card?.versions[0];
+    card?.versions.find((v: CardVersion) => v.isDefault) ?? card?.versions[0];
   const [selectedVersionId, setSelectedVersionId] = useState(
     defaultVersion?.id ?? ""
   );
-
   const [showQR, setShowQR] = useState(false);
 
   const currentVersion =
-    card?.versions.find((v) => v.id === selectedVersionId) ?? defaultVersion;
+    card?.versions.find((v: CardVersion) => v.id === selectedVersionId) ?? defaultVersion;
 
   const handleSelectVersion = useCallback(
     (id: string) => setSelectedVersionId(id),
     []
   );
 
-  /* Empty state */
   if (!card || !currentVersion) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
@@ -161,19 +150,14 @@ export default function HomeScreen() {
       contentContainerClassName="pb-8"
     >
       {/* Card Display — hero */}
-      <Animated.View
-        entering={FadeInDown.springify()
-          .stiffness(springs.gentle.stiffness)
-          .damping(springs.gentle.damping)}
-        className="px-4 pt-4"
-      >
+      <View className="px-4 pt-4">
         <CardDisplay
           profile={card.profile}
           version={currentVersion}
           qrCodeData={card.qrCodeData}
           showQR={showQR}
         />
-      </Animated.View>
+      </View>
 
       {/* Version Selector */}
       <ScrollView
@@ -182,7 +166,7 @@ export default function HomeScreen() {
         contentContainerClassName="gap-2 px-4 py-4"
         className="mt-2"
       >
-        {card.versions.map((v) => (
+        {card.versions.map((v: CardVersion) => (
           <VersionChip
             key={v.id}
             version={v}
@@ -193,33 +177,21 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Quick Actions */}
-      <View className="flex-row items-center justify-center gap-4 mt-2">
+      <View className="flex-row items-center justify-center gap-3 mt-1">
         <QuickAction
-          ios="pencil"
-          web="create-outline"
+          icon="edit-pen"
           label="Edit card"
-          onPress={() => {
-            haptic.light();
-            router.push("/editor");
-          }}
+          onPress={() => { haptic.light(); router.push("/editor" as any); }}
         />
         <QuickAction
-          ios="square.and.arrow.up"
-          web="share-outline"
+          icon="share"
           label="Share card"
-          onPress={() => {
-            haptic.light();
-            router.push("/share");
-          }}
+          onPress={() => { haptic.light(); router.push("/share" as any); }}
         />
         <QuickAction
-          ios="qrcode"
-          web="qr-code-outline"
+          icon="qr-code"
           label="Toggle QR code"
-          onPress={() => {
-            haptic.medium();
-            setShowQR((prev) => !prev);
-          }}
+          onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
         />
       </View>
     </ScrollView>

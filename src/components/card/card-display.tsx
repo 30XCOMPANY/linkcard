@@ -1,7 +1,8 @@
 /**
- * [INPUT]: @/src/tw View/Text, @/src/types LinkedInProfile/CardVersion, CardField, Avatar, QRCode
- * [OUTPUT]: CardDisplay component — renders a complete business card
- * [POS]: Card core — hero element on home screen, preview on share/editor
+ * [INPUT]: @/src/tw View/Text, @/src/types LinkedInProfile/CardVersion,
+ *          CardField, Avatar, QRCode, @/src/lib/cn
+ * [OUTPUT]: CardDisplay — physical card with Robinhood-style presence
+ * [POS]: Card core — hero element, credit-card proportions, accent bg, soft shadow
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -12,7 +13,7 @@ import { CardField } from "./card-field";
 import { Avatar } from "@/src/components/shared/avatar";
 import { QRCode } from "@/src/components/shared/qr-code";
 import type { LinkedInProfile, CardVersion } from "@/src/types";
-import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from "react-native-reanimated";
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 
 interface CardDisplayProps {
   profile: LinkedInProfile;
@@ -32,19 +33,14 @@ export function CardDisplay({
   className,
 }: CardDisplayProps) {
   const { visibleFields, fieldStyles = {}, accentColor } = version;
-
-  const isFieldVisible = (field: string) => visibleFields.includes(field as any);
+  const vis = (f: string) => visibleFields.includes(f as any);
 
   return (
     <View
-      className={cn(
-        "bg-sf-card rounded-3xl overflow-hidden",
-        compact ? "p-4" : "p-6",
-        className
-      )}
+      className={cn("rounded-3xl overflow-hidden", className)}
       style={{
         borderCurve: "continuous" as any,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
+        boxShadow: "0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
       }}
     >
       {/* QR Overlay */}
@@ -52,107 +48,125 @@ export function CardDisplay({
         <Animated.View
           entering={ZoomIn.springify()}
           exiting={ZoomOut.duration(200)}
-          style={{
-            position: "absolute",
-            top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 10,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(255,255,255,0.95)",
-            borderRadius: 24,
-          }}
+          className="absolute inset-0 z-10 items-center justify-center rounded-3xl"
+          style={{ backgroundColor: "rgba(255,255,255,0.97)" }}
         >
-          <QRCode value={qrCodeData} size={compact ? 160 : 200} />
+          <QRCode value={qrCodeData} size={compact ? 140 : 180} />
           <Text className="text-xs text-sf-text-2 mt-4" selectable>
             {qrCodeData}
           </Text>
         </Animated.View>
       )}
 
-      {/* Avatar */}
-      {isFieldVisible("photoUrl") && (
-        <View className="mb-4">
-          <Avatar
-            source={profile.photoUrl}
-            name={profile.name}
-            size={compact ? "lg" : "xl"}
-            accentColor={accentColor}
-          />
-        </View>
-      )}
-
-      {/* Name */}
-      {isFieldVisible("name") && (
-        <CardField
-          field="name"
-          value={profile.name}
-          fieldStyle={fieldStyles.name}
-          className={compact ? "text-xl" : undefined}
-        />
-      )}
-
-      {/* Job Title */}
-      {isFieldVisible("jobTitle") && profile.jobTitle && (
-        <CardField
-          field="jobTitle"
-          value={profile.jobTitle}
-          fieldStyle={fieldStyles.jobTitle}
-          className="mt-1"
-        />
-      )}
-
-      {/* Headline */}
-      {isFieldVisible("headline") && (
-        <CardField
-          field="headline"
-          value={profile.headline}
-          fieldStyle={fieldStyles.headline}
-          className="mt-2"
-        />
-      )}
-
-      {/* Character tags */}
-      {isFieldVisible("character") && profile.character && (
-        <View className="flex-row flex-wrap gap-1.5 mt-3">
-          {profile.character.split(",").map((tag, i) => (
-            <View key={i} className="bg-sf-bg-2 rounded-full px-3 py-1">
-              <Text className="text-xs text-sf-text-2">{tag.trim()}</Text>
+      {/* Card surface */}
+      <View className={cn("bg-sf-card", compact ? "p-5" : "p-6 pb-7")}>
+        {/* Top row: Avatar + Name block */}
+        <View className="flex-row items-start">
+          {/* Avatar */}
+          {vis("photoUrl") && (
+            <View className="mr-4">
+              <Avatar
+                source={profile.photoUrl}
+                name={profile.name}
+                size={compact ? 56 : 72}
+                accentColor={accentColor}
+                showBorder
+              />
             </View>
-          ))}
+          )}
+
+          {/* Name + Title */}
+          <View className="flex-1 justify-center">
+            {vis("name") && (
+              <CardField
+                field="name"
+                value={profile.name}
+                fieldStyle={fieldStyles.name}
+              />
+            )}
+            {vis("jobTitle") && profile.jobTitle && (
+              <CardField
+                field="jobTitle"
+                value={profile.jobTitle}
+                fieldStyle={fieldStyles.jobTitle}
+                className="mt-1"
+              />
+            )}
+          </View>
         </View>
-      )}
 
-      {/* Company + Location row */}
-      <View className="flex-row items-center gap-2 mt-4">
-        {isFieldVisible("company") && (
+        {/* Headline */}
+        {vis("headline") && (
           <CardField
-            field="company"
-            value={profile.company}
-            fieldStyle={fieldStyles.company}
+            field="headline"
+            value={profile.headline}
+            fieldStyle={fieldStyles.headline}
+            className="mt-4"
           />
         )}
-        {isFieldVisible("company") && isFieldVisible("location") && profile.company && profile.location && (
-          <Text className="text-sf-text-3">·</Text>
-        )}
-        {isFieldVisible("location") && (
-          <CardField
-            field="location"
-            value={profile.location}
-            fieldStyle={fieldStyles.location}
-          />
-        )}
-      </View>
 
-      {/* Contact fields */}
-      <View className="gap-1 mt-3">
-        {isFieldVisible("email") && profile.email && (
-          <CardField field="email" value={profile.email} fieldStyle={fieldStyles.email} />
+        {/* Character tags */}
+        {vis("character") && profile.character && (
+          <View className="flex-row flex-wrap gap-1.5 mt-3">
+            {profile.character.split(",").map((tag, i) => (
+              <View
+                key={i}
+                className="rounded-full px-2.5 py-0.5"
+                style={{ backgroundColor: accentColor + "15" }}
+              >
+                <Text
+                  className="text-xs font-medium"
+                  style={{ color: accentColor }}
+                >
+                  {tag.trim()}
+                </Text>
+              </View>
+            ))}
+          </View>
         )}
-        {isFieldVisible("phone") && profile.phone && (
-          <CardField field="phone" value={profile.phone} fieldStyle={fieldStyles.phone} />
+
+        {/* Accent divider */}
+        <View
+          className="h-[2px] rounded-full mt-4 mb-3"
+          style={{ backgroundColor: accentColor + "30", width: 32 }}
+        />
+
+        {/* Company + Location */}
+        {(vis("company") || vis("location")) && (
+          <View className="flex-row items-center gap-1.5">
+            {vis("company") && (
+              <CardField
+                field="company"
+                value={profile.company}
+                fieldStyle={fieldStyles.company}
+              />
+            )}
+            {vis("company") && vis("location") && profile.company && profile.location && (
+              <Text className="text-sf-text-3 text-sm">·</Text>
+            )}
+            {vis("location") && (
+              <CardField
+                field="location"
+                value={profile.location}
+                fieldStyle={fieldStyles.location}
+              />
+            )}
+          </View>
         )}
-        {isFieldVisible("website") && profile.website && (
-          <CardField field="website" value={profile.website} fieldStyle={fieldStyles.website} />
+
+        {/* Contact fields */}
+        {(vis("email") || vis("phone") || vis("website")) && (
+          <View className="gap-0.5 mt-2">
+            {vis("email") && profile.email && (
+              <CardField field="email" value={profile.email} fieldStyle={fieldStyles.email} />
+            )}
+            {vis("phone") && profile.phone && (
+              <CardField field="phone" value={profile.phone} fieldStyle={fieldStyles.phone} />
+            )}
+            {vis("website") && profile.website && (
+              <CardField field="website" value={profile.website} fieldStyle={fieldStyles.website} />
+            )}
+          </View>
         )}
       </View>
     </View>
