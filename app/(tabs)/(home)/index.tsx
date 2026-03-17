@@ -38,37 +38,31 @@ function VersionChip({
   selected: boolean;
   onPress: () => void;
 }) {
-  const scale = useSharedValue(1);
-
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        onPress={() => {
-          haptic.selection();
-          onPress();
-        }}
-        onPressIn={() => { scale.value = withSpring(0.97, springs.snappy); }}
-        onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
+    <Pressable
+      className={cn(
+        "h-[44px] px-4 rounded-full flex-row items-center gap-2",
+        selected ? "bg-sf-card" : ""
+      )}
+      style={selected ? { borderCurve: "continuous" as any } : undefined}
+      onPress={() => {
+        haptic.selection();
+        onPress();
+      }}
+    >
+      <View
+        className="w-2.5 h-2.5 rounded-full"
+        style={{ backgroundColor: version.accentColor }}
+      />
+      <Text
+        className={cn(
+          "text-subheadline",
+          selected ? "font-semibold text-sf-text" : "font-medium text-sf-text-2"
+        )}
       >
-        <AdaptiveGlass
-          className="h-[44px] px-4 rounded-full flex-row items-center gap-2"
-          style={selected ? { backgroundColor: `${version.accentColor}20` } : undefined}
-        >
-          <View
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: version.accentColor }}
-          />
-          <Text
-            className={cn(
-              "text-subheadline",
-              selected ? "font-semibold text-sf-text" : "font-medium text-sf-text-2"
-            )}
-          >
-            {version.name}
-          </Text>
-        </AdaptiveGlass>
-      </Pressable>
-    </Animated.View>
+        {version.name}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -85,25 +79,15 @@ function QuickAction({
   label: string;
   onPress: () => void;
 }) {
-  const scale = useSharedValue(1);
-
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        accessibilityLabel={label}
-        accessibilityRole="button"
-        onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.95, springs.snappy); }}
-        onPressOut={() => { scale.value = withSpring(1, springs.snappy); }}
-      >
-        <AdaptiveGlass
-          className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] rounded-[10px] items-center justify-center"
-          style={{ borderCurve: "continuous" as any }}
-        >
-          <Icon web={icon} size={20} />
-        </AdaptiveGlass>
-      </Pressable>
-    </Animated.View>
+    <Pressable
+      className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] items-center justify-center"
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+    >
+      <Icon web={icon} size={22} />
+    </Pressable>
   );
 }
 
@@ -193,40 +177,45 @@ export default function HomeScreen() {
         </Link>
       </View>
 
-      {/* Version Selector */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2 px-4 py-3"
-        className="mt-2"
-      >
-        {card.versions.map((v: CardVersion) => (
-          <VersionChip
-            key={v.id}
-            version={v}
-            selected={v.id === selectedVersionId}
-            onPress={() => handleSelectVersion(v.id)}
-          />
-        ))}
-      </ScrollView>
+      {/* Version Selector — one glass group */}
+      <View className="mx-4 mt-3">
+        <AdaptiveGlass
+          className="rounded-full flex-row items-center p-1"
+          style={{ borderCurve: "continuous" as any }}
+        >
+          {card.versions.map((v: CardVersion) => (
+            <VersionChip
+              key={v.id}
+              version={v}
+              selected={v.id === selectedVersionId}
+              onPress={() => handleSelectVersion(v.id)}
+            />
+          ))}
+        </AdaptiveGlass>
+      </View>
 
-      {/* Quick Actions */}
-      <View className="flex-row items-center justify-center gap-4 mt-3">
-        <QuickAction
-          icon="edit-pen"
-          label="Edit card"
-          onPress={() => { haptic.light(); router.push("/editor" as any); }}
-        />
-        <QuickAction
-          icon="share"
-          label="Share card"
-          onPress={() => { haptic.light(); router.push("/share" as any); }}
-        />
-        <QuickAction
-          icon="qr-code"
-          label="Toggle QR code"
-          onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
-        />
+      {/* Quick Actions — one glass group */}
+      <View className="mx-auto mt-3">
+        <AdaptiveGlass
+          className="rounded-full flex-row items-center px-2 py-1"
+          style={{ borderCurve: "continuous" as any }}
+        >
+          <QuickAction
+            icon="edit-pen"
+            label="Edit card"
+            onPress={() => { haptic.light(); router.push("/editor" as any); }}
+          />
+          <QuickAction
+            icon="share"
+            label="Share card"
+            onPress={() => { haptic.light(); router.push("/share" as any); }}
+          />
+          <QuickAction
+            icon="qr-code"
+            label="Toggle QR code"
+            onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
+          />
+        </AdaptiveGlass>
       </View>
     </ScrollView>
   );
