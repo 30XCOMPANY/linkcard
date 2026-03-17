@@ -12,11 +12,20 @@ export default function WebTabLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        name="(index,share)"
+        name="(home)"
         options={{
           title: "Card",
           tabBarIcon: ({ color }) => (
             <Ionicons name="card-outline" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="share"
+        options={{
+          title: "Share",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="share-outline" size={24} color={color} />
           ),
         }}
       />

@@ -7,16 +7,22 @@
 
 ```
 _layout.tsx:    Stack navigator — headerless auth, headed linkedin/preview
-index.tsx:      Auth screen (stub) — entry point, no header
-linkedin.tsx:   LinkedIn import screen (stub) — profile URL input
-preview.tsx:    Preview screen (stub) — card preview before saving
+_shared.ts:     Module-level profile data shuttle (linkedin → preview) — avoids serialization
+index.tsx:      Auth screen — email/password + Google OAuth, spring-animated buttons, shake error
+linkedin.tsx:   LinkedIn URL input — single input, bottom bar CTA, fetchLinkedInProfile call
+preview.tsx:    Profile preview — staggered card display, smart theme selection, createNewCard
 ```
 
 ## Flow
 
-1. `index` (Auth) — user signs in or starts fresh
-2. `linkedin` — user provides LinkedIn profile URL for import
-3. `preview` — user previews generated card, confirms to save
+1. `index` (Auth) — user signs in or starts fresh → pushes to linkedin
+2. `linkedin` — user provides LinkedIn URL → fetchLinkedInProfile → stores in _shared → pushes to preview
+3. `preview` — displays extracted data → createNewCard + smart theme → replaces to /(tabs)
+
+## Data Passing
+
+Profile data flows via `_shared.ts` module-level variable. No JSON serialization.
+`setOnboardingProfile()` in linkedin, `getOnboardingProfile()` in preview.
 
 Root layout gates here when `cardStore.card === null`.
 
