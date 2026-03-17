@@ -221,10 +221,10 @@ export default function HomeScreen() {
               resizeMode="cover"
             />
             {/* Progressive blur — 4 stacked BlurViews with increasing opacity */}
-            <BlurView intensity={20} tint="default" style={[s.bannerBlur, { top: "40%", opacity: 0.3 }]} />
-            <BlurView intensity={40} tint="default" style={[s.bannerBlur, { top: "55%", opacity: 0.5 }]} />
-            <BlurView intensity={60} tint="default" style={[s.bannerBlur, { top: "70%", opacity: 0.7 }]} />
-            <BlurView intensity={80} tint="default" style={[s.bannerBlur, { top: "85%", opacity: 1 }]} />
+            <BlurView intensity={50} tint="default" style={[s.bannerBlur, { top: "40%", opacity: 0.4 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "55%", opacity: 0.6 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "65%", opacity: 0.8 }]} />
+            <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "75%", opacity: 1 }]} />
             {/* White fade on top of blur */}
             <LinearGradient
               colors={["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", "rgba(255,255,255,1)"]}
