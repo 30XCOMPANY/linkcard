@@ -158,7 +158,7 @@ export default function HomeScreen() {
       >
         {/* Profile Card */}
         <View style={s.card}>
-          {/* Banner Image — tap to change */}
+          {/* Banner Image — absolute, tap to change */}
           <Pressable
             style={s.bannerWrap}
             onPress={async () => {
@@ -186,8 +186,8 @@ export default function HomeScreen() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={["transparent", "rgba(255,255,255,0.6)", "rgba(255,255,255,1)"]}
-              locations={[0, 0.6, 1]}
+              colors={["transparent", "rgba(255,255,255,0.4)", "rgba(255,255,255,1)"]}
+              locations={[0, 0.5, 1]}
               style={s.bannerFade}
             />
           </Pressable>
@@ -342,7 +342,7 @@ const s = StyleSheet.create({
     borderRadius: 24,
     borderCurve: "continuous" as any,
     paddingHorizontal: 20,
-    paddingTop: 0,
+    paddingTop: 24,
     paddingBottom: 20,
     gap: 20,
     borderWidth: StyleSheet.hairlineWidth,
@@ -352,9 +352,12 @@ const s = StyleSheet.create({
   },
 
   bannerWrap: {
-    width: "100%",
-    height: 180,
-    marginBottom: -20,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    zIndex: 0,
   },
   bannerImage: {
     width: "100%",
@@ -365,7 +368,7 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 80,
+    height: 120,
   },
 
   profileName: {
