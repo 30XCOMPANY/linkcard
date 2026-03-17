@@ -20,7 +20,9 @@ import {
   Linking,
 } from "react-native";
 import { Stack } from "expo-router/stack";
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import * as ImagePicker from "expo-image-picker";
 
 import { useCardStore } from "@/src/stores/cardStore";
@@ -142,6 +144,7 @@ function ProfileHeader({
 /* ------------------------------------------------------------------ */
 
 export default function HomeScreen() {
+  const router = useRouter();
   const card = useCardStore((s: any) => s.card);
   const nameFont: NameFontKey = useCardStore((s: any) => s.nameFont) ?? "classic";
 
@@ -180,6 +183,7 @@ export default function HomeScreen() {
         currentVersion={currentVersion}
         profile={profile}
         onSelectVersion={handleSelectVersion}
+        onEdit={() => router.push("/editor" as any)}
       />
 
       <ScrollView
@@ -216,9 +220,15 @@ export default function HomeScreen() {
               style={s.bannerImage}
               resizeMode="cover"
             />
+            {/* Progressive blur — 4 stacked BlurViews with increasing opacity */}
+            <BlurView intensity={20} tint="default" style={[s.bannerBlur, { top: "40%", opacity: 0.3 }]} />
+            <BlurView intensity={40} tint="default" style={[s.bannerBlur, { top: "55%", opacity: 0.5 }]} />
+            <BlurView intensity={60} tint="default" style={[s.bannerBlur, { top: "70%", opacity: 0.7 }]} />
+            <BlurView intensity={80} tint="default" style={[s.bannerBlur, { top: "85%", opacity: 1 }]} />
+            {/* White fade on top of blur */}
             <LinearGradient
-              colors={["transparent", "rgba(255,255,255,0.4)", "rgba(255,255,255,1)"]}
-              locations={[0, 0.5, 1]}
+              colors={["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", "rgba(255,255,255,1)"]}
+              locations={[0, 0.4, 0.7, 1]}
               style={s.bannerFade}
             />
           </Pressable>
@@ -393,6 +403,12 @@ const s = StyleSheet.create({
   bannerImage: {
     width: "100%",
     height: "100%",
+  },
+  bannerBlur: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   bannerFade: {
     position: "absolute",
