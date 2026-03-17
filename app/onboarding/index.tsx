@@ -126,13 +126,13 @@ export default function AuthScreen() {
         {/* Title + Subtitle */}
         <Text
           selectable
-          className="text-3xl font-semibold tracking-tight text-sf-text text-center mb-2"
+          className="text-title-1 font-semibold tracking-tight text-sf-text text-center mb-2"
         >
           The Professional{"\n"}Networking OS.
         </Text>
         <Text
           selectable
-          className="text-sm text-sf-text-2 text-center mb-2"
+          className="text-subheadline text-sf-text-2 text-center mb-2"
         >
           Your identity, amplified.
         </Text>
@@ -157,7 +157,7 @@ export default function AuthScreen() {
               size={18}
               color={isWeb ? undefined : undefined}
             />
-            <Text className="text-xs font-medium tracking-wide text-sf-text">
+            <Text className="text-caption-1 font-medium tracking-wide text-sf-text">
               Continue with Google
             </Text>
           </Pressable>
@@ -166,7 +166,7 @@ export default function AuthScreen() {
         {/* Divider */}
         <View className="flex-row items-center gap-4 my-6">
           <View className="flex-1 h-px bg-sf-separator" />
-          <Text className="text-xs font-medium tracking-widest text-sf-text-2 uppercase">
+          <Text className="text-caption-1 font-medium tracking-widest text-sf-text-2 uppercase">
             OR
           </Text>
           <View className="flex-1 h-px bg-sf-separator" />
@@ -175,7 +175,7 @@ export default function AuthScreen() {
         {/* Email Input */}
         <Animated.View style={shakeStyle}>
           <View className="mb-4">
-            <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
               EMAIL ADDRESS
             </Text>
             <View
@@ -188,7 +188,7 @@ export default function AuthScreen() {
               }`}
             >
               <TextInput
-                className="text-base text-sf-text"
+                className="text-body text-sf-text"
                 placeholder="name@work-email.com"
                 placeholderTextColor="rgba(60,60,67,0.3)"
                 value={email}
@@ -208,7 +208,7 @@ export default function AuthScreen() {
 
           {/* Password Input */}
           <View className="mb-4">
-            <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
               PASSWORD
             </Text>
             <View
@@ -221,7 +221,7 @@ export default function AuthScreen() {
               }`}
             >
               <TextInput
-                className="text-base text-sf-text"
+                className="text-body text-sf-text"
                 placeholder="Enter your password"
                 placeholderTextColor="rgba(60,60,67,0.3)"
                 value={password}
@@ -240,7 +240,7 @@ export default function AuthScreen() {
 
           {/* Error Message */}
           {error && (
-            <Text className="text-xs text-sf-red mb-3">{error}</Text>
+            <Text className="text-caption-1 text-sf-red mb-3">{error}</Text>
           )}
         </Animated.View>
 
@@ -263,7 +263,7 @@ export default function AuthScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-xs font-medium tracking-wide text-sf-bg">
+              <Text className="text-caption-1 font-medium tracking-wide text-sf-bg">
                 Continue
               </Text>
             )}
@@ -272,12 +272,12 @@ export default function AuthScreen() {
 
         {/* Footer */}
         <View className="flex-row justify-center items-center gap-1 mt-8">
-          <Text className="text-sm text-sf-text-2">New to LinkCard?</Text>
+          <Text className="text-subheadline text-sf-text-2">New to LinkCard?</Text>
           <Pressable
             className="min-h-[44px] min-w-[44px] justify-center"
             onPress={() => {}}
           >
-            <Text className="text-sm font-medium text-sf-text underline">
+            <Text className="text-subheadline font-medium text-sf-text underline">
               Create Account
             </Text>
           </Pressable>

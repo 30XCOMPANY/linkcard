@@ -17,16 +17,17 @@ interface CardFieldProps {
   className?: string;
 }
 
+/* Apple Dynamic Type mapping for card fields */
 const fieldTypeMap: Record<string, string> = {
-  name: "text-2xl font-bold text-sf-text",
-  headline: "text-[15px] leading-relaxed text-sf-text",
-  jobTitle: "text-sm font-medium text-sf-text-2",
-  company: "text-sm font-semibold text-sf-text",
-  location: "text-sm text-sf-text-2",
-  email: "text-sm text-sf-blue",
-  phone: "text-sm text-sf-blue",
-  website: "text-sm text-sf-blue",
-  character: "text-xs text-sf-text-2",
+  name: "text-title-1 font-bold text-sf-text",
+  headline: "text-subheadline text-sf-text",
+  jobTitle: "text-footnote font-medium text-sf-text-2",
+  company: "text-footnote font-semibold text-sf-text",
+  location: "text-footnote text-sf-text-2",
+  email: "text-caption-1 text-sf-blue",
+  phone: "text-caption-1 text-sf-blue",
+  website: "text-caption-1 text-sf-blue",
+  character: "text-caption-2 text-sf-text-2",
 };
 
 export function CardField({ field, value, fieldStyle, className }: CardFieldProps) {

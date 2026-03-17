@@ -109,13 +109,13 @@ export default function LinkedInScreen() {
           <Animated.View entering={FadeInDown.delay(100).springify()}>
             <Text
               selectable
-              className="text-3xl font-semibold tracking-tight text-sf-text text-center mb-2"
+              className="text-title-1 font-semibold tracking-tight text-sf-text text-center mb-2"
             >
               Add your LinkedIn.
             </Text>
             <Text
               selectable
-              className="text-sm text-sf-text-2 text-center"
+              className="text-subheadline text-sf-text-2 text-center"
             >
               Link your LinkedIn, we'll do the rest.
             </Text>
@@ -129,7 +129,7 @@ export default function LinkedInScreen() {
             entering={FadeInDown.delay(200).springify()}
             style={shakeStyle}
           >
-            <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-2">
+            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-2">
               LINKEDIN URL
             </Text>
             <View
@@ -142,7 +142,7 @@ export default function LinkedInScreen() {
               }`}
             >
               <TextInput
-                className="text-base text-sf-text"
+                className="text-body text-sf-text"
                 placeholder="https://linkedin.com/in/username"
                 placeholderTextColor="rgba(60,60,67,0.3)"
                 value={url}
@@ -160,7 +160,7 @@ export default function LinkedInScreen() {
 
             {/* Error Message */}
             {error && (
-              <Text className="text-xs text-sf-red mt-2">{error}</Text>
+              <Text className="text-caption-1 text-sf-red mt-2">{error}</Text>
             )}
           </Animated.View>
         </View>
@@ -190,7 +190,7 @@ export default function LinkedInScreen() {
                 {isLoading ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text className="text-xs font-medium tracking-wide text-sf-bg uppercase">
+                  <Text className="text-caption-1 font-medium tracking-wide text-sf-bg uppercase">
                     Import Profile
                   </Text>
                 )}

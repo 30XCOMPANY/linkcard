@@ -52,7 +52,7 @@ export function CardDisplay({
           style={{ backgroundColor: "rgba(255,255,255,0.97)" }}
         >
           <QRCode value={qrCodeData} size={compact ? 140 : 180} />
-          <Text className="text-xs text-sf-text-2 mt-4" selectable>
+          <Text className="text-caption-1 text-sf-text-2 mt-4" selectable>
             {qrCodeData}
           </Text>
         </Animated.View>
@@ -115,7 +115,7 @@ export function CardDisplay({
                 style={{ backgroundColor: accentColor + "15" }}
               >
                 <Text
-                  className="text-xs font-medium"
+                  className="text-caption-1 font-medium"
                   style={{ color: accentColor }}
                 >
                   {tag.trim()}
@@ -142,7 +142,7 @@ export function CardDisplay({
               />
             )}
             {vis("company") && vis("location") && profile.company && profile.location && (
-              <Text className="text-sf-text-3 text-sm">·</Text>
+              <Text className="text-sf-text-3 text-subheadline">·</Text>
             )}
             {vis("location") && (
               <CardField

@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
+import { StripedBackground } from "@/src/components/shared/striped-background";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -64,7 +65,7 @@ function VersionChip({
         />
         <Text
           className={cn(
-            "text-sm text-sf-text",
+            "text-subheadline text-sf-text",
             selected ? "font-semibold" : "font-medium"
           )}
         >
@@ -136,21 +137,26 @@ export default function HomeScreen() {
   if (!card || !currentVersion) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
-        <Text className="text-base text-sf-text-2" selectable>
+        <Text className="text-body text-sf-text-2" selectable>
           No card yet. Complete onboarding to get started.
         </Text>
       </View>
     );
   }
 
+  const bgColor = useCardStore((s: any) => s.currentGradient) || "cyan";
+
   return (
-    <ScrollView
-      className="flex-1 bg-sf-bg"
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="pb-8"
-    >
-      {/* Card Display — hero */}
-      <View className="px-4 pt-4">
+    <View style={{ flex: 1 }}>
+      <StripedBackground color={bgColor} />
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="pb-8"
+        style={{ backgroundColor: "transparent" }}
+      >
+        {/* Card Display — hero */}
+        <View className="px-4 pt-4">
         <CardDisplay
           profile={card.profile}
           version={currentVersion}
@@ -194,6 +200,7 @@ export default function HomeScreen() {
           onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
         />
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

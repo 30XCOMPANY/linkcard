@@ -141,7 +141,7 @@ export default function PreviewScreen() {
   if (!profile) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
-        <Text className="text-base text-sf-text-2">
+        <Text className="text-body text-sf-text-2">
           No profile data found. Go back and try again.
         </Text>
       </View>
@@ -168,13 +168,13 @@ export default function PreviewScreen() {
           <Animated.View entering={stagger(1)}>
             <Text
               selectable
-              className="text-2xl font-semibold text-sf-text text-center mb-1"
+              className="text-title-2 font-semibold text-sf-text text-center mb-1"
             >
               Here's what we found
             </Text>
             <Text
               selectable
-              className="text-sm text-sf-text-2 text-center mb-8"
+              className="text-subheadline text-sf-text-2 text-center mb-8"
             >
               Your professional information has been captured
             </Text>
@@ -201,7 +201,7 @@ export default function PreviewScreen() {
                     {nameComponent?.content.text && (
                       <Text
                         selectable
-                        className="text-xl font-semibold text-sf-text tracking-tight mb-1"
+                        className="text-title-3 font-semibold text-sf-text tracking-tight mb-1"
                       >
                         {nameComponent.content.text}
                       </Text>
@@ -210,12 +210,12 @@ export default function PreviewScreen() {
                       <View className="flex-row items-center flex-wrap gap-1">
                         {jobTitleComponent?.content.text && (
                           <View>
-                            <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-0.5">
+                            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-0.5">
                               Job Title
                             </Text>
                             <Text
                               selectable
-                              className="text-sm font-medium text-sf-text"
+                              className="text-subheadline font-medium text-sf-text"
                             >
                               {jobTitleComponent.content.text}
                             </Text>
@@ -226,12 +226,12 @@ export default function PreviewScreen() {
                         )}
                         {companyComponent?.content.text && (
                           <View>
-                            <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-0.5">
+                            <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-0.5">
                               Company
                             </Text>
                             <Text
                               selectable
-                              className="text-sm text-sf-text"
+                              className="text-subheadline text-sf-text"
                             >
                               {companyComponent.content.text}
                             </Text>
@@ -247,7 +247,7 @@ export default function PreviewScreen() {
               {characterComponent?.content.text && (
                 <Animated.View entering={stagger(6)}>
                   <View className="border-t border-sf-separator pt-5 mb-5">
-                    <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-3">
+                    <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-3">
                       Character
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
@@ -263,7 +263,7 @@ export default function PreviewScreen() {
                             >
                               <Text
                                 selectable
-                                className="text-sm text-sf-text"
+                                className="text-subheadline text-sf-text"
                               >
                                 {trimmed}
                               </Text>
@@ -279,12 +279,12 @@ export default function PreviewScreen() {
               {headlineComponent?.content.text && (
                 <Animated.View entering={stagger(7)}>
                   <View className="border-t border-sf-separator pt-5 mb-5">
-                    <Text className="text-xs font-medium uppercase tracking-widest text-sf-text-2 mb-3">
+                    <Text className="text-caption-1 font-medium uppercase tracking-widest text-sf-text-2 mb-3">
                       About
                     </Text>
                     <Text
                       selectable
-                      className="text-sm text-sf-text leading-relaxed"
+                      className="text-subheadline text-sf-text leading-relaxed"
                     >
                       {headlineComponent.content.text}
                     </Text>
@@ -296,7 +296,7 @@ export default function PreviewScreen() {
               {emailComponent?.content.value && (
                 <Animated.View entering={stagger(8)}>
                   <View className="border-t border-sf-separator pt-5">
-                    <Text selectable className="text-sm text-sf-text-2">
+                    <Text selectable className="text-footnote text-sf-text-2">
                       {emailComponent.content.value}
                     </Text>
                   </View>
@@ -328,7 +328,7 @@ export default function PreviewScreen() {
                   buttonScale.value = withSpring(1, springs.snappy);
                 }}
               >
-                <Text className="text-xs font-medium tracking-wide text-sf-bg">
+                <Text className="text-caption-1 font-medium tracking-wide text-sf-bg">
                   Go home
                 </Text>
               </Pressable>

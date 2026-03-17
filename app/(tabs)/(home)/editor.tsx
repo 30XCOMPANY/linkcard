@@ -56,7 +56,7 @@ function Separator() {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-xs font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
+    <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
       {title}
     </Text>
   );
@@ -77,7 +77,7 @@ function FieldToggleRow({
 }) {
   return (
     <Pressable className="flex-row items-center justify-between px-4 min-h-[44px] py-3">
-      <Text className="text-base text-sf-text flex-1">{label}</Text>
+      <Text className="text-body text-sf-text flex-1">{label}</Text>
       <Switch
         value={enabled}
         onValueChange={(val) => {
@@ -119,7 +119,7 @@ export default function EditorScreen() {
   if (!card || !version) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
-        <Text className="text-base text-sf-text-2">No card to edit.</Text>
+        <Text className="text-body text-sf-text-2">No card to edit.</Text>
       </View>
     );
   }
@@ -139,7 +139,7 @@ export default function EditorScreen() {
               }}
               className="min-w-[44px] min-h-[44px] items-center justify-center"
             >
-              <Text className="text-sf-blue text-base font-semibold">Done</Text>
+              <Text className="text-sf-blue text-body font-semibold">Done</Text>
             </Pressable>
           ),
         }}
@@ -194,7 +194,7 @@ export default function EditorScreen() {
               // Sheet implementation deferred
             }}
           >
-            <Text className="text-base text-sf-text">Choose Background</Text>
+            <Text className="text-body text-sf-text">Choose Background</Text>
             <Icon ios="chevron.right" web="chevron-forward" size={16} />
           </Pressable>
         </View>

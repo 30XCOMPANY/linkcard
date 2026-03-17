@@ -42,8 +42,77 @@
   }
 }
 
+/* ================================================================
+ * APPLE DYNAMIC TYPE SCALE (San Francisco)
+ * https://developer.apple.com/design/human-interface-guidelines/typography
+ * ================================================================ */
+
+:root {
+  /* Font sizes */
+  --sf-large-title: 34px;
+  --sf-title-1: 28px;
+  --sf-title-2: 22px;
+  --sf-title-3: 20px;
+  --sf-headline: 17px;
+  --sf-body: 17px;
+  --sf-callout: 16px;
+  --sf-subheadline: 15px;
+  --sf-footnote: 13px;
+  --sf-caption-1: 12px;
+  --sf-caption-2: 11px;
+
+  /* Line heights */
+  --sf-large-title-lh: 41px;
+  --sf-title-1-lh: 34px;
+  --sf-title-2-lh: 28px;
+  --sf-title-3-lh: 25px;
+  --sf-headline-lh: 22px;
+  --sf-body-lh: 22px;
+  --sf-callout-lh: 21px;
+  --sf-subheadline-lh: 20px;
+  --sf-footnote-lh: 18px;
+  --sf-caption-1-lh: 16px;
+  --sf-caption-2-lh: 13px;
+}
+
 @layer theme {
   @theme {
+    /* Apple Dynamic Type text sizes */
+    --text-large-title: var(--sf-large-title);
+    --text-large-title--line-height: var(--sf-large-title-lh);
+
+    --text-title-1: var(--sf-title-1);
+    --text-title-1--line-height: var(--sf-title-1-lh);
+
+    --text-title-2: var(--sf-title-2);
+    --text-title-2--line-height: var(--sf-title-2-lh);
+
+    --text-title-3: var(--sf-title-3);
+    --text-title-3--line-height: var(--sf-title-3-lh);
+
+    --text-headline: var(--sf-headline);
+    --text-headline--line-height: var(--sf-headline-lh);
+    --text-headline--font-weight: 600;
+
+    --text-body: var(--sf-body);
+    --text-body--line-height: var(--sf-body-lh);
+
+    --text-callout: var(--sf-callout);
+    --text-callout--line-height: var(--sf-callout-lh);
+
+    --text-subheadline: var(--sf-subheadline);
+    --text-subheadline--line-height: var(--sf-subheadline-lh);
+
+    --text-footnote: var(--sf-footnote);
+    --text-footnote--line-height: var(--sf-footnote-lh);
+
+    --text-caption-1: var(--sf-caption-1);
+    --text-caption-1--line-height: var(--sf-caption-1-lh);
+
+    --text-caption-2: var(--sf-caption-2);
+    --text-caption-2--line-height: var(--sf-caption-2-lh);
+
+    /* Colors */
     --color-sf-blue: var(--sf-blue);
     --color-sf-green: var(--sf-green);
     --color-sf-red: var(--sf-red);

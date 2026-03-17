@@ -15,6 +15,7 @@ import { FadeInDown } from "react-native-reanimated";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
+import { StripedBackground } from "@/src/components/shared/striped-background";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
@@ -64,7 +65,7 @@ function FieldRow({
         <View className="w-[30px] items-center mr-3">
           <Icon web={field.web} size={20} />
         </View>
-        <Text className="flex-1 text-base text-sf-text">{field.label}</Text>
+        <Text className="flex-1 text-body text-sf-text">{field.label}</Text>
         <Switch
           value={enabled}
           onValueChange={() => {
@@ -130,21 +131,26 @@ export default function ShareScreen() {
   if (!card || !currentVersion || !previewVersion) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
-        <Text className="text-base text-sf-text-2">
+        <Text className="text-body text-sf-text-2">
           No card yet. Complete onboarding to get started.
         </Text>
       </View>
     );
   }
 
+  const bgColor = useCardStore((s: any) => s.currentGradient) || "cyan";
+
   return (
-    <ScrollView
-      className="flex-1 bg-sf-bg"
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="pb-8"
-    >
-      {/* Card Preview */}
-      <View className="px-4 pt-4">
+    <View style={{ flex: 1 }}>
+      <StripedBackground color={bgColor} />
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="pb-8"
+        style={{ backgroundColor: "transparent" }}
+      >
+        {/* Card Preview */}
+        <View className="px-4 pt-4">
         <Animated.View
           entering={FadeInDown.springify()
             .stiffness(springs.gentle.stiffness)
@@ -160,7 +166,7 @@ export default function ShareScreen() {
       </View>
 
       {/* What to Share — grouped list */}
-      <Text className="text-xs font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
+      <Text className="text-caption-1 font-semibold uppercase tracking-widest text-sf-text-2 px-5 mb-2 mt-8">
         What to Share
       </Text>
       <View
@@ -185,20 +191,21 @@ export default function ShareScreen() {
           onPress={handleShare}
         >
           <Icon web="share-outline" size={18} color="#FFFFFF" />
-          <Text className="text-base font-semibold text-sf-bg">Share</Text>
+          <Text className="text-body font-semibold text-sf-bg">Share</Text>
         </Pressable>
       </View>
 
       {/* Secondary links */}
       <View className="flex-row items-center justify-center mt-4 gap-1">
         <Pressable className="min-h-[44px] justify-center px-2" onPress={handleCopyLink}>
-          <Text className="text-[13px] text-sf-blue">Copy Link</Text>
+          <Text className="text-footnote text-sf-blue">Copy Link</Text>
         </Pressable>
-        <Text className="text-[13px] text-sf-text-3">{"\u00B7"}</Text>
+        <Text className="text-footnote text-sf-text-3">{"\u00B7"}</Text>
         <Pressable className="min-h-[44px] justify-center px-2" onPress={handleWallet}>
-          <Text className="text-[13px] text-sf-blue">Add to Wallet</Text>
+          <Text className="text-footnote text-sf-blue">Add to Wallet</Text>
         </Pressable>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
