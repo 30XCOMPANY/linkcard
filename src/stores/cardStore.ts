@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BusinessCard, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
-import { accentColors, AccentColorKey } from '@/src/design-system/tokens/colors';
+import { accentColors, AccentColorKey } from '@/src/lib/accent-colors';
 import { cardService } from '@/src/services/supabase';
 
 // Debounced cloud sync — avoids hammering Supabase on rapid edits
