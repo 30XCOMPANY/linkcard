@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: @/src/types (LinkedInProfile)
+ * [OUTPUT]: extractLinkedInUsername, fetchLinkedInProfile, checkProfileChanges
+ * [POS]: LinkedIn API client — calls api/ backend, URL parsing, change detection
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { LinkedInProfile } from '@/src/types';
 
 const API_BASE_URL = (typeof window !== 'undefined' && window.location?.hostname === 'localhost')

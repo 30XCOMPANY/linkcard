@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: react-native Share/Platform, expo-linking, @/src/types
+ * [OUTPUT]: generateShareLink, shareCard, getShareHistory, trackShareEvent
+ * [POS]: Card sharing utilities — server share link creation + native share sheet
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { Share, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { BusinessCard, CardVersion, ShareSession } from '@/src/types';

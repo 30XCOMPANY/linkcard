@@ -1,5 +1,8 @@
 /**
- * LinkedIn Profile Scraper using RapidAPI
+ * [INPUT]: node-fetch, services/ai (summarizeToKeywords)
+ * [OUTPUT]: parseLinkedInProfile, clearProfileCache, isValidUsername, checkRateLimit, LinkedInProfileData
+ * [POS]: Core LinkedIn data pipeline — RapidAPI fetch → parse → AI keyword generation → cache
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import fetch from 'node-fetch';

@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: react-native-view-shot, expo-file-system, expo-sharing, expo-media-library, react-native
+ * [OUTPUT]: captureCardAsImage, saveCardToGallery, shareCardImage, ExportOptions
+ * [POS]: Card image export — view-shot capture → file system → media library / share sheet
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { captureRef } from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';

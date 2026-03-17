@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: express, cors, dotenv, routes/{linkedin,wallet,share}
+ * [OUTPUT]: Express app (default export) — mounted routes, health check, error handler
+ * [POS]: api/src entry point — local dev server + Vercel serverless export
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

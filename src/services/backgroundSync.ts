@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: expo-background-fetch, expo-task-manager, ./linkedin, ./notifications, ./supabase, AsyncStorage
+ * [OUTPUT]: registerBackgroundSync, unregisterBackgroundSync
+ * [POS]: Background sync task definition — registered but not yet called from app/
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { checkProfileChanges } from './linkedin';

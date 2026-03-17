@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: express Router, zod, uuid
+ * [OUTPUT]: Router — POST /create, GET /:shareId, POST /track, GET /history
+ * [POS]: Share link CRUD + analytics, in-memory storage (demo)
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';

@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: expo-notifications, expo-device, expo-constants, react-native Platform
+ * [OUTPUT]: registerForPushNotifications, notifyProfileUpdated, scheduleSyncReminder
+ * [POS]: Push notification setup + scheduling — consumed by sync and backgroundSync
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';

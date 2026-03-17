@@ -1,6 +1,8 @@
 /**
- * Emoji Matching Service
- * Uses AI to match 3 emojis that best represent the user's profile
+ * [INPUT]: dotenv, OpenAI Chat Completions API (gpt-4o-mini)
+ * [OUTPUT]: matchEmojis — returns 3 AI-matched emojis for a profile, with fallback
+ * [POS]: Emoji matching service — consumed by routes/emoji for profile personality emojis
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import dotenv from 'dotenv';

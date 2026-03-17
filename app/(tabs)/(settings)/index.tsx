@@ -7,8 +7,8 @@
  */
 
 import React, { useState } from "react";
-import { Switch, Alert, StyleSheet } from "react-native";
-import { View, Text, ScrollView } from "@/src/tw";
+import { Switch, Alert, StyleSheet, ScrollView as RNScrollView } from "react-native";
+import { View, Text } from "@/src/tw";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { Icon } from "@/src/lib/icons";
@@ -58,9 +58,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1"
-      style={settingsPageStyle}
+    <RNScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
@@ -125,7 +123,7 @@ export default function SettingsScreen() {
       <View style={styles.footer}>
         <Text className="text-sf-text-3" style={styles.footerText}>LinkCard v1.0.0</Text>
       </View>
-    </ScrollView>
+    </RNScrollView>
   );
 }
 

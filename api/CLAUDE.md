@@ -11,10 +11,14 @@ src/
   index.ts:        Express app (local dev entry, cors, routes, error handler)
   routes/
     linkedin.ts:   POST /profile (fetch), POST /check (change detection), POST /clear-cache (dev only)
-    wallet.ts:     Wallet pass endpoints
-    share.ts:      Share session endpoints
+    wallet.ts:     Wallet pass endpoints (generate, update, download)
+    share.ts:      Share session endpoints (create, get, track, history)
+    emoji.ts:      POST /match — AI-powered emoji matching for profiles
   services/
-    scraper.ts:    RapidAPI LinkedIn profile fetch + OpenAI keyword generation
+    scraper.ts:    RapidAPI LinkedIn profile fetch + response parsing + cache
+    ai.ts:         OpenAI gpt-4o-mini keyword summarization
+    emoji.ts:      OpenAI gpt-4o-mini emoji matching with fallback
+    passGenerator.ts: Apple Wallet .pkpass generation (stub)
 ```
 
 CORS restricted via `CORS_ORIGIN` env var. `/clear-cache` gated behind `NODE_ENV === 'development'`.

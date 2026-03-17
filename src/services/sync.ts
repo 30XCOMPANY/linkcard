@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: react-native AppState, ./linkedin (checkProfileChanges), @/src/types
+ * [OUTPUT]: ProfileSyncService — foreground periodic sync with app state awareness
+ * [POS]: Foreground sync scheduler — 6hr interval, 5min debounce, pauses in background
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { AppState, AppStateStatus } from 'react-native';
 import { checkProfileChanges } from './linkedin';
 import { LinkedInProfile } from '@/src/types';

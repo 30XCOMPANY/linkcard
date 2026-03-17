@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: express Router, zod, uuid, services/passGenerator (generatePass, updatePass)
+ * [OUTPUT]: Router — POST /generate, PUT /update, GET /pass/:serialNumber
+ * [POS]: Apple Wallet pass generation + update routes
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';

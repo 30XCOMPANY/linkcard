@@ -395,7 +395,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   accountFooterLeading: {
-    width: 92 - 32,
+    flexShrink: 0,
+    marginRight: 16,
     alignItems: "flex-start",
     justifyContent: "center",
   },

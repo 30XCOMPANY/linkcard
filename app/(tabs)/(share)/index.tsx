@@ -8,13 +8,13 @@
  */
 
 import React, { useState, useCallback, useMemo } from "react";
-import { Switch, Share, Clipboard, StyleSheet, PlatformColor } from "react-native";
+import { Switch, Share, Clipboard, StyleSheet, PlatformColor, ScrollView as RNScrollView } from "react-native";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
-
-const useGlass = isGlassEffectAPIAvailable();
-import { View, Text, ScrollView, Pressable } from "@/src/tw";
+import { View, Text, Pressable } from "@/src/tw";
 import { Animated } from "@/src/tw/animated";
 import { FadeInDown } from "react-native-reanimated";
+
+const useGlass = isGlassEffectAPIAvailable();
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
@@ -135,11 +135,9 @@ export default function ShareScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1"
-      style={settingsPageStyle}
+    <RNScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="pb-8"
+      contentContainerStyle={{ paddingBottom: 32 }}
     >
       <View className="px-4 pt-4">
         <Animated.View
@@ -198,7 +196,7 @@ export default function ShareScreen() {
           <Text className="text-sf-blue" style={styles.secondaryLinkText}>Add to Wallet</Text>
         </Pressable>
       </View>
-    </ScrollView>
+    </RNScrollView>
   );
 }
 

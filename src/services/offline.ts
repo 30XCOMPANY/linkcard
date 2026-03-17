@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: AsyncStorage, @react-native-community/netinfo, @/src/types
+ * [OUTPUT]: initializeOfflineManager, queueAction, processQueue, getCachedCard, isOnline
+ * [POS]: Offline queue + connectivity listener — queues failed ops for retry when back online
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { BusinessCard } from '@/src/types';

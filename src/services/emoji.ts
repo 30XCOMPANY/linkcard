@@ -1,6 +1,8 @@
 /**
- * Emoji Service - Frontend
- * Matches emojis to user profiles for "My Vibe" component
+ * [INPUT]: @/src/types (LinkedInProfile)
+ * [OUTPUT]: matchEmojis — returns 3 AI-matched emojis for "My Vibe" display
+ * [POS]: Emoji client — calls api/emoji/match, with fallback defaults
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { LinkedInProfile } from '@/src/types';

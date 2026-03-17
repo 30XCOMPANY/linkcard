@@ -1,8 +1,10 @@
 /**
- * AI Service - For summarizing and processing text
+ * [INPUT]: dotenv, OpenAI Chat Completions API (gpt-4o-mini)
+ * [OUTPUT]: summarizeToKeywords — extracts 3 descriptive keywords from text
+ * [POS]: AI text processing service — consumed by scraper for character field generation
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-// Ensure dotenv is loaded (in case this module is imported before dotenv.config() in index.ts)
 import dotenv from 'dotenv';
 dotenv.config();
 

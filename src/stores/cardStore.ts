@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/accent-colors
+ * [OUTPUT]: useCardStore — card data, theme mode, accent color, gradient, CRUD actions
+ * [POS]: Main app state — single Zustand store with AsyncStorage persistence + debounced Supabase sync
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';

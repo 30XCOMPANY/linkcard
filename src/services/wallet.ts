@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: react-native Platform, @/src/types (BusinessCard, CardVersion, WalletPassData)
+ * [OUTPUT]: isWalletAvailable, generateWalletPass, updateWalletPass
+ * [POS]: Apple Wallet client — calls api/wallet endpoints for .pkpass generation
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { Platform } from 'react-native';
 import { BusinessCard, CardVersion, WalletPassData } from '@/src/types';
 

@@ -1,6 +1,8 @@
 /**
- * Emoji API Routes
- * Matches emojis to user profiles
+ * [INPUT]: express Router, services/emoji (matchEmojis)
+ * [OUTPUT]: Router — POST /match (3 AI-matched emojis)
+ * [POS]: Emoji matching route — returns 3 profile-representative emojis
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import express from 'express';

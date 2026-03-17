@@ -1,13 +1,8 @@
 /**
- * Apple Wallet Pass Generator
- * 
- * This service generates .pkpass files for Apple Wallet.
- * 
- * Requirements:
- * - Apple Developer Program membership
- * - Pass Type ID registered in Apple Developer portal
- * - Pass signing certificate (.p12 file)
- * - WWDR (Apple Worldwide Developer Relations) certificate
+ * [INPUT]: path, env vars (PASS_TYPE_ID, APPLE_TEAM_ID, API_BASE_URL)
+ * [OUTPUT]: generatePass, updatePass — Apple Wallet .pkpass generation (stub)
+ * [POS]: Wallet pass service — consumed by routes/wallet. Requires Apple Developer certs for production.
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import path from 'path';

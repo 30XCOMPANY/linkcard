@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: express Router, zod, services/scraper (parseLinkedInProfile, clearProfileCache)
+ * [OUTPUT]: Router — POST /profile, POST /check, POST /clear-cache
+ * [POS]: LinkedIn profile fetch + change detection routes
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import { Router } from 'express';
 import { z } from 'zod';
 import { parseLinkedInProfile, clearProfileCache } from '../services/scraper';

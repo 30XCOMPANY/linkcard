@@ -1,3 +1,11 @@
+/**
+ * [INPUT]: none (pure type definitions)
+ * [OUTPUT]: LinkedInProfile, CardTemplate, FieldStyle, CardVersion, BusinessCard, ShareSession,
+ *           WalletPassData, RootStackParamList, ThemeMode, Theme
+ * [POS]: Core domain types — consumed by stores, services, and components across the app
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 // LinkedIn Profile data structure
 export interface LinkedInProfile {
   url: string;

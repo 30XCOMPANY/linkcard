@@ -1,5 +1,8 @@
 /**
- * Card Component System - Draggable components for card customization
+ * [INPUT]: none (pure type definitions + extraction logic)
+ * [OUTPUT]: ComponentType, CardComponent, ComponentContent, ComponentStyle, extractComponentsFromProfile
+ * [POS]: Card component system — draggable component model + LinkedIn profile → component extraction
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 export type ComponentType = 

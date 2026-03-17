@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: @supabase/supabase-js, expo-secure-store, @/src/types
+ * [OUTPUT]: supabase client, cardService (upsert/fetch), auth helpers
+ * [POS]: Supabase client + CRUD — sole persistence layer for card data
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ */
+
 import 'react-native-url-polyfill/auto';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
