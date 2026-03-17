@@ -1,25 +1,302 @@
 /**
- * [INPUT]: react-native View/Text/PlatformColor/StyleSheet
+ * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
+ *          expo-router Stack/useRouter, react-native-reanimated Animated/FadeInRight/FadeOutLeft,
+ *          @/src/stores/contactsStore, @/src/components/card/card-display CardDisplay,
+ *          @/src/lib/haptics, @/src/lib/springs, @/src/lib/icons Icon,
+ *          @/src/lib/contact-actions, @/src/types CardVersion
  * [OUTPUT]: DiscoverScreen — discover feed with card browsing and actions
  * [POS]: Discover tab main screen — one card at a time with Next/Say Hi buttons
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React from "react";
-import { PlatformColor, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import {
+  PlatformColor,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { Stack } from "expo-router/stack";
+import { useRouter } from "expo-router";
+import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
+
+import { useContactsStore } from "@/src/stores/contactsStore";
+import { CardDisplay } from "@/src/components/card/card-display";
+import { executeContactAction } from "@/src/lib/contact-actions";
+import { haptic } from "@/src/lib/haptics";
+import { springs } from "@/src/lib/springs";
+import { Icon } from "@/src/lib/icons";
+import type { CardVersion, DiscoverProfile } from "@/src/types";
+
+// ── Synthesize CardVersion from DiscoverProfile fields ───────────
+function toCardVersion(p: DiscoverProfile): CardVersion {
+  return {
+    id: "discover-preview",
+    name: "Discover",
+    visibleFields: p.visibleFields,
+    template: p.template,
+    accentColor: p.accentColor,
+    background: p.background,
+    isDefault: false,
+  };
+}
 
 export default function DiscoverScreen() {
+  const router = useRouter();
+  const batch = useContactsStore((s) => s.discoverBatch);
+  const index = useContactsStore((s) => s.discoverIndex);
+  const status = useContactsStore((s) => s.discoverStatus);
+  const refreshesUsed = useContactsStore((s) => s.refreshesUsed);
+  const nextCard = useContactsStore((s) => s.nextCard);
+  const refreshBatch = useContactsStore((s) => s.refreshBatch);
+  const saveContact = useContactsStore((s) => s.saveContact);
+  const resetDaily = useContactsStore((s) => s.resetDailyIfNeeded);
+
+  const current = index < batch.length ? batch[index] : null;
+
+  // Reactive bookmark check — re-renders when savedContacts changes
+  const saved = useContactsStore((s) =>
+    current ? s.savedContacts.some((c) => c.id === current.id) : false
+  );
+
+  useEffect(() => {
+    resetDaily();
+  }, [resetDaily]);
+
+  // Auto-load first batch if empty
+  useEffect(() => {
+    if (
+      batch.length === 0 &&
+      status === "batch_exhausted" &&
+      refreshesUsed < 5
+    ) {
+      refreshBatch();
+    }
+  }, [batch.length, status, refreshesUsed, refreshBatch]);
+
+  const handleNext = useCallback(() => {
+    haptic.selection();
+    nextCard();
+  }, [nextCard]);
+
+  const handleSayHi = useCallback(() => {
+    if (!current) return;
+    haptic.medium();
+    executeContactAction(current.contactAction, current.profile.url);
+  }, [current]);
+
+  const handleSave = useCallback(() => {
+    if (!current || saved) return;
+    haptic.success();
+    saveContact(current);
+  }, [current, saved, saveContact]);
+
+  const handleRefresh = useCallback(() => {
+    haptic.medium();
+    refreshBatch();
+  }, [refreshBatch]);
+
+  const remainingRefreshes = 5 - refreshesUsed;
+
   return (
-    <View style={styles.center}>
-      <Text style={styles.text}>Discover — Coming Soon</Text>
-    </View>
+    <>
+      {/* ── Header toolbar ──────────────────────────────────── */}
+      <Stack.Screen options={{ title: "Discover", headerLargeTitle: true }} />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.View>
+          <Pressable
+            onPress={() => {
+              haptic.light();
+              router.push("/(discover)/collection" as any);
+            }}
+            style={styles.toolbarBtn}
+          >
+            <Icon web="bookmark" size={20} color={PlatformColor("label") as unknown as string} />
+          </Pressable>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.View>
+          <Text style={styles.refreshBadge}>{remainingRefreshes} left</Text>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
+
+      {/* ── Body ────────────────────────────────────────────── */}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {status === "browsing" && current ? (
+          <>
+            {/* Progress */}
+            <Text style={styles.progress}>
+              {index + 1} / {batch.length}
+            </Text>
+
+            {/* Card */}
+            <Animated.View
+              key={current.id}
+              entering={FadeInRight.springify()
+                .stiffness(springs.gentle.stiffness)
+                .damping(springs.gentle.damping)}
+              exiting={FadeOutLeft.duration(200)}
+            >
+              <CardDisplay
+                profile={current.profile}
+                version={toCardVersion(current)}
+                qrCodeData={current.qrCodeData}
+                compact
+              />
+            </Animated.View>
+
+            {/* Bookmark */}
+            <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
+              <Icon
+                web={saved ? "bookmark" : "bookmark-outline"}
+                size={22}
+                color={saved ? "#FF9500" : (PlatformColor("secondaryLabel") as unknown as string)}
+              />
+            </Pressable>
+
+            {/* Action buttons */}
+            <View style={styles.actions}>
+              <Pressable style={styles.btnSecondary} onPress={handleNext}>
+                <Text style={styles.btnSecondaryLabel}>Next</Text>
+              </Pressable>
+              <View style={styles.btnSpacer} />
+              <Pressable style={styles.btnPrimary} onPress={handleSayHi}>
+                <Text style={styles.btnPrimaryLabel}>
+                  {current.contactAction?.label ?? "Say Hi"}
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        ) : status === "batch_exhausted" ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>
+              {remainingRefreshes > 0
+                ? "Batch complete!"
+                : "All done for today"}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {remainingRefreshes > 0
+                ? `${remainingRefreshes} refresh${remainingRefreshes === 1 ? "" : "es"} remaining`
+                : "Come back tomorrow for more profiles"}
+            </Text>
+            {remainingRefreshes > 0 ? (
+              <Pressable
+                style={[styles.btnPrimary, styles.refreshBtn]}
+                onPress={handleRefresh}
+              >
+                <Text style={styles.btnPrimaryLabel}>Refresh</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Come back tomorrow</Text>
+            <Text style={styles.emptySubtitle}>
+              You've used all 5 refreshes for today
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  text: {
-    fontSize: 17,
+  scroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 120,
+  },
+  toolbarBtn: {
+    minHeight: 32,
+    minWidth: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  refreshBadge: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
     color: PlatformColor("secondaryLabel") as unknown as string,
+  },
+  progress: {
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: PlatformColor("secondaryLabel") as unknown as string,
+    marginBottom: 16,
+  },
+  bookmarkBtn: {
+    alignSelf: "flex-end",
+    marginTop: 12,
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actions: {
+    flexDirection: "row",
+    marginTop: 24,
+  },
+  btnSpacer: { width: 12 },
+  btnSecondary: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 25,
+    borderCurve: "continuous" as any,
+    borderWidth: 1,
+    borderColor: PlatformColor("separator") as unknown as string,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnSecondaryLabel: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: PlatformColor("label") as unknown as string,
+  },
+  btnPrimary: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 25,
+    borderCurve: "continuous" as any,
+    backgroundColor: PlatformColor("systemBlue") as unknown as string,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnPrimaryLabel: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  refreshBtn: {
+    marginTop: 24,
+    width: 200,
+    alignSelf: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingTop: 80,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+    color: PlatformColor("label") as unknown as string,
+  },
+  emptySubtitle: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 20,
+    color: PlatformColor("secondaryLabel") as unknown as string,
+    textAlign: "center",
   },
 });
