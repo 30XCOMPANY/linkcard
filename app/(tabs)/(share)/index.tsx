@@ -1,10 +1,9 @@
 /**
  * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, react-native Switch/Share/Clipboard/StyleSheet,
- *          @/src/stores/cardStore useCardStore, @/src/components/card/card-display CardDisplay,
- *          @/src/components/shared/adaptive-glass AdaptiveGlass,
- *          @/src/lib/haptics haptic, @/src/lib/icons Icon, @/src/lib/cn cn
- * [OUTPUT]: ShareScreen — field-toggle glass grouped list, card preview, single CTA
- * [POS]: Share tab — editorial luxury sharing experience with glass material grouped cards
+ *          @/src/stores/cardStore, @/src/components/card/card-display CardDisplay,
+ *          @/src/design-system/settings primitives, @/src/lib/haptics, @/src/lib/icons Icon
+ * [OUTPUT]: ShareScreen — card preview plus grouped share fields built from settings primitives
+ * [POS]: Share tab — share controls aligned to the same grouped-list language as Settings
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -16,15 +15,16 @@ import { FadeInDown } from "react-native-reanimated";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
-import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
 import type { LinkedInProfile } from "@/src/types";
-
-/* ------------------------------------------------------------------ */
-/*  Shareable field definitions                                        */
-/* ------------------------------------------------------------------ */
+import {
+  SettingsGroup,
+  SettingsRow,
+  SettingsSectionHeader,
+  SettingsSeparator,
+} from "@/src/design-system/settings";
 
 type ShareField = keyof LinkedInProfile | "qrCode";
 
@@ -45,10 +45,6 @@ const SHARE_FIELDS: FieldDef[] = [
   { key: "qrCode", label: "QR Code", web: "qr-code-outline" },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Field Row                                                          */
-/* ------------------------------------------------------------------ */
-
 function FieldRow({
   field,
   enabled,
@@ -62,27 +58,23 @@ function FieldRow({
 }) {
   return (
     <>
-      <View style={styles.fieldRow}>
-        <View style={styles.fieldIconWrap}>
-          <Icon web={field.web} size={20} />
-        </View>
-        <Text className="text-sf-text" style={styles.fieldLabel}>{field.label}</Text>
-        <Switch
-          value={enabled}
-          onValueChange={() => {
-            haptic.selection();
-            onToggle();
-          }}
-        />
-      </View>
-      {!isLast && <View className="h-px bg-sf-separator" style={styles.fieldSeparator} />}
+      <SettingsRow
+        title={field.label}
+        leading={<Icon web={field.web} size={20} />}
+        trailing={
+          <Switch
+            value={enabled}
+            onValueChange={() => {
+              haptic.selection();
+              onToggle();
+            }}
+          />
+        }
+      />
+      {!isLast ? <SettingsSeparator inset={60} /> : null}
     </>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Share Screen                                                       */
-/* ------------------------------------------------------------------ */
 
 export default function ShareScreen() {
   const card = useCardStore((s) => s.card);
@@ -128,7 +120,6 @@ export default function ShareScreen() {
     haptic.light();
   }, []);
 
-  /* Empty state */
   if (!card || !currentVersion || !previewVersion) {
     return (
       <View className="flex-1 items-center justify-center bg-sf-bg">
@@ -145,8 +136,7 @@ export default function ShareScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-8"
     >
-        {/* Card Preview */}
-        <View className="px-4 pt-4">
+      <View className="px-4 pt-4">
         <Animated.View
           entering={FadeInDown.springify()
             .stiffness(springs.gentle.stiffness)
@@ -161,14 +151,8 @@ export default function ShareScreen() {
         </Animated.View>
       </View>
 
-      {/* What to Share — grouped list */}
-      <Text className="text-sf-text-2" style={styles.sectionHeader}>
-        What to Share
-      </Text>
-      <AdaptiveGlass
-        className="rounded-[10px] overflow-hidden"
-        style={styles.group}
-      >
+      <SettingsSectionHeader title="WHAT TO SHARE" />
+      <SettingsGroup>
         {SHARE_FIELDS.map((f, i) => (
           <FieldRow
             key={f.key}
@@ -178,9 +162,8 @@ export default function ShareScreen() {
             isLast={i === SHARE_FIELDS.length - 1}
           />
         ))}
-      </AdaptiveGlass>
+      </SettingsGroup>
 
-      {/* Primary CTA */}
       <View style={styles.ctaWrap}>
         <Pressable
           className="bg-sf-text"
@@ -192,7 +175,6 @@ export default function ShareScreen() {
         </Pressable>
       </View>
 
-      {/* Secondary links */}
       <View style={styles.secondaryLinks}>
         <Pressable style={styles.secondaryLinkButton} onPress={handleCopyLink}>
           <Text className="text-sf-blue" style={styles.secondaryLinkText}>Copy Link</Text>
@@ -207,47 +189,13 @@ export default function ShareScreen() {
 }
 
 const styles = StyleSheet.create({
-  sectionHeader: {
-    marginTop: 35,
-    marginBottom: 6,
-    marginHorizontal: 20,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
-  group: {
-    marginHorizontal: 16,
-    borderCurve: "continuous" as any,
-  },
-  fieldRow: {
-    minHeight: 44,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  fieldIconWrap: {
-    width: 30,
-    alignItems: "center",
-    marginRight: 12,
-  },
-  fieldLabel: {
-    flex: 1,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  fieldSeparator: {
-    marginLeft: 56,
-  },
   ctaWrap: {
     paddingHorizontal: 16,
     marginTop: 35,
   },
   cta: {
     minHeight: 50,
-    borderRadius: 10,
+    borderRadius: 16,
     borderCurve: "continuous" as any,
     flexDirection: "row",
     alignItems: "center",

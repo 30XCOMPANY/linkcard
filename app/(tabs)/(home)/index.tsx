@@ -10,86 +10,19 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { RefreshControl } from "react-native";
-import { View, Text, ScrollView, Pressable, Link } from "@/src/tw";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import { ScrollView as RNScrollView } from "react-native";
+import { View, Text, Pressable, Link } from "@/src/tw";
 import { useRouter } from "expo-router";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { CardDisplay } from "@/src/components/card/card-display";
-import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
-import { springs } from "@/src/lib/springs";
 import { Icon } from "@/src/lib/icons";
-import { cn } from "@/src/lib/cn";
 import type { CardVersion } from "@/src/types";
-import { Animated } from "@/src/tw/animated";
 
-/* ------------------------------------------------------------------ */
-/*  Version Chip                                                       */
-/* ------------------------------------------------------------------ */
-
-function VersionChip({
-  version,
-  selected,
-  onPress,
-}: {
-  version: CardVersion;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      className={cn(
-        "h-[44px] px-4 rounded-full flex-row items-center gap-2",
-        selected ? "bg-sf-card" : ""
-      )}
-      style={selected ? { borderCurve: "continuous" as any } : undefined}
-      onPress={() => {
-        haptic.selection();
-        onPress();
-      }}
-    >
-      <View
-        className="w-2.5 h-2.5 rounded-full"
-        style={{ backgroundColor: version.accentColor }}
-      />
-      <Text
-        className={cn(
-          "text-subheadline",
-          selected ? "font-semibold text-sf-text" : "font-medium text-sf-text-2"
-        )}
-      >
-        {version.name}
-      </Text>
-    </Pressable>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Quick Action Button                                                */
-/* ------------------------------------------------------------------ */
-
-function QuickAction({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      className="w-[48px] h-[48px] min-h-[44px] min-w-[44px] items-center justify-center"
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      onPress={onPress}
-    >
-      <Icon web={icon} size={22} />
-    </Pressable>
-  );
-}
+// SwiftUI Liquid Glass components
+import { Host, HStack, Picker, Button, Text as SUIText } from "@expo/ui/swift-ui";
+import { glassEffect, padding, tag, pickerStyle, buttonStyle } from "@expo/ui/swift-ui/modifiers";
 
 /* ------------------------------------------------------------------ */
 /*  Home Screen                                                        */
@@ -134,13 +67,9 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1"
+    <RNScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="pb-8"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      contentContainerStyle={{ paddingBottom: 32 }}
     >
       {/* Card Display — hero with native context menu + preview */}
       <View className="px-4 pt-2">
@@ -177,41 +106,57 @@ export default function HomeScreen() {
         </Link>
       </View>
 
-      {/* Version Selector */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="px-4 py-3 gap-2"
-        className="mt-2"
-      >
-        {card.versions.map((v: CardVersion) => (
-          <VersionChip
-            key={v.id}
-            version={v}
-            selected={v.id === selectedVersionId}
-            onPress={() => handleSelectVersion(v.id)}
-          />
-        ))}
-      </ScrollView>
-
-      {/* Quick Actions */}
-      <View className="flex-row items-center justify-center gap-4 mt-3">
-        <QuickAction
-          icon="edit-pen"
-          label="Edit card"
-          onPress={() => { haptic.light(); router.push("/editor" as any); }}
-        />
-        <QuickAction
-          icon="share"
-          label="Share card"
-          onPress={() => { haptic.light(); router.push("/share" as any); }}
-        />
-        <QuickAction
-          icon="qr-code"
-          label="Toggle QR code"
-          onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
-        />
+      {/* Version Selector — SwiftUI Segmented Picker with Liquid Glass */}
+      <View className="px-4 mt-3">
+        <Host style={{ width: "100%", height: 44 }}>
+          <Picker
+            selection={selectedVersionId}
+            onSelectionChange={(id) => {
+              haptic.selection();
+              handleSelectVersion(id as string);
+            }}
+            modifiers={[
+              pickerStyle("segmented"),
+              glassEffect({ glass: { variant: "regular" } }),
+            ]}
+          >
+            {card.versions.map((v: CardVersion) => (
+              <SUIText key={v.id} modifiers={[tag(v.id)]}>
+                {v.name}
+              </SUIText>
+            ))}
+          </Picker>
+        </Host>
       </View>
-    </ScrollView>
+
+      {/* Quick Actions — SwiftUI Glass Buttons */}
+      <View className="px-4 mt-3">
+        <Host style={{ width: "100%", height: 50 }}>
+          <HStack modifiers={[
+            padding({ horizontal: 8 }),
+            glassEffect({ glass: { variant: "regular" } }),
+          ]}>
+            <Button
+              modifiers={[buttonStyle("glass")]}
+              onPress={() => { haptic.light(); router.push("/editor" as any); }}
+            >
+              Edit
+            </Button>
+            <Button
+              modifiers={[buttonStyle("glass")]}
+              onPress={() => { haptic.light(); router.push("/share" as any); }}
+            >
+              Share
+            </Button>
+            <Button
+              modifiers={[buttonStyle("glass")]}
+              onPress={() => { haptic.medium(); setShowQR((p) => !p); }}
+            >
+              QR Code
+            </Button>
+          </HStack>
+        </Host>
+      </View>
+    </RNScrollView>
   );
 }
