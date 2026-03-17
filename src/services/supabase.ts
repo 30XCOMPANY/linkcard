@@ -1,5 +1,5 @@
 /**
- * [INPUT]: @supabase/supabase-js, expo-secure-store, @/src/types
+ * [INPUT]: @supabase/supabase-js, expo-secure-store, @/src/types, @/src/lib/card-presets
  * [OUTPUT]: supabase client, cardService (upsert/fetch), auth helpers
  * [POS]: Supabase client + CRUD — sole persistence layer for card data
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
@@ -9,6 +9,7 @@ import 'react-native-url-polyfill/auto';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { BusinessCard, LinkedInProfile, CardVersion, ShareSession } from '@/src/types';
+import { normalizeCardVersion } from '@/src/lib/card-presets';
 
 // Supabase configuration
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
@@ -146,7 +147,7 @@ export const cardService = {
     return {
       id: data.id,
       profile: data.profile,
-      versions: data.versions,
+      versions: data.versions.map(normalizeCardVersion),
       qrCodeData: data.qr_code_data,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
@@ -187,7 +188,7 @@ export const cardService = {
           onUpdate({
             id: data.id,
             profile: data.profile,
-            versions: data.versions,
+            versions: data.versions.map(normalizeCardVersion),
             qrCodeData: data.qr_code_data,
             createdAt: new Date(data.created_at),
             updatedAt: new Date(data.updated_at),
@@ -386,5 +387,4 @@ CREATE POLICY "Users can create share sessions for their cards"
 -- Enable realtime for cards
 ALTER PUBLICATION supabase_realtime ADD TABLE cards;
 `;
-
 

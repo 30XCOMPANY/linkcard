@@ -1,17 +1,20 @@
 /**
- * [INPUT]: react-native View/Text/StyleSheet, @/src/types LinkedInProfile/CardVersion,
- *          Avatar, QRCode, react-native-reanimated
+ * [INPUT]: react-native View/Text/StyleSheet, expo-linear-gradient, @/src/types LinkedInProfile/CardVersion,
+ *          Avatar, QRCode, react-native-reanimated, @/src/lib/card-presets
  * [OUTPUT]: CardDisplay — stable business card renderer with explicit RN layout
  * [POS]: Card core — hero component, isolated from flaky className layout utilities
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
+
+import { resolveCardBackground } from "@/src/lib/card-presets";
 import { Avatar } from "@/src/components/shared/avatar";
 import { QRCode } from "@/src/components/shared/qr-code";
-import type { LinkedInProfile, CardVersion } from "@/src/types";
-import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
+import type { CardVersion, LinkedInProfile } from "@/src/types";
 
 interface CardDisplayProps {
   profile: LinkedInProfile;
@@ -29,11 +32,22 @@ export function CardDisplay({
   compact = false,
 }: CardDisplayProps) {
   const { visibleFields, accentColor } = version;
-  const vis = (f: string) => visibleFields.includes(f as any);
+  const background = resolveCardBackground(version.background);
+  const isDark = version.background === "midnightInk";
+  const primaryText = isDark ? "#F8FAFC" : "#111111";
+  const secondaryText = isDark ? "rgba(248,250,252,0.72)" : "#6B7280";
+  const vis = (field: string) => visibleFields.includes(field as any);
 
   return (
-    <View style={[styles.shell, compact && styles.shellCompact]}>
-      {/* QR Overlay */}
+    <View
+      style={[
+        styles.shell,
+        compact && styles.shellCompact,
+        { backgroundColor: background.surface, borderColor: background.border },
+      ]}
+    >
+      <LinearGradient colors={background.gradient} style={StyleSheet.absoluteFillObject} />
+
       {showQR && (
         <Animated.View
           entering={ZoomIn.springify()}
@@ -47,22 +61,25 @@ export function CardDisplay({
         </Animated.View>
       )}
 
-      {/* Card surface */}
-      <View style={[styles.surface, compact ? styles.surfaceCompact : styles.surfaceRegular]}>
-        {/* Top row: version name + location */}
+      <View
+        style={[
+          styles.surface,
+          compact ? styles.surfaceCompact : styles.surfaceRegular,
+          { backgroundColor: background.surface },
+        ]}
+      >
         <View style={styles.topRow}>
           <View>
-            <Text style={styles.versionName}>{version.name}</Text>
+            <Text style={[styles.versionName, { color: primaryText }]}>{version.name}</Text>
             {vis("location") && profile.location && (
-              <Text style={styles.metaText}>{profile.location}</Text>
+              <Text style={[styles.metaText, { color: secondaryText }]}>{profile.location}</Text>
             )}
           </View>
           {vis("company") && profile.company && (
-            <Text style={styles.metaText}>{profile.company}</Text>
+            <Text style={[styles.metaText, { color: secondaryText }]}>{profile.company}</Text>
           )}
         </View>
 
-        {/* Centered avatar */}
         {vis("photoUrl") && (
           <View style={styles.avatarWrap}>
             <Avatar
@@ -74,50 +91,37 @@ export function CardDisplay({
           </View>
         )}
 
-        {/* Name */}
         {vis("name") && (
           <Text
-            style={[styles.name, compact ? styles.nameCompact : styles.nameRegular]}
+            style={[
+              styles.name,
+              compact ? styles.nameCompact : styles.nameRegular,
+              { color: primaryText },
+            ]}
           >
             {profile.name}
           </Text>
         )}
 
-        {/* Headline / Job Title */}
         {vis("headline") && (
-          <Text
-            style={styles.headline}
-            numberOfLines={2}
-          >
-            {profile.jobTitle
-              ? `${profile.jobTitle} at ${profile.company}`
-              : profile.headline}
+          <Text style={[styles.headline, { color: secondaryText }]} numberOfLines={2}>
+            {profile.jobTitle ? `${profile.jobTitle} at ${profile.company}` : profile.headline}
           </Text>
         )}
 
-        {/* Character tag */}
         {vis("character") && profile.character && (
           <View style={styles.characterWrap}>
-            <View
-              style={[styles.characterChip, { backgroundColor: accentColor + "15" }]}
-            >
-              <Text style={[styles.characterText, { color: accentColor }]}>
-                {profile.character}
-              </Text>
+            <View style={[styles.characterChip, { backgroundColor: accentColor + "15" }]}>
+              <Text style={[styles.characterText, { color: accentColor }]}>{profile.character}</Text>
             </View>
           </View>
         )}
 
-        {/* Bottom bar: Your Links + Direct */}
-        <View
-          style={styles.bottomBar}
-        >
-          <Text style={styles.bottomLabel}>LinkCard</Text>
+        <View style={styles.bottomBar}>
+          <Text style={[styles.bottomLabel, { color: secondaryText }]}>LinkCard</Text>
           <View style={styles.bottomRight}>
-            <View
-              style={[styles.bottomDot, { backgroundColor: accentColor }]}
-            />
-            <Text style={styles.bottomLabel}>
+            <View style={[styles.bottomDot, { backgroundColor: accentColor }]} />
+            <Text style={[styles.bottomLabel, { color: secondaryText }]}>
               {version.template.charAt(0).toUpperCase() + version.template.slice(1)}
             </Text>
           </View>
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 24,
     borderCurve: "continuous" as any,
-    backgroundColor: "#FFFFFF",
+    borderWidth: StyleSheet.hairlineWidth,
     boxShadow: "0 12px 32px rgba(0,0,0,0.10)",
   },
   shellCompact: {
@@ -154,7 +158,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   surface: {
-    backgroundColor: "#FFFFFF",
+    position: "relative",
   },
   surfaceRegular: {
     paddingHorizontal: 20,
@@ -174,12 +178,10 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
-    color: "#111111",
   },
   metaText: {
     fontSize: 12,
     lineHeight: 16,
-    color: "#6B7280",
   },
   avatarWrap: {
     alignItems: "center",
@@ -188,7 +190,6 @@ const styles = StyleSheet.create({
   name: {
     textAlign: "center",
     fontWeight: "700",
-    color: "#111111",
   },
   nameRegular: {
     fontSize: 22,
@@ -203,7 +204,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     textAlign: "center",
-    color: "#6B7280",
   },
   characterWrap: {
     alignItems: "center",
@@ -220,19 +220,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   bottomBar: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 0.5,
-    borderTopColor: "rgba(0,0,0,0.06)",
+    marginTop: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  bottomLabel: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "500",
-    color: "#111111",
   },
   bottomRight: {
     flexDirection: "row",
@@ -242,6 +233,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 999,
-    marginRight: 6,
+    marginRight: 8,
+  },
+  bottomLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
   },
 });

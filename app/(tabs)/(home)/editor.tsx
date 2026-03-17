@@ -1,7 +1,8 @@
 /**
- * [INPUT]: @/src/tw View/Text/ScrollView/Pressable, @/src/stores/cardStore,
- *          @/src/components/card/card-display, @/src/design-system/settings primitives,
- *          @/src/lib/icons, react-native Switch/RefreshControl/StyleSheet, @/src/lib/accent-colors
+ * [INPUT]: expo-router Stack/useRouter, react-native ScrollView/Pressable/Text/Switch/StyleSheet,
+ *          @/src/tw View/Text, @/src/stores/cardStore, @/src/components/card/profile-card,
+ *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
+ *          @/src/lib/card-presets
  * [OUTPUT]: EditorScreen — card editor aligned to the shared settings design system
  * [POS]: Push screen from home — editing controls expressed as grouped settings rows and inline controls
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -15,16 +16,18 @@ import {
   Pressable as RNPressable,
   Text as RNText,
 } from "react-native";
-import { View, Text, Pressable } from "@/src/tw";
+import { View, Text } from "@/src/tw";
 import { Stack, useRouter } from "expo-router";
 import { useCardStore } from "@/src/stores/cardStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { Icon } from "@/src/lib/icons";
 import { accentColors } from "@/src/lib/accent-colors";
+import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import type { LinkedInProfile } from "@/src/types";
 import {
   SettingsColorGrid,
   SettingsGroup,
+  SettingsChevron,
   SettingsRow,
   SettingsSectionHeader,
   SettingsSegmented,
@@ -58,6 +61,7 @@ const ACCENT_OPTIONS = [
   accentColors.teal,
   accentColors.slate,
 ] as const;
+const BACKGROUND_LABELS = CARD_BACKGROUND_OPTIONS.map((option) => option.label);
 
 function FieldToggleRow({
   label,
@@ -95,12 +99,7 @@ export default function EditorScreen() {
   const router = useRouter();
   const card = useCardStore((s) => s.card);
   const updateVersion = useCardStore((s) => s.updateVersion);
-  const setDefaultVersion = useCardStore((s) => s.setDefaultVersion);
 
-  const versionNames = useMemo(
-    () => card?.versions.map((v) => v.name) ?? [],
-    [card?.versions]
-  );
   const versionIdx = useMemo(
     () => Math.max(card?.versions.findIndex((v) => v.isDefault) ?? 0, 0),
     [card?.versions]
@@ -109,6 +108,10 @@ export default function EditorScreen() {
 
   const nameWeight = (version?.fieldStyles?.name?.fontWeight ?? "bold") as string;
   const weightIdx = Math.max(WEIGHT_KEYS.indexOf(nameWeight as any), 0);
+  const backgroundIdx = Math.max(
+    CARD_BACKGROUND_OPTIONS.findIndex((option) => option.id === version?.background),
+    0
+  );
 
   const handleToggle = useCallback(
     (field: ToggleableField, next: boolean) => {
@@ -160,16 +163,18 @@ export default function EditorScreen() {
 
         <SettingsSectionHeader title="CARD VERSION" />
         <SettingsGroup>
-          <LabeledBody label="Version">
-            <SettingsSegmented
-              values={versionNames}
-              selectedIndex={versionIdx}
-              onChange={(index) => {
-                const next = card.versions[index];
-                if (next) setDefaultVersion(next.id);
-              }}
-            />
-          </LabeledBody>
+          <SettingsRow
+            title="Version"
+            onPress={() => router.push("/versions" as any)}
+            trailing={
+              <View style={styles.rowValue}>
+                <Text className="text-sf-text-2" style={styles.rowValueText}>
+                  {version.name}
+                </Text>
+                <SettingsChevron />
+              </View>
+            }
+          />
         </SettingsGroup>
 
         <SettingsSectionHeader title="VISIBLE FIELDS" />
@@ -218,9 +223,22 @@ export default function EditorScreen() {
 
         <SettingsSectionHeader title="BACKGROUND" />
         <SettingsGroup>
+          <LabeledBody label="Style">
+            <SettingsSegmented
+              values={BACKGROUND_LABELS}
+              selectedIndex={backgroundIdx}
+              onChange={(index) =>
+                updateVersion(version.id, {
+                  background: CARD_BACKGROUND_OPTIONS[index]?.id ?? CARD_BACKGROUND_OPTIONS[0].id,
+                })
+              }
+            />
+          </LabeledBody>
+          <SettingsSeparator />
           <SettingsRow
-            title="Choose Background"
-            trailing={<Icon web="chevron-forward" size={16} />}
+            title={CARD_BACKGROUND_OPTIONS[backgroundIdx]?.label ?? "Glass"}
+            subtitle={CARD_BACKGROUND_OPTIONS[backgroundIdx]?.description}
+            trailing={<Icon web="color-palette-outline" size={16} />}
           />
         </SettingsGroup>
       </RNScrollView>
@@ -241,6 +259,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 15,
     lineHeight: 20,
+  },
+  rowValue: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  rowValueText: {
+    fontSize: 17,
+    lineHeight: 22,
   },
   doneButton: {
     minWidth: 44,

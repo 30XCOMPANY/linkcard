@@ -1,7 +1,7 @@
 /**
  * [INPUT]: none (pure type definitions)
- * [OUTPUT]: LinkedInProfile, CardTemplate, FieldStyle, CardVersion, CardTag, CardTagState,
- *           BusinessCard, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
+ * [OUTPUT]: LinkedInProfile, CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag,
+ *           CardTagState, BusinessCard, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, and components across the app
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -16,6 +16,7 @@ export interface LinkedInProfile {
   company: string;
   location: string;
   city?: string;
+  bannerUrl?: string | null;
   photoUrl: string | null;
   email?: string;
   phone?: string;
@@ -34,6 +35,7 @@ export interface LinkedInProfile {
 
 // Card template types
 export type CardTemplate = 'classic' | 'modern' | 'minimal' | 'bento' | 'ocean' | 'midnight' | 'sunset' | 'sleek';
+export type CardBackground = 'lightGlass' | 'freshBlue' | 'midnightInk' | 'sunsetGlow' | 'paper';
 
 // Field-level typography styles
 export interface FieldStyle {
@@ -61,6 +63,7 @@ export interface CardVersion {
   visibleFields: (keyof LinkedInProfile | 'qrCode')[];
   template: CardTemplate;
   accentColor: string;
+  background: CardBackground;
   layout?: 'portrait' | 'landscape' | 'square';
   isDefault: boolean;
   // Field-level style overrides

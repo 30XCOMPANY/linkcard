@@ -25,14 +25,14 @@ import { useCardStore, createNewCard } from "@/src/stores/cardStore";
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { extractComponentsFromProfile } from "@/src/types/cardComponents";
-import { LinkedInProfile } from "@/src/types";
+import { CardBackground, LinkedInProfile } from "@/src/types";
 import { getOnboardingProfile } from "@/app/onboarding/_shared";
 
 // ── Component ────────────────────────────────────────────────
 
 export default function PreviewScreen() {
   const router = useRouter();
-  const { setCard } = useCardStore();
+  const setCard = useCardStore((state) => state.setCard);
 
   // Retrieve profile from shared module
   const profile = getOnboardingProfile();
@@ -81,7 +81,7 @@ export default function PreviewScreen() {
 
   // ── Smart Theme Selection ────────────────────────────────
 
-  const selectTheme = useCallback((data: LinkedInProfile): string => {
+  const selectTheme = useCallback((data: LinkedInProfile): CardBackground => {
     const headline = (data.headline || "").toLowerCase();
     const character = (data.character || "").toLowerCase();
     const jobTitle = (data.jobTitle || "").toLowerCase();
@@ -95,7 +95,7 @@ export default function PreviewScreen() {
       return "freshBlue";
     }
     if (combined.match(/design|creative|art|visual|brand|ux|ui/)) {
-      return "v7Classic";
+      return "sunsetGlow";
     }
     return "lightGlass";
   }, []);
@@ -126,12 +126,9 @@ export default function PreviewScreen() {
       checksum: profile.checksum ?? Date.now().toString(),
     };
 
-    const newCard = createNewCard(linkedInData);
-    setCard(newCard);
-
-    // Smart theme
     const theme = selectTheme(linkedInData);
-    useCardStore.getState().setCurrentGradient(theme);
+    const newCard = createNewCard(linkedInData, { primaryBackground: theme });
+    setCard(newCard);
 
     router.replace("/(tabs)" as any);
   }, [profile, setCard, selectTheme, router]);

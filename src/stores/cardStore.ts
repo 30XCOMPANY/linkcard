@@ -1,15 +1,15 @@
 /**
- * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/accent-colors
- * [OUTPUT]: useCardStore — card data, theme mode, accent color, gradient, CRUD actions, tag editing actions
- * [POS]: Main app state — single Zustand store with AsyncStorage persistence + debounced Supabase sync
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/card-presets
+ * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions
+ * [POS]: Main app state — single Zustand store with AsyncStorage persistence, version ordering, and debounced Supabase sync
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BusinessCard, CardTag, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
-import { accentColors, AccentColorKey } from '@/src/lib/accent-colors';
+import { BusinessCard, CardBackground, CardTag, CardVersion, LinkedInProfile, ThemeMode } from '@/src/types';
+import { createDefaultCardVersions, normalizeCardVersion } from '@/src/lib/card-presets';
 import type { NameFontKey } from '@/src/lib/name-fonts';
 import { cardService } from '@/src/services/supabase';
 
@@ -22,6 +22,37 @@ const debouncedSync = (card: BusinessCard) => {
     }, 500);
 };
 
+const createEmptyTagState = (): BusinessCard['tagState'] => ({
+    custom: [],
+    hidden: [],
+    renamed: {},
+});
+
+const normalizeCard = (card: BusinessCard): BusinessCard => ({
+    ...card,
+    tagState: card.tagState ?? createEmptyTagState(),
+    versions: card.versions.map(normalizeCardVersion),
+});
+
+const moveItems = <T,>(items: T[], sourceIndices: number[], destination: number): T[] => {
+    if (sourceIndices.length === 0) return items;
+
+    const sortedSources = [...sourceIndices].sort((a, b) => a - b);
+    const movingItems = sortedSources
+        .map((index) => items[index])
+        .filter((item): item is T => item !== undefined);
+
+    if (movingItems.length === 0) return items;
+
+    const sourceSet = new Set(sortedSources);
+    const remainingItems = items.filter((_, index) => !sourceSet.has(index));
+    const offset = sortedSources.filter((index) => index < destination).length;
+    const targetIndex = Math.max(0, Math.min(remainingItems.length, destination - offset));
+
+    remainingItems.splice(targetIndex, 0, ...movingItems);
+    return remainingItems;
+};
+
 interface CardState {
     // Card data
     card: BusinessCard | null;
@@ -30,8 +61,6 @@ interface CardState {
 
     // Theme
     themeMode: ThemeMode;
-    accentColor: string;
-    currentGradient: string; // Current background gradient or image URL
     nameFont: NameFontKey;
 
     // Actions
@@ -40,6 +69,7 @@ interface CardState {
     addVersion: (version: CardVersion) => void;
     updateVersion: (versionId: string, updates: Partial<CardVersion>) => void;
     deleteVersion: (versionId: string) => void;
+    moveVersions: (sourceIndices: number[], destination: number) => void;
     setDefaultVersion: (versionId: string) => void;
     addCustomTag: (tag: Pick<CardTag, 'emoji' | 'label'>) => void;
     removeTag: (tagId: string) => void;
@@ -47,8 +77,6 @@ interface CardState {
 
     // Theme actions
     setThemeMode: (mode: ThemeMode) => void;
-    setAccentColor: (color: AccentColorKey | string) => void;
-    setCurrentGradient: (gradient: string) => void;
     setNameFont: (font: NameFontKey) => void;
 
     // Sync actions
@@ -56,47 +84,6 @@ interface CardState {
     setError: (error: string | null) => void;
     clearCard: () => void;
 }
-
-// Default card versions
-const defaultVersions: CardVersion[] = [
-    {
-        id: 'professional',
-        name: 'Professional',
-        description: 'Executive left-aligned layout with a clean aesthetic',
-        visibleFields: ['photoUrl', 'name', 'jobTitle', 'headline', 'company', 'location', 'qrCode', 'character'],
-        template: 'modern',
-        accentColor: '#0066CC',
-        isDefault: true,
-        fieldStyles: {
-            photoUrl: { x: 10, y: 8, width: 20, borderRadius: 100 },
-            name: { x: 10, y: 30, width: 80, fontWeight: 'bold', fontSize: 28, color: '#000000' },
-            jobTitle: { x: 10, y: 38, width: 80, fontWeight: 'medium', fontSize: 13, color: '#666666' },
-            headline: { x: 10, y: 46, width: 80, fontSize: 15, lineHeight: 22, color: '#1a1a1a' },
-            character: { x: 10, y: 58, width: 80, fontSize: 12, color: '#999999' },
-            company: { x: 10, y: 76, width: 50, fontWeight: 'bold', fontSize: 14, color: '#000000' },
-            location: { x: 10, y: 84, width: 50, fontSize: 12, color: '#666666' },
-            qrCode: { x: 74, y: 76, width: 16 }
-        }
-    },
-    {
-        id: 'networking',
-        name: 'Networking',
-        description: 'Quick connect with a bento layout',
-        visibleFields: ['photoUrl', 'name', 'headline', 'company', 'qrCode'],
-        template: 'bento',
-        accentColor: '#8B5CF6',
-        isDefault: false,
-    },
-    {
-        id: 'personal',
-        name: 'Personal',
-        description: 'Elegant sunset theme for social contexts',
-        visibleFields: ['photoUrl', 'name', 'headline', 'location', 'website', 'qrCode'],
-        template: 'minimal',
-        accentColor: '#EC4899',
-        isDefault: false,
-    },
-];
 
 // ── Mock card for frontend development ──────────────────────────
 const MOCK_CARD: BusinessCard = {
@@ -118,12 +105,8 @@ const MOCK_CARD: BusinessCard = {
         lastSynced: new Date(),
         checksum: 'mock-checksum',
     },
-    versions: defaultVersions,
-    tagState: {
-        custom: [],
-        hidden: [],
-        renamed: {},
-    },
+    versions: createDefaultCardVersions(),
+    tagState: createEmptyTagState(),
     qrCodeData: 'https://linkcard.app/c/henryzhao',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -136,22 +119,22 @@ export const useCardStore = create<CardState>()(
             isLoading: false,
             error: null,
             themeMode: 'system',
-            accentColor: accentColors.indigo,
-            currentGradient: 'lightGlass', // Default gradient
             nameFont: 'classic' as NameFontKey,
 
             setCard: (card) => {
-                set({ card, error: null });
-                debouncedSync(card);
+                const normalizedCard = normalizeCard(card);
+                set({ card: normalizedCard, error: null });
+                debouncedSync(normalizedCard);
             },
 
             updateProfile: (profile) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const updatedCard = {
-                    ...currentCard,
-                    profile: { ...currentCard.profile, ...profile },
+                    ...normalizedCard,
+                    profile: { ...normalizedCard.profile, ...profile },
                     updatedAt: new Date(),
                 };
 
@@ -163,10 +146,11 @@ export const useCardStore = create<CardState>()(
             addVersion: (version) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const updatedCard = {
-                    ...currentCard,
-                    versions: [...currentCard.versions, version],
+                    ...normalizedCard,
+                    versions: [...normalizedCard.versions, normalizeCardVersion(version)],
                     updatedAt: new Date(),
                 };
 
@@ -177,11 +161,12 @@ export const useCardStore = create<CardState>()(
             updateVersion: (versionId, updates) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const updatedCard = {
-                    ...currentCard,
-                    versions: currentCard.versions.map((v) =>
-                        v.id === versionId ? { ...v, ...updates } : v
+                    ...normalizedCard,
+                    versions: normalizedCard.versions.map((v) =>
+                        v.id === versionId ? normalizeCardVersion({ ...v, ...updates }) : v
                     ),
                     updatedAt: new Date(),
                 };
@@ -193,20 +178,42 @@ export const useCardStore = create<CardState>()(
             deleteVersion: (versionId) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 // Don't delete if it's the only version
-                if (currentCard.versions.length <= 1) return;
+                if (normalizedCard.versions.length <= 1) return;
 
-                const newVersions = currentCard.versions.filter((v) => v.id !== versionId);
+                const newVersions = normalizedCard.versions.filter((v) => v.id !== versionId);
 
                 // If we deleted the default, make the first one default
-                if (currentCard.versions.find((v) => v.id === versionId)?.isDefault) {
+                if (normalizedCard.versions.find((v) => v.id === versionId)?.isDefault) {
                     newVersions[0].isDefault = true;
                 }
 
                 const updatedCard = {
-                    ...currentCard,
+                    ...normalizedCard,
                     versions: newVersions,
+                    updatedAt: new Date(),
+                };
+
+                set({ card: updatedCard });
+                debouncedSync(updatedCard);
+            },
+
+            moveVersions: (sourceIndices, destination) => {
+                const currentCard = get().card;
+                if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
+
+                const reorderedVersions = moveItems(
+                    normalizedCard.versions,
+                    sourceIndices,
+                    destination
+                );
+
+                const updatedCard = {
+                    ...normalizedCard,
+                    versions: reorderedVersions,
                     updatedAt: new Date(),
                 };
 
@@ -217,10 +224,11 @@ export const useCardStore = create<CardState>()(
             setDefaultVersion: (versionId) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const updatedCard = {
-                    ...currentCard,
-                    versions: currentCard.versions.map((v) => ({
+                    ...normalizedCard,
+                    versions: normalizedCard.versions.map((v) => ({
                         ...v,
                         isDefault: v.id === versionId,
                     })),
@@ -234,13 +242,14 @@ export const useCardStore = create<CardState>()(
             addCustomTag: (tag) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const updatedCard = {
-                    ...currentCard,
+                    ...normalizedCard,
                     tagState: {
-                        ...currentCard.tagState,
+                        ...normalizedCard.tagState,
                         custom: [
-                            ...currentCard.tagState.custom,
+                            ...normalizedCard.tagState.custom,
                             {
                                 id: `custom:${Date.now()}`,
                                 emoji: tag.emoji,
@@ -259,18 +268,19 @@ export const useCardStore = create<CardState>()(
             removeTag: (tagId) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const isCustomTag = tagId.startsWith('custom:');
                 const updatedCard = {
-                    ...currentCard,
+                    ...normalizedCard,
                     tagState: {
-                        ...currentCard.tagState,
+                        ...normalizedCard.tagState,
                         custom: isCustomTag
-                            ? currentCard.tagState.custom.filter((tag) => tag.id !== tagId)
-                            : currentCard.tagState.custom,
+                            ? normalizedCard.tagState.custom.filter((tag) => tag.id !== tagId)
+                            : normalizedCard.tagState.custom,
                         hidden: isCustomTag
-                            ? currentCard.tagState.hidden
-                            : Array.from(new Set([...currentCard.tagState.hidden, tagId])),
+                            ? normalizedCard.tagState.hidden
+                            : Array.from(new Set([...normalizedCard.tagState.hidden, tagId])),
                     },
                     updatedAt: new Date(),
                 };
@@ -282,24 +292,25 @@ export const useCardStore = create<CardState>()(
             renameTag: (tagId, label) => {
                 const currentCard = get().card;
                 if (!currentCard) return;
+                const normalizedCard = normalizeCard(currentCard);
 
                 const trimmed = label.trim();
                 if (!trimmed) return;
 
                 const isCustomTag = tagId.startsWith('custom:');
                 const updatedCard = {
-                    ...currentCard,
+                    ...normalizedCard,
                     tagState: {
-                        ...currentCard.tagState,
+                        ...normalizedCard.tagState,
                         custom: isCustomTag
-                            ? currentCard.tagState.custom.map((tag) =>
+                            ? normalizedCard.tagState.custom.map((tag) =>
                                 tag.id === tagId ? { ...tag, label: trimmed } : tag
                             )
-                            : currentCard.tagState.custom,
+                            : normalizedCard.tagState.custom,
                         renamed: isCustomTag
-                            ? currentCard.tagState.renamed
+                            ? normalizedCard.tagState.renamed
                             : {
-                                ...currentCard.tagState.renamed,
+                                ...normalizedCard.tagState.renamed,
                                 [tagId]: trimmed,
                             },
                     },
@@ -311,15 +322,6 @@ export const useCardStore = create<CardState>()(
             },
 
             setThemeMode: (mode) => set({ themeMode: mode }),
-
-            setAccentColor: (color) => {
-                const colorValue = color in accentColors
-                    ? accentColors[color as AccentColorKey]
-                    : color;
-                set({ accentColor: colorValue });
-            },
-
-            setCurrentGradient: (gradient) => set({ currentGradient: gradient }),
             setNameFont: (font) => set({ nameFont: font }),
 
             setLoading: (loading) => set({ isLoading: loading }),
@@ -333,8 +335,6 @@ export const useCardStore = create<CardState>()(
             partialize: (state) => ({
                 card: state.card,
                 themeMode: state.themeMode,
-                accentColor: state.accentColor,
-                currentGradient: state.currentGradient,
                 nameFont: state.nameFont,
             }),
         }
@@ -342,15 +342,14 @@ export const useCardStore = create<CardState>()(
 );
 
 // Helper to create a new business card
-export const createNewCard = (profile: LinkedInProfile): BusinessCard => ({
+export const createNewCard = (
+    profile: LinkedInProfile,
+    options?: { primaryBackground?: CardBackground }
+): BusinessCard => ({
     id: `card-${Date.now()}`,
     profile,
-    versions: defaultVersions,
-    tagState: {
-        custom: [],
-        hidden: [],
-        renamed: {},
-    },
+    versions: createDefaultCardVersions(options?.primaryBackground),
+    tagState: createEmptyTagState(),
     qrCodeData: `https://www.linkedin.com/in/${profile.username}`,
     createdAt: new Date(),
     updatedAt: new Date(),

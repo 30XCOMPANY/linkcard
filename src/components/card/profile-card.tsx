@@ -2,7 +2,7 @@
  * [INPUT]: react-native View/Text/Image/Pressable/StyleSheet/PlatformColor/Linking,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
  *          @/src/components/shared/avatar Avatar, @/src/lib/haptics,
- *          @/src/lib/profile-tags, @/src/lib/name-fonts,
+ *          @/src/lib/profile-tags, @/src/lib/name-fonts, @/src/lib/card-presets,
  *          @/src/types LinkedInProfile/CardVersion
  * [OUTPUT]: ProfileCard — full profile card with banner, glass-framed avatar, tags, contacts
  * [POS]: Shared card component — used on home/editor flows for the high-emphasis profile hero
@@ -26,6 +26,7 @@ import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
+import { resolveCardBackground } from "@/src/lib/card-presets";
 import type { LinkedInProfile, CardVersion } from "@/src/types";
 
 /* ------------------------------------------------------------------ */
@@ -60,15 +61,17 @@ export function ProfileCard({
 }: ProfileCardProps) {
   const accent = version.accentColor;
   const tags = deriveProfileTags(profile);
+  const background = resolveCardBackground(version.background);
+  const bannerFadeColors = ["transparent", "rgba(255,255,255,0.3)", background.surface, background.surface] as const;
 
   return (
-    <View style={s.card}>
+    <View style={[s.card, { backgroundColor: background.surface, borderColor: background.border }]}>
       {/* Banner Image */}
       <Pressable style={s.bannerWrap} onPress={onBannerPress} disabled={!onBannerPress}>
         <Image
           source={
-            (profile as any).bannerUrl
-              ? { uri: (profile as any).bannerUrl }
+            profile.bannerUrl
+              ? { uri: profile.bannerUrl }
               : require("@/assets/default-banner.jpg")
           }
           style={s.bannerImage}
@@ -84,7 +87,7 @@ export function ProfileCard({
         <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "78%", opacity: 0.90 }]} />
         <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "86%", opacity: 1.0  }]} />
         <LinearGradient
-          colors={["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", "rgba(255,255,255,1)"]}
+          colors={bannerFadeColors}
           locations={[0, 0.4, 0.7, 1]}
           style={s.bannerFade}
         />
