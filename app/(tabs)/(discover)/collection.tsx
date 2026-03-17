@@ -1,7 +1,7 @@
 /**
  * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
  *          @/src/stores/contactsStore, @/src/components/shared/avatar Avatar,
- *          @/src/components/card/card-display CardDisplay,
+ *          @/src/components/card/profile-card ProfileCard,
  *          @/src/design-system/settings primitives,
  *          @/src/lib/haptics, @/src/lib/contact-actions, @/src/types
  * [OUTPUT]: CollectionScreen — saved contacts card holder list with expandable detail
@@ -22,7 +22,7 @@ import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { Avatar } from "@/src/components/shared/avatar";
-import { CardDisplay } from "@/src/components/card/card-display";
+import { ProfileCard } from "@/src/components/card/profile-card";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
@@ -84,11 +84,9 @@ function ContactRow({
           exiting={FadeOutUp.duration(150)}
           style={styles.detail}
         >
-          <CardDisplay
+          <ProfileCard
             profile={contact.profile}
             version={version}
-            qrCodeData={contact.profile.url}
-            compact
           />
           <View style={styles.detailActions}>
             <Pressable style={styles.detailBtnPrimary} onPress={onSayHi}>

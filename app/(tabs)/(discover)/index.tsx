@@ -1,7 +1,7 @@
 /**
  * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
  *          expo-router Stack/useRouter, react-native-reanimated Animated/FadeInRight/FadeOutLeft,
- *          @/src/stores/contactsStore, @/src/components/card/card-display CardDisplay,
+ *          @/src/stores/contactsStore, @/src/components/card/profile-card ProfileCard,
  *          @/src/lib/haptics, @/src/lib/springs, @/src/lib/icons Icon,
  *          @/src/lib/contact-actions, @/src/types CardVersion
  * [OUTPUT]: DiscoverScreen — discover feed with card browsing and actions
@@ -23,7 +23,7 @@ import { useRouter } from "expo-router";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
-import { CardDisplay } from "@/src/components/card/card-display";
+import { ProfileCard } from "@/src/components/card/profile-card";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
@@ -144,11 +144,9 @@ export default function DiscoverScreen() {
                 .damping(springs.gentle.damping)}
               exiting={FadeOutLeft.duration(200)}
             >
-              <CardDisplay
+              <ProfileCard
                 profile={current.profile}
                 version={toCardVersion(current)}
-                qrCodeData={current.qrCodeData}
-                compact
               />
             </Animated.View>
 
