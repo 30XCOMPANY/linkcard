@@ -1,7 +1,9 @@
 /**
- * [INPUT]: react-native StyleSheet/ViewStyle/PlatformColor, @/src/tw View/Text/Pressable, @/src/lib/haptics
- * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid, settingsPageStyle
- * [POS]: design-system entry for iOS grouped settings surfaces, rows, inline controls, and page background
+ * [INPUT]: react-native StyleSheet/ViewStyle/PlatformColor, @/src/tw View/Text/Pressable, @/src/lib/haptics,
+ *          @/src/lib/icons Icon, @/src/components/shared/avatar Avatar
+ * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid,
+ *           SettingsChevron, SettingsIconTile, SettingsAccountCard, settingsPageStyle
+ * [POS]: design-system entry for iOS grouped settings surfaces, rows, account hero, inline controls, and page background
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -9,6 +11,8 @@ import React from "react";
 import { Platform, PlatformColor, StyleSheet, type ViewStyle } from "react-native";
 import { View, Text, Pressable } from "@/src/tw";
 import { haptic } from "@/src/lib/haptics";
+import { Icon } from "@/src/lib/icons";
+import { Avatar } from "@/src/components/shared/avatar";
 
 const settingsColors = {
   page: Platform.OS === "ios" ? PlatformColor("systemGroupedBackground") : "#F2F2F7",
@@ -19,6 +23,24 @@ const settingsColors = {
 export const settingsPageStyle = {
   backgroundColor: settingsColors.page,
 } satisfies ViewStyle;
+
+export function SettingsChevron() {
+  return <Icon web="chevron-right" size={16} color="rgba(60,60,67,0.3)" />;
+}
+
+export function SettingsIconTile({
+  web,
+  color,
+}: {
+  web: string;
+  color: string;
+}) {
+  return (
+    <View style={[styles.iconTile, { backgroundColor: color }]}>
+      <Icon web={web} size={16} color="#FFFFFF" />
+    </View>
+  );
+}
 
 export function SettingsSectionHeader({ title }: { title: string }) {
   return (
@@ -94,6 +116,80 @@ export function SettingsRow({
     >
       {content}
     </Pressable>
+  );
+}
+
+export function SettingsAccountCard({
+  name,
+  subtitle,
+  detail,
+  avatarSource,
+  accentColor,
+  footerLabel,
+  footerLeading,
+  onPress,
+  onFooterPress,
+}: {
+  name: string;
+  subtitle: string;
+  detail?: string;
+  avatarSource?: string | null;
+  accentColor: string;
+  footerLabel: string;
+  footerLeading?: React.ReactNode;
+  onPress?: () => void;
+  onFooterPress?: () => void;
+}) {
+  return (
+    <SettingsGroup style={styles.accountCard}>
+      <Pressable
+        disabled={!onPress}
+        onPress={() => {
+          if (!onPress) return;
+          haptic.light();
+          onPress();
+        }}
+      >
+        <View style={styles.accountPrimary}>
+          <Avatar source={avatarSource} name={name} size={60} accentColor={accentColor} />
+          <View style={styles.accountText}>
+            <Text className="text-sf-text" style={styles.accountName}>
+              {name}
+            </Text>
+            <Text className="text-sf-text-2" style={styles.accountSubtitle}>
+              {subtitle}
+            </Text>
+            {detail ? (
+              <Text className="text-sf-text-2" style={styles.accountDetail}>
+                {detail}
+              </Text>
+            ) : null}
+          </View>
+          <SettingsChevron />
+        </View>
+      </Pressable>
+
+      <SettingsSeparator inset={92} />
+
+      <Pressable
+        disabled={!onFooterPress}
+        onPress={() => {
+          if (!onFooterPress) return;
+          haptic.light();
+          onFooterPress();
+        }}
+      >
+        <View style={styles.accountFooter}>
+          <View style={styles.accountFooterLeading}>
+            {footerLeading}
+          </View>
+          <Text className="text-sf-text" style={styles.accountFooterLabel}>
+            {footerLabel}
+          </Text>
+          <SettingsChevron />
+        </View>
+      </Pressable>
+    </SettingsGroup>
   );
 }
 
@@ -253,5 +349,61 @@ const styles = StyleSheet.create({
   },
   colorChipSelected: {
     borderColor: "#000000",
+  },
+  iconTile: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderCurve: "continuous" as any,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  accountCard: {
+    marginTop: 12,
+  },
+  accountPrimary: {
+    minHeight: 96,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accountText: {
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 12,
+  },
+  accountName: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+  },
+  accountSubtitle: {
+    marginTop: 2,
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  accountDetail: {
+    marginTop: 2,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  accountFooter: {
+    minHeight: 68,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accountFooterLeading: {
+    width: 92 - 32,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  accountFooterLabel: {
+    flex: 1,
+    marginRight: 12,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "400",
   },
 });

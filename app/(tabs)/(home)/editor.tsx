@@ -4,7 +4,7 @@
  *          @/src/lib/icons, react-native Switch/RefreshControl/StyleSheet, @/src/lib/accent-colors
  * [OUTPUT]: EditorScreen — card editor aligned to the shared settings design system
  * [POS]: Push screen from home — editing controls expressed as grouped settings rows and inline controls
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useCallback, useMemo } from "react";
@@ -22,6 +22,7 @@ import {
   SettingsSectionHeader,
   SettingsSegmented,
   SettingsSeparator,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 type ToggleableField = keyof LinkedInProfile | "qrCode" | "character";
@@ -141,6 +142,7 @@ export default function EditorScreen() {
 
       <ScrollView
         className="flex-1"
+        style={settingsPageStyle}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="pb-12"
         refreshControl={<RefreshControl refreshing={false} onRefresh={() => {}} />}

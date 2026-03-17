@@ -4,7 +4,7 @@
  *          @/src/design-system/settings primitives, @/src/lib/haptics, @/src/lib/icons Icon
  * [OUTPUT]: ShareScreen — card preview plus grouped share fields built from settings primitives
  * [POS]: Share tab — share controls aligned to the same grouped-list language as Settings
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useState, useCallback, useMemo } from "react";
@@ -24,6 +24,7 @@ import {
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 type ShareField = keyof LinkedInProfile | "qrCode";
@@ -133,6 +134,7 @@ export default function ShareScreen() {
   return (
     <ScrollView
       className="flex-1"
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="pb-8"
     >
