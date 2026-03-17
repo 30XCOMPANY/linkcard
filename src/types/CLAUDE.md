@@ -6,8 +6,8 @@ TypeScript interfaces and type definitions shared across the app.
 ## Members
 
 ```
-index.ts:            Core domain types — LinkedInProfile, CardVersion, BusinessCard, ShareSession,
-                     WalletPassData, FieldStyle, CardTemplate, Theme, RootStackParamList
+index.ts:            Core domain types — LinkedInProfile, CardVersion, CardBackground, BusinessCard,
+                     ShareSession, WalletPassData, FieldStyle, CardTemplate, Theme, RootStackParamList
 cardComponents.ts:   Card component system — ComponentType, CardComponent, ComponentContent,
                      ComponentStyle, extractComponentsFromProfile()
 ```

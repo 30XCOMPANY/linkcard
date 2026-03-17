@@ -1,7 +1,8 @@
 /**
  * [INPUT]: none (pure type definitions)
  * [OUTPUT]: LinkedInProfile, CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag,
- *           CardTagState, BusinessCard, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
+ *           CardTagState, BusinessCard, ContactActionType, ContactAction, SavedContact,
+ *           DiscoverProfile, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, and components across the app
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -92,6 +93,37 @@ export interface BusinessCard {
   qrCodeData: string;
   createdAt: Date;
   updatedAt: Date;
+  contactAction?: ContactAction;
+}
+
+// ── Discover & Contact ─────────────────────────────────────────
+// How others can contact this user — user-configurable
+export type ContactActionType = 'email' | 'linkedin' | 'wechat' | 'url';
+
+export interface ContactAction {
+  type: ContactActionType;
+  label: string;
+  value: string;
+}
+
+// A saved contact in the user's card holder
+export interface SavedContact {
+  id: string;
+  profile: LinkedInProfile;
+  contactAction?: ContactAction;
+  savedAt: string; // ISO 8601 — survives AsyncStorage JSON serialization
+}
+
+// Lightweight discovery profile — flat struct, no fieldStyles overhead
+export interface DiscoverProfile {
+  id: string;
+  profile: LinkedInProfile;
+  template: CardTemplate;
+  accentColor: string;
+  background: CardBackground;
+  visibleFields: (keyof LinkedInProfile | 'qrCode')[];
+  contactAction?: ContactAction;
+  qrCodeData: string;
 }
 
 // Share session - tracking shared cards
@@ -117,7 +149,8 @@ export type RootStackParamList = {
   index: undefined;
   onboarding: undefined;
   card: { cardId: string };
-  share: { cardId: string; versionId?: string };
+  discover: undefined;
+  collection: undefined;
   settings: undefined;
 };
 
