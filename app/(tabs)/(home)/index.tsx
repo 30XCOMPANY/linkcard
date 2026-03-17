@@ -96,15 +96,28 @@ function QuickAction({
   label: string;
   onPress: () => void;
 }) {
+  const actionInner = (
+    <>
+      <Icon web={icon} size={20} color="#000" />
+      <Text style={styles.actionLabel}>{label}</Text>
+    </>
+  );
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityLabel={label}
       accessibilityRole="button"
-      style={styles.action}
     >
-      <Icon web={icon} size={20} color="#000" />
-      <Text style={styles.actionLabel}>{label}</Text>
+      {useGlass ? (
+        <GlassView glassEffectStyle="regular" style={styles.action}>
+          {actionInner}
+        </GlassView>
+      ) : (
+        <View style={[styles.action, { backgroundColor: "#F2F2F7" }]}>
+          {actionInner}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -262,11 +275,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   action: {
-    alignItems: "center",
+    alignItems: "center" as const,
     gap: 4,
     minWidth: 60,
     minHeight: 44,
-    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    overflow: "hidden" as const,
   },
   actionLabel: {
     fontSize: 12,
