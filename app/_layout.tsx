@@ -8,10 +8,18 @@
 import "@/src/css/global.css";
 
 import { Stack } from "expo-router/stack";
+import { useFonts } from "expo-font";
+import { GoudyBookletter1911_400Regular } from "@expo-google-fonts/goudy-bookletter-1911";
 import { useCardStore } from "@/src/stores/cardStore";
 
 export default function RootLayout() {
   const card = useCardStore((s) => s.card);
+
+  const [fontsLoaded] = useFonts({
+    GoudyBookletter1911_400Regular,
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
