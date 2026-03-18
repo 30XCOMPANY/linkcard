@@ -63,6 +63,13 @@ interface CardState {
     themeMode: ThemeMode;
     nameFont: NameFontKey;
 
+    // Preferences
+    autoSync: boolean;
+    includeQRCode: boolean;
+    notifProfileUpdates: boolean;
+    notifShareActivity: boolean;
+    notifSyncReminders: boolean;
+
     // Actions
     setCard: (card: BusinessCard) => void;
     updateProfile: (profile: Partial<LinkedInProfile>) => void;
@@ -78,6 +85,13 @@ interface CardState {
     // Theme actions
     setThemeMode: (mode: ThemeMode) => void;
     setNameFont: (font: NameFontKey) => void;
+
+    // Preference actions
+    setAutoSync: (val: boolean) => void;
+    setIncludeQRCode: (val: boolean) => void;
+    setNotifProfileUpdates: (val: boolean) => void;
+    setNotifShareActivity: (val: boolean) => void;
+    setNotifSyncReminders: (val: boolean) => void;
 
     // Sync actions
     setLoading: (loading: boolean) => void;
@@ -121,6 +135,11 @@ export const useCardStore = create<CardState>()(
             error: null,
             themeMode: 'system',
             nameFont: 'classic' as NameFontKey,
+            autoSync: true,
+            includeQRCode: true,
+            notifProfileUpdates: true,
+            notifShareActivity: true,
+            notifSyncReminders: false,
 
             setCard: (card) => {
                 const normalizedCard = normalizeCard(card);
@@ -324,6 +343,11 @@ export const useCardStore = create<CardState>()(
 
             setThemeMode: (mode) => set({ themeMode: mode }),
             setNameFont: (font) => set({ nameFont: font }),
+            setAutoSync: (val) => set({ autoSync: val }),
+            setIncludeQRCode: (val) => set({ includeQRCode: val }),
+            setNotifProfileUpdates: (val) => set({ notifProfileUpdates: val }),
+            setNotifShareActivity: (val) => set({ notifShareActivity: val }),
+            setNotifSyncReminders: (val) => set({ notifSyncReminders: val }),
 
             setLoading: (loading) => set({ isLoading: loading }),
             setError: (error) => set({ error }),
@@ -349,6 +373,11 @@ export const useCardStore = create<CardState>()(
                 card: state.card,
                 themeMode: state.themeMode,
                 nameFont: state.nameFont,
+                autoSync: state.autoSync,
+                includeQRCode: state.includeQRCode,
+                notifProfileUpdates: state.notifProfileUpdates,
+                notifShareActivity: state.notifShareActivity,
+                notifSyncReminders: state.notifSyncReminders,
             }),
         }
     )

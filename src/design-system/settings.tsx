@@ -8,7 +8,7 @@
  */
 
 import React from "react";
-import { Platform, PlatformColor, StyleSheet, type ViewStyle } from "react-native";
+import { Platform, PlatformColor, StyleSheet, type TextStyle, type ViewStyle } from "react-native";
 import { View, Text, Pressable } from "@/src/tw";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
@@ -77,6 +77,14 @@ export function SettingsSeparator({ inset = 16 }: { inset?: number }) {
   return <View style={[styles.separator, { marginLeft: inset }]} />;
 }
 
+export function SettingsGroupFooter({ text }: { text: string }) {
+  return (
+    <Text className="text-sf-text-2" style={styles.groupFooter}>
+      {text}
+    </Text>
+  );
+}
+
 export function SettingsRow({
   title,
   subtitle,
@@ -84,6 +92,7 @@ export function SettingsRow({
   trailing,
   onPress,
   destructive = false,
+  titleStyle,
 }: {
   title: string;
   subtitle?: string;
@@ -91,6 +100,7 @@ export function SettingsRow({
   trailing?: React.ReactNode;
   onPress?: () => void;
   destructive?: boolean;
+  titleStyle?: TextStyle;
 }) {
   const content = (
     <View style={styles.row}>
@@ -98,7 +108,7 @@ export function SettingsRow({
       <View style={styles.textBlock}>
         <Text
           className={destructive ? "text-sf-red" : "text-sf-text"}
-          style={styles.rowTitle}
+          style={[styles.rowTitle, titleStyle]}
         >
           {title}
         </Text>
@@ -273,6 +283,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "600",
     letterSpacing: 0.2,
+  },
+  groupFooter: {
+    marginTop: 6,
+    marginHorizontal: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   group: {
     marginHorizontal: 16,
