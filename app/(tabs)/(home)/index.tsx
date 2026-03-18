@@ -1,16 +1,19 @@
 /**
  * [INPUT]: react/react-native ScrollView/View/Text/Alert/StyleSheet/PlatformColor,
+ *          expo-linear-gradient LinearGradient, react-native-reanimated Animated/interpolate/useAnimatedStyle,
  *          expo-router useRouter, @/src/stores/cardStore,
  *          @/src/components/card/profile-card, @/src/services/share shareCard,
  *          @/src/types CardVersion, local profile-header, local swipe-to-share
- * [OUTPUT]: HomeScreen — card preview with direct edit entry in the header and version switching
- * [POS]: (home) module entrypoint, displaying the card while delegating editing to the editor screen
+ * [OUTPUT]: HomeScreen — card preview with overscroll share backdrop, direct edit entry in header, and version switching
+ * [POS]: (home) module entrypoint, coordinating header, backdrop, card preview, and share flow
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from "react-native-reanimated";
 
 import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
@@ -19,7 +22,7 @@ import type { CardVersion } from "@/src/types";
 
 import { shareCard } from "@/src/services/share";
 import { HomeProfileHeader } from "./profile-header";
-import { SwipeToShare, useShareOverscroll } from "./swipe-to-share";
+import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -74,12 +77,23 @@ export default function HomeScreen() {
     setSelectedVersionId(nextVersion.id);
   }, [addVersion, card]);
 
-  const { overscroll, handleScroll: handleShareScroll } = useShareOverscroll();
+  const {
+    overscroll,
+    releaseTick,
+    handleScroll: handleShareScroll,
+    handleRelease: handleShareRelease,
+  } = useShareOverscroll();
+  const backdropStyle = useAnimatedStyle(() => {
+    const progress = Math.min(1, overscroll.value / COMMIT_THRESHOLD);
+    return {
+      opacity: interpolate(progress, [0, 0.1, 1], [0, 0, 0.6], Extrapolation.CLAMP),
+    };
+  });
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
     handleShareScroll(contentOffset.y, contentSize.height, layoutMeasurement.height);
-  }, []);
+  }, [handleShareScroll]);
 
   const handleShare = useCallback(async () => {
     if (!card || !currentVersion) return;
@@ -123,17 +137,33 @@ export default function HomeScreen() {
         versions={card.versions}
       />
 
+      <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={[
+            currentVersion.accentColor + "00",
+            currentVersion.accentColor + "00",
+            currentVersion.accentColor + "40",
+            currentVersion.accentColor,
+          ]}
+          locations={[0, 0.35, 0.65, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
       <ScrollView
         contentContainerStyle={styles.scroll}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        onMomentumScrollEnd={handleShareRelease}
         onScroll={handleScroll}
+        onScrollEndDrag={handleShareRelease}
         scrollEventThrottle={16}
       >
         <SwipeToShare
           accentColor={currentVersion.accentColor}
           onShare={handleShare}
           overscroll={overscroll}
+          releaseTick={releaseTick}
         >
           <ProfileCard
             nameFont={nameFont}
@@ -147,6 +177,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    left: -16,
+    right: -16,
+    bottom: -500,
+  },
   scroll: {
     paddingBottom: 120,
     paddingHorizontal: 16,
