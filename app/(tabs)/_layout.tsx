@@ -1,6 +1,6 @@
 /**
- * [INPUT]: expo-router NativeTabs, Majesticons tab icon PNGs
- * [OUTPUT]: Tab layout with Card, Discover, Events, Settings tabs using Majesticons
+ * [INPUT]: expo-router NativeTabs with SF Symbols
+ * [OUTPUT]: Tab layout with Card, Discover, Events, Settings tabs using SF Symbols
  * [POS]: Tab navigator — iOS native tabs with Liquid Glass on iOS 26+
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -12,33 +12,23 @@ export default function TabsLayout() {
     <NativeTabs>
       <NativeTabs.Trigger name="(home)">
         <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-creditcard.png")}
-          renderingMode="template"
+          sf={{ default: "rectangle.on.rectangle", selected: "rectangle.on.rectangle.fill" }}
         />
         <NativeTabs.Trigger.Label hidden>Card</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="(discover)">
-        <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-tickets.png")}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf={{ default: "ticket", selected: "ticket.fill" }} />
         <NativeTabs.Trigger.Label hidden>Discover</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="(events)">
-        <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-calendar.png")}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf={{ default: "calendar", selected: "calendar.circle.fill" }} />
         <NativeTabs.Trigger.Label hidden>Events</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="(settings)">
-        <NativeTabs.Trigger.Icon
-          src={require("@/assets/icons/tab-settings-cog.png")}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
         <NativeTabs.Trigger.Label hidden>Settings</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>

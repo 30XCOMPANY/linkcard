@@ -2,11 +2,10 @@
  * [INPUT]: react-native Image/Linking/Pressable/StyleSheet/Text/View/PlatformColor,
  *          expo-linear-gradient, expo-blur, @/src/components/shared/avatar Avatar,
  *          @/src/lib/haptics, @/src/lib/name-fonts, @/src/lib/card-presets,
- *          @/src/lib/social-icon SocialIcon,
- *          @/src/types LinkedInProfile/CardTag/CardVersion,
- *          local editable-text/editable-tag-list
+ *          @/src/lib/social-icon SocialIcon, @/src/types LinkedInProfile/CardTag/CardVersion,
+ *          screens/home editable-text/editable-tag-list
  * [OUTPUT]: ProfileCardEditor — editable home hero card body with banner, inline text, tags, and links
- * [POS]: (home) 模块展示层，渲染卡片主体而不拥有全局状态
+ * [POS]: screens/home presentation layer rendering the editable card body without owning global state
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -30,8 +29,8 @@ import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
 import type { CardTag, CardVersion, ContactAction, LinkedInProfile } from "@/src/types";
 
-import { EditableTagList } from "./editable-tag-list";
-import { EditableText } from "./editable-text";
+import { EditableTagList } from "@/src/screens/home/editable-tag-list";
+import { EditableText } from "@/src/screens/home/editable-text";
 
 interface ProfileCardEditorProps {
   contactAction?: ContactAction;
@@ -71,17 +70,18 @@ export function ProfileCardEditor({
     : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
 
   const colors = {
-    label: dark ? "#F9FAFB" : (platformColor("label")),
-    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel")),
-    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (platformColor("tertiaryLabel")),
-    pillBg: dark ? "rgba(255,255,255,0.10)" : (platformColor("systemBackground")),
-    pillBorder: dark ? "rgba(255,255,255,0.12)" : (platformColor("separator")),
+    label: dark ? "#F9FAFB" : platformColor("label"),
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : platformColor("secondaryLabel"),
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : platformColor("tertiaryLabel"),
+    pillBg: dark ? "rgba(255,255,255,0.10)" : platformColor("systemBackground"),
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : platformColor("separator"),
     link: version.accentColor,
-    separator: dark ? "rgba(255,255,255,0.10)" : (platformColor("separator")),
+    separator: dark ? "rgba(255,255,255,0.10)" : platformColor("separator"),
   };
 
   const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
-  const nameWeight = nameWeightMap[(version.fieldStyles?.name?.fontWeight as keyof typeof nameWeightMap)] ?? "400";
+  const nameWeight =
+    nameWeightMap[(version.fieldStyles?.name?.fontWeight as keyof typeof nameWeightMap)] ?? "400";
 
   return (
     <View style={[styles.card, { backgroundColor: background.surface }]}>
@@ -168,7 +168,10 @@ export function ProfileCardEditor({
           placeholder="What do you do?"
           style={[styles.statusText, { color: colors.label }]}
           value={profile.headline}
-          wrapperStyle={[styles.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+          wrapperStyle={[
+            styles.statusBox,
+            { backgroundColor: colors.pillBg, borderColor: colors.pillBorder },
+          ]}
         />
       )}
 
@@ -184,7 +187,12 @@ export function ProfileCardEditor({
 
       {vis.has("email") && (
         <View style={styles.contactRow}>
-          <View style={[styles.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
+          <View
+            style={[
+              styles.contactPill,
+              { backgroundColor: colors.pillBg, borderColor: colors.pillBorder },
+            ]}
+          >
             <Text style={styles.contactPillIcon}>✉</Text>
             <EditableText
               onSave={(v) => onFieldSave("email", v)}
@@ -203,7 +211,6 @@ export function ProfileCardEditor({
         </View>
       )}
 
-      {/* Social icons — render from socialLinks, fallback to legacy profile.url */}
       <View style={styles.socialRow}>
         {(profile.socialLinks && profile.socialLinks.length > 0
           ? profile.socialLinks
@@ -213,7 +220,10 @@ export function ProfileCardEditor({
         ).map((link) => (
           <Pressable
             key={link.platform}
-            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            style={[
+              styles.socialIcon,
+              { backgroundColor: colors.pillBg, borderColor: colors.pillBorder },
+            ]}
             onPress={() => {
               if (!link.url) return;
               haptic.light();
@@ -221,220 +231,134 @@ export function ProfileCardEditor({
               Linking.openURL(url);
             }}
           >
-            <SocialIcon platform={link.platform} size={18} color={colors.link} />
+            <SocialIcon
+              color={colors.label}
+              platform={link.platform}
+              size={20}
+            />
           </Pressable>
         ))}
       </View>
-
-      {profile.publications?.slice(0, 3).map((publication, index) => (
-        <Pressable
-          key={`pub-${index}`}
-          onPress={() => {
-            if (!publication.url) {
-              return;
-            }
-
-            haptic.light();
-            Linking.openURL(publication.url);
-          }}
-          style={[styles.publicationCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-        >
-          <View style={styles.publicationContent}>
-            <Text numberOfLines={1} style={[styles.publicationTitle, { color: colors.label }]}>
-              {publication.title}
-            </Text>
-            {publication.publisher ? (
-              <Text style={[styles.publicationMeta, { color: colors.secondaryLabel }]}>{publication.publisher}</Text>
-            ) : null}
-          </View>
-          {publication.url ? (
-            <View style={[styles.publicationVisit, dark && { backgroundColor: "rgba(255,255,255,0.15)" }]}>
-              <Text style={[styles.publicationVisitText, { color: dark ? "#F9FAFB" : colors.link }]}>Visit</Text>
-            </View>
-          ) : null}
-        </Pressable>
-      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderColor: "rgba(255,255,255,0.40)",
     borderCurve: "continuous" as any,
-    borderRadius: 24,
-    borderWidth: 2,
-    gap: 20,
-    marginTop: 8,
+    borderRadius: 32,
     overflow: "hidden",
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingBottom: 28,
   },
   bannerWrap: {
-    height: 204,
-    left: -2,
-    position: "absolute",
-    right: -2,
-    top: -2,
-    zIndex: 0,
+    height: 220,
+    overflow: "hidden",
   },
   bannerImage: {
-    height: "100%",
+    ...StyleSheet.absoluteFillObject,
+    height: 220,
     width: "100%",
   },
   bannerBlur: {
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-    right: 0,
+    ...StyleSheet.absoluteFillObject,
   },
   bannerFade: {
-    bottom: 0,
-    height: 200,
-    left: 0,
-    position: "absolute",
-    right: 0,
+    ...StyleSheet.absoluteFillObject,
   },
   profileName: {
-    color: platformColor("label"),
-    fontSize: 32,
-    letterSpacing: 0.2,
+    fontSize: 38,
+    lineHeight: 46,
+    marginHorizontal: 24,
+    marginTop: 12,
   },
   identityLine: {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-  },
-  identityLink: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 4,
+    gap: 2,
+    marginHorizontal: 24,
+    marginTop: 8,
   },
   identityEmoji: {
     fontSize: 15,
+    marginRight: 6,
   },
   identityLinkText: {
-    color: platformColor("systemBlue"),
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: "600",
   },
   identitySeparator: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 15,
+    fontSize: 17,
+    marginHorizontal: 4,
   },
   identityRole: {
-    color: platformColor("label"),
-    fontSize: 15,
+    fontSize: 17,
   },
   statusBox: {
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginHorizontal: 24,
+    marginTop: 20,
+    minHeight: 54,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   statusText: {
-    color: platformColor("label"),
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
   },
   contactRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
+    marginHorizontal: 24,
+    marginTop: 22,
   },
   contactPill: {
     alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: 6,
-    height: 36,
-    paddingHorizontal: 14,
+    gap: 8,
+    minHeight: 42,
+    paddingHorizontal: 16,
   },
   contactPillIcon: {
-    fontSize: 14,
+    fontSize: 16,
   },
   contactPillText: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
+    flex: 1,
+    fontSize: 16,
   },
   statsRow: {
     alignItems: "center",
     flexDirection: "row",
+    marginTop: 18,
   },
   statNumber: {
-    color: platformColor("systemBlue"),
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
   },
   statLabel: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
+    fontSize: 16,
   },
   statsSeparator: {
-    backgroundColor: platformColor("separator"),
-    flex: 1,
     height: StyleSheet.hairlineWidth,
-    marginLeft: 8,
+    marginTop: 16,
+    width: "100%",
   },
   socialRow: {
     flexDirection: "row",
     gap: 10,
+    marginHorizontal: 24,
+    marginTop: 18,
   },
   socialIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderCurve: "continuous" as any,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
-    justifyContent: "center",
-  },
-  publicationCard: {
-    alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
-    borderCurve: "continuous" as any,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 12,
-    minHeight: 62,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  publicationContent: {
-    flex: 1,
-    gap: 4,
-  },
-  publicationTitle: {
-    color: platformColor("label"),
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  publicationMeta: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
-  },
-  publicationVisit: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  publicationVisitText: {
-    color: platformColor("systemBlue"),
-    fontSize: 13,
-    fontWeight: "600",
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
   },
 });

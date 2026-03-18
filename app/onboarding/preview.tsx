@@ -26,7 +26,7 @@ import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { extractComponentsFromProfile } from "@/src/types/cardComponents";
 import { CardBackground, LinkedInProfile } from "@/src/types";
-import { getOnboardingProfile } from "@/app/onboarding/_shared";
+import { getOnboardingProfile } from "@/src/lib/onboarding-profile";
 
 // ── Component ────────────────────────────────────────────────
 

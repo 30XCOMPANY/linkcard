@@ -1,7 +1,7 @@
 /**
  * [INPUT]: react, react-native View/Text/TextInput/Pressable/PlatformColor, @/src/lib/haptics
  * [OUTPUT]: EditableText — inline tap-to-edit text field used by the home hero card
- * [POS]: (home) 模块最小编辑原语，被 name/headline 两处复用
+ * [POS]: screens/home editing primitive reused by the card editor and future inline-edit surfaces
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 

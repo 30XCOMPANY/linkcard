@@ -2,7 +2,7 @@
  * [INPUT]: react-native View, expo-router Stack, @/src/components/shared/avatar Avatar,
  *          @/src/lib/haptics, @/src/types CardVersion/LinkedInProfile
  * [OUTPUT]: HomeProfileHeader — native navigation header for version switching and quick actions
- * [POS]: (home) 模块导航壳，隔离 toolbar 菜单与路由页面
+ * [POS]: screens/home toolbar shell isolating header menus from route files
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -40,7 +40,9 @@ export function HomeProfileHeader({
 
   return (
     <>
-      <Stack.Screen.Title large largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular" }}>{currentVersion.name}</Stack.Screen.Title>
+      <Stack.Screen.Title large largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular" }}>
+        {currentVersion.name}
+      </Stack.Screen.Title>
 
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Menu icon="chevron.up.chevron.down" elementSize="small">

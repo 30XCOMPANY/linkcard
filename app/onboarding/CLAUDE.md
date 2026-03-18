@@ -9,7 +9,6 @@ Four-page swipeable onboarding: welcome → identity → versions → social con
 _layout.tsx:    Stack navigator — headerless single screen
 index.tsx:      Four-page horizontal FlatList — gradient tops, emoji+title+subtitle,
                 Liquid Glass "Next" button, LinkedIn/Twitter connect on page 4
-_shared.ts:     (Legacy) Module-level profile data shuttle — unused, pending cleanup
 linkedin.tsx:   (Legacy) LinkedIn URL input — unused, pending cleanup
 preview.tsx:    (Legacy) Profile preview — unused, pending cleanup
 ```

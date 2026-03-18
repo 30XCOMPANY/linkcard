@@ -1,7 +1,7 @@
 /**
  * [INPUT]: react/react-native ScrollView/View/Text/Alert/StyleSheet/PlatformColor,
  *          expo-router useRouter, @/src/stores/cardStore,
- *          @/src/components/card/profile-card, @/src/types CardVersion, local profile-header
+ *          @/src/components/card/profile-card, @/src/types CardVersion, @/src/screens/home/profile-header
  * [OUTPUT]: HomeScreen — read-only profile card display with version switching
  * [POS]: (home) module entrypoint, displaying the card while delegating editing to the editor screen
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -16,7 +16,7 @@ import { useCardStore } from "@/src/stores/cardStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import type { CardVersion } from "@/src/types";
 
-import { HomeProfileHeader } from "./profile-header";
+import { HomeProfileHeader } from "@/src/screens/home/profile-header";
 
 export default function HomeScreen() {
   const router = useRouter();

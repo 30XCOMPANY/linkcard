@@ -1,5 +1,5 @@
 # src/
-> L2 | 父级: /Users/henry/PARA/01-Projects/Vibe/linkcard/app/AGENTS.md
+> L2 | 父级: /Users/nora/Desktop/linkcard/app/AGENTS.md
 
 成员清单
 `design-system/`: 设置页与共享界面原语，负责平台一致的视觉骨架。

@@ -2,7 +2,7 @@
  * [INPUT]: react, react-native Alert/Pressable/Text/TextInput/View/PlatformColor/StyleSheet,
  *          react-native-reanimated, expo-symbols SymbolView, @/src/lib/haptics, @/src/types CardTag
  * [OUTPUT]: EditableTagList — animated tag row with rename/delete/add interactions
- * [POS]: (home) 模块 tag 编辑器，隔离 chip 交互与动画
+ * [POS]: screens/home tag editor isolating chip interaction and motion from route files
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -44,7 +44,9 @@ function EditableTagItem({
   onEditingChange,
   onRename,
 }: EditableTagItemProps) {
-  const darkTag = isDark ? { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" } : undefined;
+  const darkTag = isDark
+    ? { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" }
+    : undefined;
   const darkLabel = isDark ? { color: "#F9FAFB" } : undefined;
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(tag.label);
@@ -167,12 +169,20 @@ export function EditableTagList({
               );
             }}
           >
-            <View style={[styles.addTagPill, isDark && { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" }]}>
+            <View
+              style={[
+                styles.addTagPill,
+                isDark && {
+                  backgroundColor: "rgba(255,255,255,0.10)",
+                  borderColor: "rgba(255,255,255,0.12)",
+                },
+              ]}
+            >
               <SymbolView
                 name="plus"
                 resizeMode="scaleAspectFit"
                 style={styles.addTagIcon}
-                tintColor={isDark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel"))}
+                tintColor={isDark ? "rgba(255,255,255,0.60)" : platformColor("secondaryLabel")}
               />
             </View>
           </Pressable>
@@ -261,25 +271,23 @@ const styles = StyleSheet.create({
     width: 36,
   },
   addTagIcon: {
-    height: 14,
-    width: 14,
+    height: 16,
+    width: 16,
   },
   doneButton: {
-    alignItems: "center" as const,
-    alignSelf: "flex-start" as const,
+    alignItems: "center",
     borderCurve: "continuous" as any,
     borderRadius: 999,
-    justifyContent: "center" as const,
-    minHeight: 38,
-    minWidth: 74,
-    overflow: "hidden" as any,
-    paddingHorizontal: 22,
+    justifyContent: "center",
+    marginTop: 12,
+    minHeight: 40,
+    paddingHorizontal: 18,
     paddingVertical: 10,
+    alignSelf: "flex-start",
   },
   doneButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700" as const,
-    letterSpacing: 0.2,
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

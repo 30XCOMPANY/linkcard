@@ -25,7 +25,7 @@ import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
 import { fetchLinkedInProfile } from "@/src/services/linkedin";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
-import { setOnboardingProfile } from "@/app/onboarding/_shared";
+import { setOnboardingProfile } from "@/src/lib/onboarding-profile";
 
 // ── Component ────────────────────────────────────────────────
 

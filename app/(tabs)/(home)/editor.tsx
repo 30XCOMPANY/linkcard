@@ -1,6 +1,6 @@
 /**
  * [INPUT]: expo-router Stack/useRouter, react-native ScrollView/Pressable/Text/Switch/StyleSheet,
- *          @/src/tw View/Text, @/src/stores/cardStore, local profile-card-editor,
+ *          @/src/tw View/Text, @/src/stores/cardStore, @/src/screens/home/profile-card-editor,
  *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
  *          @/src/lib/card-presets, @/src/lib/profile-tags, @/src/lib/social-platforms,
  *          @/src/lib/social-icon, expo-image-picker
@@ -28,7 +28,7 @@ import { nameFonts, NAME_FONT_KEYS } from "@/src/lib/name-fonts";
 import type { LinkedInProfile, SocialLink } from "@/src/types";
 import { getSocialPlatform } from "@/src/lib/social-platforms";
 
-import { ProfileCardEditor } from "./profile-card-editor";
+import { ProfileCardEditor } from "@/src/screens/home/profile-card-editor";
 import {
   SettingsColorGrid,
   SettingsGroup,
