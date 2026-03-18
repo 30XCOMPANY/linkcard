@@ -23,6 +23,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { Icon } from "@/src/lib/icons";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
@@ -222,20 +223,45 @@ export function ProfileCard({
         </View>
       )}
 
-      {/* LinkedIn Link */}
-      <Pressable
-        style={[s.activityCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-        onPress={() => {
-          haptic.light();
-          if (profile.url) Linking.openURL(profile.url);
-        }}
-      >
-        <Text style={[s.activityTitle, { color: colors.label }]}>LinkedIn Profile</Text>
-        <View style={s.activityRight}>
-          <Text style={[s.activityLink, { color: colors.link }]}>View</Text>
-          <Text style={[s.activityChevron, { color: colors.tertiaryLabel }]}>›</Text>
-        </View>
-      </Pressable>
+      {/* Social icons row */}
+      <View style={s.socialRow}>
+        {profile.url ? (
+          <Pressable
+            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
+          >
+            <Icon web="link" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.website ? (
+          <Pressable
+            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => {
+              haptic.light();
+              const url = profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`;
+              Linking.openURL(url);
+            }}
+          >
+            <Icon web="globe" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.email ? (
+          <Pressable
+            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(`mailto:${profile.email}`); }}
+          >
+            <Icon web="mail" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.phone ? (
+          <Pressable
+            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(`tel:${profile.phone}`); }}
+          >
+            <Icon web="phone" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+      </View>
 
       {/* Publications */}
       {profile.publications &&
@@ -427,34 +453,18 @@ const s = StyleSheet.create({
     marginLeft: 8,
   },
 
-  activityCard: {
+  socialRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 16,
+    gap: 10,
+  },
+  socialIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
-    minHeight: 50,
-  },
-  activityTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: PlatformColor("label") as unknown as string,
-  },
-  activityRight: { flexDirection: "row", alignItems: "center", gap: 4 },
-  activityLink: {
-    fontSize: 14,
-    color: PlatformColor("systemBlue") as unknown as string,
-    fontWeight: "600",
-  },
-  activityChevron: {
-    fontSize: 20,
-    color: PlatformColor("tertiaryLabel") as unknown as string,
-    fontWeight: "300",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   pubCard: {

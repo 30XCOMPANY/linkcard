@@ -23,6 +23,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { Icon } from "@/src/lib/icons";
 import { haptic } from "@/src/lib/haptics";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
@@ -200,21 +201,45 @@ export function ProfileCardEditor({
         </View>
       )}
 
-      <Pressable
-        onPress={() => {
-          haptic.light();
-          if (profile.url) {
-            Linking.openURL(profile.url);
-          }
-        }}
-        style={[styles.activityCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-      >
-        <Text style={[styles.activityTitle, { color: colors.label }]}>LinkedIn Profile</Text>
-        <View style={styles.activityRight}>
-          <Text style={[styles.activityLink, { color: colors.link }]}>View</Text>
-          <Text style={[styles.activityChevron, { color: colors.tertiaryLabel }]}>›</Text>
-        </View>
-      </Pressable>
+      {/* Social icons row */}
+      <View style={styles.socialRow}>
+        {profile.url ? (
+          <Pressable
+            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
+          >
+            <Icon web="link" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.website ? (
+          <Pressable
+            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => {
+              haptic.light();
+              const url = profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`;
+              Linking.openURL(url);
+            }}
+          >
+            <Icon web="globe" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.email ? (
+          <Pressable
+            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(`mailto:${profile.email}`); }}
+          >
+            <Icon web="mail" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+        {profile.phone ? (
+          <Pressable
+            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+            onPress={() => { haptic.light(); Linking.openURL(`tel:${profile.phone}`); }}
+          >
+            <Icon web="phone" size={18} color={colors.link} />
+          </Pressable>
+        ) : null}
+      </View>
 
       {profile.publications?.slice(0, 3).map((publication, index) => (
         <Pressable
@@ -376,38 +401,18 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginLeft: 8,
   },
-  activityCard: {
-    alignItems: "center",
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+  socialRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  socialIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderCurve: "continuous" as any,
-    borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: 50,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  activityTitle: {
-    color: PlatformColor("label") as unknown as string,
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  activityRight: {
     alignItems: "center",
-    flexDirection: "row",
-    gap: 4,
-  },
-  activityLink: {
-    color: PlatformColor("systemBlue") as unknown as string,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  activityChevron: {
-    color: PlatformColor("tertiaryLabel") as unknown as string,
-    fontSize: 20,
-    fontWeight: "300",
+    justifyContent: "center",
   },
   publicationCard: {
     alignItems: "center",
