@@ -138,11 +138,12 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
       }
     });
 
-  /* Card: translate + tilt + scale + opacity */
+  /* Card: translate + tilt + shadow lift + scale + opacity */
   const cardStyle = useAnimatedStyle(() => {
+    const p = progress.value;
     const tilt = reducedMotion
       ? 0
-      : interpolate(progress.value, [0, 1], [0, MAX_TILT], Extrapolation.CLAMP);
+      : interpolate(p, [0, 1], [0, MAX_TILT], Extrapolation.CLAMP);
     return {
       transform: [
         { translateY: translateY.value },
@@ -151,6 +152,10 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
         { scale: cardScale.value },
       ],
       opacity: cardOpacity.value,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: interpolate(p, [0, 1], [4, 24], Extrapolation.CLAMP) },
+      shadowOpacity: interpolate(p, [0, 1], [0.08, 0.25], Extrapolation.CLAMP),
+      shadowRadius: interpolate(p, [0, 1], [12, 40], Extrapolation.CLAMP),
     };
   });
 
