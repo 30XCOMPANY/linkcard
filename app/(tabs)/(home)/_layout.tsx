@@ -44,6 +44,13 @@ export default function HomeStackLayout() {
           headerLargeTitle: false,
         }}
       />
+      <Stack.Screen
+        name="publication-detail"
+        options={{
+          title: "Edit Publication",
+          headerLargeTitle: false,
+        }}
+      />
     </Stack>
   );
 }

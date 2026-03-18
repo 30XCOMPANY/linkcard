@@ -1,16 +1,14 @@
 /**
- * [INPUT]: expo-router Stack, react-native Alert/StyleSheet/View/Text,
- *          @expo/ui/swift-ui Host/List/Section/LabeledContent/Text,
- *          @expo/ui/swift-ui/modifiers environment/listStyle/onTapGesture/foregroundStyle/font/lineLimit,
- *          @/src/stores/cardStore, @/src/lib/haptics
- * [OUTPUT]: PublicationsScreen — native SwiftUI list with swipe-to-delete, tap-to-edit
- * [POS]: Push screen from editor — flat list of publications with native iOS interactions
+ * [INPUT]: expo-router Stack/useRouter, @expo/ui/swift-ui Host/List/Section/LabeledContent/Text,
+ *          @expo/ui/swift-ui/modifiers, @/src/stores/cardStore, @/src/lib/haptics
+ * [OUTPUT]: PublicationsScreen — native SwiftUI list, tap to push detail, swipe to delete
+ * [POS]: Push screen from editor — flat publication list with iOS-native interactions
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React, { useCallback, useState } from "react";
 import { Alert, StyleSheet, View, Text as RNText } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Host, LabeledContent, List, Section, Text } from "@expo/ui/swift-ui";
 import {
   environment,
@@ -26,6 +24,7 @@ import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 
 export default function PublicationsScreen() {
+  const router = useRouter();
   const card = useCardStore((state) => state.card);
   const updateProfile = useCardStore((state) => state.updateProfile);
   const [editing, setEditing] = useState(false);
@@ -43,42 +42,14 @@ export default function PublicationsScreen() {
     [publications, updateProfile]
   );
 
-  const handleEdit = useCallback(
-    (index: number) => {
-      const pub = publications[index];
-      if (!pub) return;
-
-      const editField = (field: "title" | "url" | "publisher", label: string) => {
-        Alert.prompt(
-          label,
-          undefined,
-          (text?: string) => {
-            const pubs = [...publications];
-            pubs[index] = { ...pubs[index], [field]: text?.trim() || undefined };
-            updateProfile({ publications: pubs });
-          },
-          "plain-text",
-          (pub as any)[field] ?? ""
-        );
-      };
-
-      Alert.alert(pub.title, undefined, [
-        { text: "Title", onPress: () => editField("title", "Title") },
-        { text: "URL", onPress: () => editField("url", "URL") },
-        { text: "Publisher", onPress: () => editField("publisher", "Publisher") },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    },
-    [publications, updateProfile]
-  );
-
   const handleAdd = useCallback(() => {
     Alert.prompt(
       "New Publication",
       "Enter the title",
       (text?: string) => {
         if (!text?.trim()) return;
-        updateProfile({ publications: [...publications, { title: text.trim() }] });
+        const pubs = [...publications, { title: text.trim() }];
+        updateProfile({ publications: pubs });
       },
       "plain-text"
     );
@@ -120,7 +91,10 @@ export default function PublicationsScreen() {
                       onTapGesture(() => {
                         if (editing) return;
                         haptic.light();
-                        handleEdit(i);
+                        router.push({
+                          pathname: "/publication-detail" as any,
+                          params: { index: String(i) },
+                        });
                       }),
                     ]}
                   >
@@ -131,7 +105,7 @@ export default function PublicationsScreen() {
                         lineLimit(1),
                       ]}
                     >
-                      {[pub.publisher, pub.url].filter(Boolean).join(" · ") || "Tap to edit"}
+                      {pub.publisher ?? pub.url ?? ""}
                     </Text>
                   </LabeledContent>
                 ))}
