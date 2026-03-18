@@ -1,18 +1,27 @@
 /**
- * [INPUT]: @/src/tw View/Text/ScrollView, react-native Switch/Alert/StyleSheet/Platform/PlatformColor,
- *          @/src/stores/cardStore (updateContactAction), @/src/types (ContactAction/ContactActionType),
- *          @/src/design-system/settings primitives, @/src/lib/icons Icon
- * [OUTPUT]: SettingsScreen — Apple grouped list with sync, contact preferences, and data sections
- * [POS]: Settings tab — preferences and destructive actions on top of the settings design system
- * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ * [INPUT]: react-native Pressable/Switch/Alert/StyleSheet/ScrollView/PlatformColor,
+ *          expo-router useRouter, @/src/stores/cardStore, @/src/tw View/Text,
+ *          @/src/design-system/settings primitives, @/src/lib/icons Icon, @/src/lib/haptics
+ * [OUTPUT]: SettingsScreen — navigation hub pushing to account, appearance, privacy, notifications, about
+ * [POS]: Settings tab — Apple-style grouped list hub with inline sync controls and sub-page navigation
+ * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React, { useRef, useState } from "react";
-import { Pressable, Switch, Alert, StyleSheet, ScrollView as RNScrollView, Platform, PlatformColor } from "react-native";
-import type { ContactActionType } from "@/src/types";
-import { View, Text } from "@/src/tw";
+import {
+  Alert,
+  PlatformColor,
+  Pressable,
+  ScrollView as RNScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { View } from "@/src/tw";
 
 import { useCardStore } from "@/src/stores/cardStore";
+import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import {
   SettingsAccountCard,
@@ -22,14 +31,13 @@ import {
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
-  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const card = useCardStore((s) => s.card);
   const clearCard = useCardStore((s) => s.clearCard);
-  const updateContactAction = useCardStore((s) => s.updateContactAction);
-  const contactAction = card?.contactAction;
+  const themeMode = useCardStore((s) => s.themeMode);
   const [autoSync, setAutoSync] = useState(true);
   const [devMode, setDevMode] = useState(false);
   const tapCountRef = useRef(0);
@@ -37,16 +45,12 @@ export default function SettingsScreen() {
   const profile = card?.profile;
   const versionCount = card?.versions.length ?? 0;
 
+  const themeLabel =
+    themeMode === "light" ? "Light" : themeMode === "dark" ? "Dark" : "System";
+
   const handleSyncNow = () => {
+    haptic.light();
     Alert.alert("Syncing...", "Refreshing your LinkedIn data.");
-  };
-
-  const handleManageAccount = () => {
-    Alert.alert("Account", "Apple-style account hub placeholder.");
-  };
-
-  const handleManageVersions = () => {
-    Alert.alert("Versions", `You have ${versionCount} saved card version${versionCount === 1 ? "" : "s"}.`);
   };
 
   const handleResetCard = () => {
@@ -58,66 +62,12 @@ export default function SettingsScreen() {
         {
           text: "Reset",
           style: "destructive",
-          onPress: () => clearCard(),
+          onPress: () => {
+            haptic.error();
+            clearCard();
+          },
         },
       ]
-    );
-  };
-
-  const CONTACT_METHODS: { type: ContactActionType; label: string; placeholder: string }[] = [
-    { type: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
-    { type: "email", label: "Email", placeholder: "you@example.com" },
-    { type: "wechat", label: "WeChat", placeholder: "WeChat ID" },
-    { type: "url", label: "Custom URL", placeholder: "https://..." },
-  ];
-
-  const handleContactMethodPick = () => {
-    const options = [...CONTACT_METHODS.map((m) => m.label), "Cancel"];
-    if (Platform.OS === "ios") {
-      const ActionSheetIOS = require("react-native").ActionSheetIOS;
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: CONTACT_METHODS.length },
-        (index: number) => {
-          if (index >= CONTACT_METHODS.length) return;
-          const method = CONTACT_METHODS[index];
-          updateContactAction({
-            type: method.type,
-            label: method.label,
-            value: contactAction?.value ?? "",
-          });
-        }
-      );
-    } else {
-      Alert.alert("Contact Method", "Choose how others can reach you",
-        CONTACT_METHODS.map((method) => ({
-          text: method.label,
-          onPress: () =>
-            updateContactAction({
-              type: method.type,
-              label: method.label,
-              value: contactAction?.value ?? "",
-            }),
-        })).concat({ text: "Cancel", onPress: () => {} })
-      );
-    }
-  };
-
-  const handleContactValueEdit = () => {
-    const method = CONTACT_METHODS.find((m) => m.type === contactAction?.type);
-    Alert.prompt(
-      "Contact Value",
-      `Enter your ${contactAction?.label ?? "contact"} info`,
-      (text) => {
-        if (!text?.trim()) return;
-        updateContactAction({
-          type: contactAction?.type ?? "linkedin",
-          label: contactAction?.label ?? "LinkedIn",
-          value: text.trim(),
-        });
-      },
-      "plain-text",
-      contactAction?.value ?? "",
-      method?.placeholder
     );
   };
 
@@ -126,6 +76,7 @@ export default function SettingsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
+      {/* ── Account Card ──────────────────────────────────── */}
       {profile ? (
         <SettingsAccountCard
           name={profile.name}
@@ -134,22 +85,33 @@ export default function SettingsScreen() {
           avatarSource={profile.photoUrl}
           accentColor="#0A84FF"
           footerLabel={`${versionCount} Card Version${versionCount === 1 ? "" : "s"}`}
-          footerLeading={<View style={styles.versionStack}>{card?.versions.slice(0, 3).map((version, index) => (
-            <View
-              key={version.id}
-              style={[
-                styles.versionDot,
-                { backgroundColor: version.accentColor, marginLeft: index === 0 ? 0 : -8 },
-              ]}
-            >
-              <Text style={styles.versionDotLabel}>{version.name.slice(0, 1)}</Text>
+          footerLeading={
+            <View style={styles.versionStack}>
+              {card?.versions.slice(0, 3).map((version, index) => (
+                <View
+                  key={version.id}
+                  style={[
+                    styles.versionDot,
+                    { backgroundColor: version.accentColor, marginLeft: index === 0 ? 0 : -8 },
+                  ]}
+                >
+                  <Text style={styles.versionDotLabel}>{version.name.slice(0, 1)}</Text>
+                </View>
+              ))}
             </View>
-          ))}</View>}
-          onPress={handleManageAccount}
-          onFooterPress={handleManageVersions}
+          }
+          onPress={() => {
+            haptic.light();
+            router.push("/(settings)/account" as any);
+          }}
+          onFooterPress={() => {
+            haptic.light();
+            router.push("/(home)/versions" as any);
+          }}
         />
       ) : null}
 
+      {/* ── Sync (inline — simple toggles stay here) ──────── */}
       <SettingsSectionHeader title="SYNC" />
       <SettingsGroup>
         <SettingsRow
@@ -159,7 +121,10 @@ export default function SettingsScreen() {
           trailing={
             <Switch
               value={autoSync}
-              onValueChange={(val) => setAutoSync(val)}
+              onValueChange={(val) => {
+                haptic.selection();
+                setAutoSync(val);
+              }}
             />
           }
         />
@@ -173,28 +138,42 @@ export default function SettingsScreen() {
         />
       </SettingsGroup>
 
-      <SettingsSectionHeader title="CONTACT PREFERENCES" />
+      {/* ── Sub-page navigation rows ─────────────────────── */}
+      <SettingsSectionHeader title="PREFERENCES" />
       <SettingsGroup>
         <SettingsRow
-          title="Contact Method"
-          leading={<SettingsIconTile web="person" color="#5856D6" />}
-          trailing={
-            <Text style={styles.trailingValue}>
-              {contactAction?.label ?? "Not set"}
-            </Text>
-          }
-          onPress={handleContactMethodPick}
+          title="Appearance"
+          subtitle={themeLabel}
+          leading={<SettingsIconTile web="moon" color="#5856D6" />}
+          trailing={<SettingsChevron />}
+          onPress={() => {
+            haptic.light();
+            router.push("/(settings)/appearance" as any);
+          }}
         />
         <SettingsSeparator />
         <SettingsRow
-          title="Contact Value"
-          subtitle={contactAction?.value || "Tap to set"}
-          leading={<SettingsIconTile web="link" color="#32ADE6" />}
+          title="Privacy & Sharing"
+          leading={<SettingsIconTile web="eye" color="#32ADE6" />}
           trailing={<SettingsChevron />}
-          onPress={handleContactValueEdit}
+          onPress={() => {
+            haptic.light();
+            router.push("/(settings)/privacy" as any);
+          }}
+        />
+        <SettingsSeparator />
+        <SettingsRow
+          title="Notifications"
+          leading={<SettingsIconTile web="bell" color="#FF3B30" />}
+          trailing={<SettingsChevron />}
+          onPress={() => {
+            haptic.light();
+            router.push("/(settings)/notifications" as any);
+          }}
         />
       </SettingsGroup>
 
+      {/* ── Data (destructive stays inline) ───────────────── */}
       <SettingsSectionHeader title="DATA" />
       <SettingsGroup>
         <SettingsRow
@@ -206,6 +185,21 @@ export default function SettingsScreen() {
         />
       </SettingsGroup>
 
+      {/* ── About ─────────────────────────────────────────── */}
+      <SettingsSectionHeader title="" />
+      <SettingsGroup>
+        <SettingsRow
+          title="About LinkCard"
+          leading={<SettingsIconTile web="heart" color="#FF9500" />}
+          trailing={<SettingsChevron />}
+          onPress={() => {
+            haptic.light();
+            router.push("/(settings)/about" as any);
+          }}
+        />
+      </SettingsGroup>
+
+      {/* ── Developer (hidden) ────────────────────────────── */}
       {devMode ? (
         <>
           <SettingsSectionHeader title="DEVELOPER" />
@@ -234,6 +228,7 @@ export default function SettingsScreen() {
         </>
       ) : null}
 
+      {/* ── Footer (triple-tap for dev mode) ──────────────── */}
       <Pressable
         onPress={() => {
           tapCountRef.current += 1;
@@ -249,7 +244,7 @@ export default function SettingsScreen() {
         }}
       >
         <View style={styles.footer}>
-          <Text className="text-sf-text-3" style={styles.footerText}>LinkCard v1.0.0</Text>
+          <Text style={styles.footerText}>LinkCard v1.0.0</Text>
         </View>
       </Pressable>
     </RNScrollView>
@@ -268,6 +263,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     lineHeight: 13,
+    color: PlatformColor("tertiaryLabel") as unknown as string,
   },
   versionStack: {
     flexDirection: "row",
@@ -287,10 +283,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 16,
     fontWeight: "700",
-  },
-  trailingValue: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: PlatformColor("secondaryLabel") as unknown as string,
   },
 });
