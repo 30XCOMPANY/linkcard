@@ -21,6 +21,7 @@ export function executeContactAction(
       Linking.openURL(`mailto:${action.value}`);
       break;
     case "linkedin":
+    case "github":
     case "url":
       Linking.openURL(action.value);
       break;

@@ -11,14 +11,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
-  Animated,
   Switch,
   StyleSheet,
   ScrollView as RNScrollView,
   Pressable as RNPressable,
   Text as RNText,
 } from "react-native";
-import Swipeable from "react-native-gesture-handler/Swipeable";
 import { View, Text } from "@/src/tw";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -222,6 +220,7 @@ export default function EditorScreen() {
         {/* Editable card preview */}
         <View style={styles.cardWrap}>
           <ProfileCardEditor
+            contactAction={card.contactAction}
             nameFont={nameFont}
             onAvatarPress={handleAvatarPick}
             onBannerPress={handleBannerPick}
@@ -369,72 +368,18 @@ export default function EditorScreen() {
 
         <SettingsSectionHeader title="PUBLICATIONS" />
         <SettingsGroup>
-          {card.profile.publications?.map((pub, i) => (
-            <React.Fragment key={`pub-${i}`}>
-              {i > 0 ? <SettingsSeparator /> : null}
-              <Swipeable
-                renderRightActions={(_, dragX) => {
-                  const scale = dragX.interpolate({
-                    inputRange: [-80, 0],
-                    outputRange: [1, 0.5],
-                    extrapolate: "clamp",
-                  });
-                  return (
-                    <RNPressable
-                      style={styles.swipeDelete}
-                      onPress={() => {
-                        const pubs = [...(card.profile.publications ?? [])];
-                        pubs.splice(i, 1);
-                        updateProfile({ publications: pubs });
-                      }}
-                    >
-                      <Animated.Text style={[styles.swipeDeleteText, { transform: [{ scale }] }]}>
-                        Delete
-                      </Animated.Text>
-                    </RNPressable>
-                  );
-                }}
-              >
-                <SettingsRow
-                  title={pub.title}
-                  subtitle={[pub.publisher, pub.url].filter(Boolean).join(" · ")}
-                  onPress={() => {
-                    Alert.prompt(
-                      "Edit Title",
-                      undefined,
-                      (text?: string) => {
-                        if (!text?.trim()) return;
-                        const pubs = [...(card.profile.publications ?? [])];
-                        pubs[i] = { ...pubs[i], title: text.trim() };
-                        updateProfile({ publications: pubs });
-                      },
-                      "plain-text",
-                      pub.title
-                    );
-                  }}
-                  trailing={<SettingsChevron />}
-                />
-              </Swipeable>
-            </React.Fragment>
-          )) ?? null}
-          <SettingsSeparator />
           <SettingsRow
-            title="Add Publication"
-            titleStyle={{ color: "#007AFF" }}
-            leading={<SettingsIconTile web="plus" color="#007AFF" />}
-            onPress={() => {
-              Alert.prompt(
-                "New Publication",
-                "Enter the title",
-                (text?: string) => {
-                  if (!text?.trim()) return;
-                  const pubs = [...(card.profile.publications ?? [])];
-                  pubs.push({ title: text.trim() });
-                  updateProfile({ publications: pubs });
-                },
-                "plain-text"
-              );
-            }}
+            title="Publications"
+            leading={<SettingsIconTile web="document" color="#FF9500" />}
+            onPress={() => router.push("/publications" as any)}
+            trailing={
+              <View style={styles.rowValue}>
+                <RNText style={styles.rowValueText}>
+                  {card.profile.publications?.length ?? 0}
+                </RNText>
+                <SettingsChevron />
+              </View>
+            }
           />
         </SettingsGroup>
       </RNScrollView>
@@ -486,16 +431,5 @@ const styles = StyleSheet.create({
   segLabelSelected: {
     fontWeight: "600",
     color: "#000000",
-  },
-  swipeDelete: {
-    backgroundColor: "#FF3B30",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 80,
-  },
-  swipeDeleteText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
   },
 });

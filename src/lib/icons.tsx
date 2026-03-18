@@ -103,6 +103,8 @@ const SF_ALIASES: Record<string, string> = {
   "qr-code-outline": "qrcode",
   qrcode: "qrcode",
   "radio-outline": "antenna.radiowaves.left.and.right",
+  "chat-bubble": "bubble.left",
+  "chat-bubble-outline": "bubble.left",
 };
 
 /* ------------------------------------------------------------------ */

@@ -98,7 +98,7 @@ export interface BusinessCard {
 
 // ── Discover & Contact ─────────────────────────────────────────
 // How others can contact this user — user-configurable
-export type ContactActionType = 'email' | 'linkedin' | 'wechat' | 'url';
+export type ContactActionType = 'email' | 'linkedin' | 'wechat' | 'github' | 'url';
 
 export interface ContactAction {
   type: ContactActionType;

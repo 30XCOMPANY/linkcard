@@ -16,19 +16,19 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  PlatformColor,
   Linking,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
-import type { LinkedInProfile, CardVersion } from "@/src/types";
+import type { ContactAction, LinkedInProfile, CardVersion } from "@/src/types";
 
 /* ------------------------------------------------------------------ */
 /*  Tag Pill                                                           */
@@ -57,6 +57,7 @@ interface ProfileCardProps {
   profile: LinkedInProfile;
   version: CardVersion;
   nameFont?: NameFontKey;
+  contactAction?: ContactAction;
   onBannerPress?: () => void;
 }
 
@@ -64,6 +65,7 @@ export function ProfileCard({
   profile,
   version,
   nameFont = "classic",
+  contactAction,
   onBannerPress,
 }: ProfileCardProps) {
   const accent = version.accentColor;
@@ -77,13 +79,13 @@ export function ProfileCard({
 
   /* Dark/light adaptive palette */
   const colors = {
-    label: dark ? "#F9FAFB" : (PlatformColor("label") as unknown as string),
-    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string),
-    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
-    pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
-    pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
+    label: dark ? "#F9FAFB" : (platformColor("label")),
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel")),
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (platformColor("tertiaryLabel")),
+    pillBg: dark ? "rgba(255,255,255,0.10)" : (platformColor("systemBackground")),
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : (platformColor("separator")),
     link: accent,
-    separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
+    separator: dark ? "rgba(255,255,255,0.10)" : (platformColor("separator")),
   };
 
   const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
@@ -223,17 +225,41 @@ export function ProfileCard({
         </View>
       )}
 
-      {/* Social icons row */}
+      {/* Social icons — LinkedIn always shown + contactAction if set */}
       <View style={s.socialRow}>
-        {profile.url ? (
+        {/* LinkedIn — always available */}
+        <Pressable
+          style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
+          onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
+        >
+          <Icon web="link" size={18} color={colors.link} />
+        </Pressable>
+
+        {/* Contact action — driven by user settings */}
+        {contactAction && contactAction.type !== "linkedin" ? (
           <Pressable
             style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-            onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
+            onPress={() => {
+              haptic.light();
+              if (contactAction.type === "email") Linking.openURL(`mailto:${contactAction.value}`);
+              else if (contactAction.type === "url" || contactAction.type === "github") Linking.openURL(contactAction.value);
+            }}
           >
-            <Icon web="link" size={18} color={colors.link} />
+            <Icon
+              web={
+                contactAction.type === "email" ? "mail"
+                : contactAction.type === "wechat" ? "chat-bubble"
+                : contactAction.type === "github" ? "code"
+                : "globe"
+              }
+              size={18}
+              color={colors.link}
+            />
           </Pressable>
         ) : null}
-        {profile.website ? (
+
+        {/* Website — if set and not already the contactAction URL */}
+        {profile.website && contactAction?.value !== profile.website ? (
           <Pressable
             style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
             onPress={() => {
@@ -243,22 +269,6 @@ export function ProfileCard({
             }}
           >
             <Icon web="globe" size={18} color={colors.link} />
-          </Pressable>
-        ) : null}
-        {profile.email ? (
-          <Pressable
-            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-            onPress={() => { haptic.light(); Linking.openURL(`mailto:${profile.email}`); }}
-          >
-            <Icon web="mail" size={18} color={colors.link} />
-          </Pressable>
-        ) : null}
-        {profile.phone ? (
-          <Pressable
-            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-            onPress={() => { haptic.light(); Linking.openURL(`tel:${profile.phone}`); }}
-          >
-            <Icon web="phone" size={18} color={colors.link} />
           </Pressable>
         ) : null}
       </View>
@@ -309,9 +319,7 @@ export function ProfileCard({
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: PlatformColor(
-      "secondarySystemGroupedBackground"
-    ) as unknown as string,
+    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderRadius: 24,
     borderCurve: "continuous" as any,
     paddingHorizontal: 20,
@@ -319,7 +327,7 @@ const s = StyleSheet.create({
     paddingBottom: 20,
     gap: 20,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
+    borderColor: platformColor("separator"),
     overflow: "hidden",
   },
 
@@ -348,7 +356,7 @@ const s = StyleSheet.create({
 
   profileName: {
     fontSize: 32,
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     letterSpacing: 0.2,
   },
 
@@ -357,19 +365,19 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 16,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
+    borderColor: platformColor("separator"),
   },
   statusText: {
     fontSize: 15,
     lineHeight: 20,
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
   statusPlaceholder: {
     fontSize: 15,
     lineHeight: 20,
-    color: PlatformColor("tertiaryLabel") as unknown as string,
+    color: platformColor("tertiaryLabel"),
   },
 
   identityLine: {
@@ -381,16 +389,16 @@ const s = StyleSheet.create({
   identityEmoji: { fontSize: 15 },
   identityLinkText: {
     fontSize: 15,
-    color: PlatformColor("systemBlue") as unknown as string,
+    color: platformColor("systemBlue"),
     fontWeight: "600",
   },
   identitySep: {
     fontSize: 15,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   identityRole: {
     fontSize: 15,
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
 
   tagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -402,15 +410,15 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
+    borderColor: platformColor("separator"),
   },
   tagEmoji: { fontSize: 14 },
   tagLabel: {
     fontSize: 14,
     fontWeight: "500",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
 
   contactRow: {
@@ -427,29 +435,29 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
+    borderColor: platformColor("separator"),
   },
   contactPillIcon: { fontSize: 14 },
   contactPillText: {
     fontSize: 13,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
   statNum: {
     fontSize: 15,
     fontWeight: "700",
-    color: PlatformColor("systemBlue") as unknown as string,
+    color: platformColor("systemBlue"),
   },
   statLabel: {
     fontSize: 13,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   statsSeparator: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("separator"),
     marginLeft: 8,
   },
 
@@ -475,20 +483,20 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor("separator") as unknown as string,
+    borderColor: platformColor("separator"),
     minHeight: 50,
   },
   pubContent: { flex: 1, marginRight: 12 },
   pubTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
   pubMeta: {
     fontSize: 13,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     marginTop: 2,
   },
   pubVisit: {
@@ -496,7 +504,7 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBlue") as unknown as string,
+    backgroundColor: platformColor("systemBlue"),
   },
   pubVisitText: { fontSize: 14, fontWeight: "600", color: "#FFFFFF" },
 });

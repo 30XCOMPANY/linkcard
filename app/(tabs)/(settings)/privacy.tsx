@@ -35,6 +35,7 @@ import {
 const CONTACT_METHODS: { type: ContactActionType; label: string; placeholder: string }[] = [
   { type: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
   { type: "email", label: "Email", placeholder: "you@example.com" },
+  { type: "github", label: "GitHub", placeholder: "https://github.com/..." },
   { type: "wechat", label: "WeChat", placeholder: "WeChat ID" },
   { type: "url", label: "Custom URL", placeholder: "https://..." },
 ];

@@ -205,6 +205,7 @@ export default function DiscoverScreen() {
               <ProfileCard
                 profile={current.profile}
                 version={toCardVersion(current)}
+                contactAction={current.contactAction}
               />
               <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
                 <AdaptiveGlass
@@ -288,6 +289,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   glassChipLabel: {
     fontSize: 17,
@@ -302,6 +308,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   glassChipPrimaryLabel: {
     fontSize: 17,
