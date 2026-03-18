@@ -74,13 +74,6 @@ interface SwipeToShareProps {
 }
 
 export function SwipeToShare({ children, onShare, accentColor, overscroll }: SwipeToShareProps) {
-  const accentRgb = React.useMemo(() => {
-    const r = parseInt(accentColor.slice(1, 3), 16);
-    const g = parseInt(accentColor.slice(3, 5), 16);
-    const b = parseInt(accentColor.slice(5, 7), 16);
-    return `${r},${g},${b}`;
-  }, [accentColor]);
-
   const reducedMotion = useReducedMotion();
   const flyState = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
@@ -151,23 +144,13 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
         { scale: cardScale.value },
       ],
       opacity: cardOpacity.value,
-      shadowColor: p < 0.02 ? "#000" : accentColor,
-      shadowOffset: { width: 0, height: interpolate(p, [0, 1], [4, 0], Extrapolation.CLAMP) },
-      shadowOpacity: interpolate(p, [0, 1], [0.08, 0.45], Extrapolation.CLAMP),
-      shadowRadius: interpolate(p, [0, 1], [12, 35], Extrapolation.CLAMP),
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: interpolate(p, [0, 1], [4, 16], Extrapolation.CLAMP) },
+      shadowOpacity: interpolate(p, [0, 1], [0.08, 0.2], Extrapolation.CLAMP),
+      shadowRadius: interpolate(p, [0, 1], [12, 32], Extrapolation.CLAMP),
     };
   });
 
-  /* Card border → accent */
-  const cardBorderStyle = useAnimatedStyle(() => {
-    if (flyState.value !== 0) return { borderColor: "rgba(255,255,255,0.40)" };
-    const p = progress.value;
-    return {
-      borderColor: p < 0.02
-        ? "rgba(255,255,255,0.40)"
-        : `rgba(${accentRgb},${interpolate(p, [0, 1], [0.08, 0.45], Extrapolation.CLAMP)})`,
-    };
-  });
 
   /* Background gradient */
   const bgStyle = useAnimatedStyle(() => {
@@ -199,7 +182,7 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
     <View style={st.root}>
       {/* Card — rendered first, highest z-order */}
       <Animated.View
-        style={[st.cardWrap, cardStyle, cardBorderStyle]}
+        style={[st.cardWrap, cardStyle]}
         accessible
         accessibilityRole="button"
         accessibilityHint="Swipe up to share your card"
