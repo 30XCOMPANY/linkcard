@@ -17,7 +17,16 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.linkcard.app"
+      "bundleIdentifier": "com.linkcard.app",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "LinkCard uses the camera to take a profile photo for your business card.",
+        "NSPhotoLibraryUsageDescription": "LinkCard accesses your photo library to choose a profile photo or banner image.",
+        "NSContactsUsageDescription": "LinkCard can save contacts from business cards you collect."
+      }
     },
     "android": {
       "adaptiveIcon": {
