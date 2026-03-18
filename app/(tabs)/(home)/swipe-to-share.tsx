@@ -16,6 +16,7 @@ import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
+  type SharedValue,
   interpolate,
   runOnJS,
   useAnimatedStyle,
@@ -60,7 +61,7 @@ function CondensationStack({
   progress,
   accentColor,
 }: {
-  progress: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
   accentColor: string;
 }) {
   const stackStyle = useAnimatedStyle(() => ({
@@ -138,7 +139,7 @@ function RippleCanvas({
   accentColor,
   width,
 }: {
-  progress: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
   accentColor: string;
   width: number;
 }) {
@@ -180,7 +181,7 @@ function HintText({
   progress,
   accentColor,
 }: {
-  progress: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
   accentColor: string;
 }) {
   const wrapStyle = useAnimatedStyle(() => ({
@@ -223,7 +224,7 @@ function BreathingPulse({
   progress,
   accentColor,
 }: {
-  progress: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
   accentColor: string;
 }) {
   const breathe = useSharedValue(0.05);
