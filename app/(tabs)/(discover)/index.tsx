@@ -296,7 +296,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
-    color: platformColor("label"),
   },
   glassChipWrapPrimary: {
     flex: 1,
