@@ -35,7 +35,7 @@ export default function RootLayout() {
     if (!card && !inOnboarding) {
       router.replace("/onboarding" as any);
     } else if (card && inOnboarding) {
-      router.replace("/(tabs)" as any);
+      router.replace("/(tabs)/(home)" as any);
     }
   }, [card, fontsLoaded, segments]);
 
