@@ -1,6 +1,7 @@
 /**
  * [INPUT]: react-native Pressable/Switch/Alert/StyleSheet/ScrollView/PlatformColor,
- *          expo-router useRouter, @/src/stores/cardStore, @/src/tw View/Text,
+ *          expo-router useRouter, expo-constants Constants,
+ *          @/src/stores/cardStore, @/src/tw View/Text,
  *          @/src/design-system/settings primitives, @/src/lib/icons Icon, @/src/lib/haptics
  * [OUTPUT]: SettingsScreen — navigation hub pushing to account, appearance, privacy, notifications, about
  * [POS]: Settings tab — Apple-style grouped list hub with inline sync controls and sub-page navigation
@@ -8,6 +9,7 @@
  */
 
 import React, { useRef, useState } from "react";
+import Constants from "expo-constants";
 import {
   Alert,
   PlatformColor,
@@ -38,7 +40,12 @@ export default function SettingsScreen() {
   const card = useCardStore((s) => s.card);
   const clearCard = useCardStore((s) => s.clearCard);
   const themeMode = useCardStore((s) => s.themeMode);
-  const [autoSync, setAutoSync] = useState(true);
+  const autoSync = useCardStore((s) => s.autoSync);
+  const setAutoSync = useCardStore((s) => s.setAutoSync);
+  const nameFont = useCardStore((s) => s.nameFont) ?? "classic";
+  const notifProfileUpdates = useCardStore((s) => s.notifProfileUpdates);
+  const notifShareActivity = useCardStore((s) => s.notifShareActivity);
+  const notifSyncReminders = useCardStore((s) => s.notifSyncReminders);
   const [devMode, setDevMode] = useState(false);
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,6 +54,11 @@ export default function SettingsScreen() {
 
   const themeLabel =
     themeMode === "light" ? "Light" : themeMode === "dark" ? "Dark" : "System";
+  const fontLabel =
+    nameFont === "classic" ? "Classic" :
+    nameFont === "modern" ? "Modern" :
+    nameFont === "mono" ? "Mono" : "System";
+  const notifCount = [notifProfileUpdates, notifShareActivity, notifSyncReminders].filter(Boolean).length;
 
   const handleSyncNow = () => {
     haptic.light();
@@ -143,7 +155,7 @@ export default function SettingsScreen() {
       <SettingsGroup>
         <SettingsRow
           title="Appearance"
-          subtitle={themeLabel}
+          subtitle={`${themeLabel} · ${fontLabel}`}
           leading={<SettingsIconTile web="moon" color="#5856D6" />}
           trailing={<SettingsChevron />}
           onPress={() => {
@@ -164,6 +176,7 @@ export default function SettingsScreen() {
         <SettingsSeparator />
         <SettingsRow
           title="Notifications"
+          subtitle={`${notifCount} of 3 enabled`}
           leading={<SettingsIconTile web="bell" color="#FF3B30" />}
           trailing={<SettingsChevron />}
           onPress={() => {
@@ -244,7 +257,7 @@ export default function SettingsScreen() {
         }}
       >
         <View style={styles.footer}>
-          <Text style={styles.footerText}>LinkCard v1.0.0</Text>
+          <Text style={styles.footerText}>LinkCard v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
         </View>
       </Pressable>
     </RNScrollView>
