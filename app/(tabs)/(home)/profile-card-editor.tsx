@@ -84,7 +84,7 @@ export function ProfileCardEditor({
   const nameWeight = nameWeightMap[(version.fieldStyles?.name?.fontWeight as keyof typeof nameWeightMap)] ?? "400";
 
   return (
-    <View style={[styles.card, { backgroundColor: background.surface, borderColor: background.border }]}>
+    <View style={[styles.card, { backgroundColor: background.surface }]}>
       <Pressable onPress={onBannerPress} style={styles.bannerWrap}>
         <Image
           resizeMode="cover"
@@ -261,10 +261,10 @@ export function ProfileCardEditor({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderColor: platformColor("separator"),
+    borderColor: "rgba(255,255,255,0.40)",
     borderCurve: "continuous" as any,
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 2,
     gap: 20,
     marginTop: 8,
     overflow: "hidden",
@@ -273,11 +273,11 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   bannerWrap: {
-    height: 200,
-    left: 0,
+    height: 204,
+    left: -2,
     position: "absolute",
-    right: 0,
-    top: 0,
+    right: -2,
+    top: -2,
     zIndex: 0,
   },
   bannerImage: {

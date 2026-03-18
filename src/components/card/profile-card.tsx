@@ -95,7 +95,7 @@ export function ProfileCard({
   const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
 
   return (
-    <View style={[s.card, { backgroundColor: background.surface, borderColor: background.border }]}>
+    <View style={[s.card, { backgroundColor: background.surface }]}>
       {/* Banner Image */}
       <Pressable style={s.bannerWrap} onPress={onBannerPress} disabled={!onBannerPress}>
         <Image
@@ -301,17 +301,17 @@ const s = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
     gap: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: platformColor("separator"),
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.40)",
     overflow: "hidden",
   },
 
   bannerWrap: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
+    top: -2,
+    left: -2,
+    right: -2,
+    height: 204,
     zIndex: 0,
   },
   bannerImage: { width: "100%", height: "100%" },
