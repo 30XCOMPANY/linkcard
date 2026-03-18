@@ -1,26 +1,28 @@
 # onboarding/
 > L2 | Parent: app/CLAUDE.md
 
-Single-path onboarding: welcome → identity → versions → social connect.
+Single-path onboarding: claim identity → role → signature → personality tuning → reachability → review.
 
 ## Members
 
 ```
 _layout.tsx:    Stack navigator — headerless single screen flow
-index.tsx:      Four-page horizontal FlatList — gradient tops, emoji+title+subtitle,
-                Liquid Glass "Next" button, LinkedIn/Twitter connect on page 4
+index.tsx:      Six-step identity builder — live ProfileCard preview, one-question steps,
+                optional LinkedIn enrich on review, creates first card from onboarding draft
 AGENTS.md:      Directory map for the unified onboarding flow
 ```
 
 ## Flow
 
-1. Page 1: "Welcome to LinkCard" — brand intro, neutral gradient
-2. Page 2: 🪪 "Your Digital Business Card" — blue gradient
-3. Page 3: 🎭 "One Profile, Many Faces" — orange gradient
-4. Page 4: 🔗 "Connect Your Profiles" — green gradient, LinkedIn URL + Twitter card + Skip
+1. Claim: name + optional photo, immediate ownership
+2. Role: job title + optional company
+3. Signature: one-line intro
+4. Vibe: four personality choices + traits + interests
+5. Reach: choose one primary contact path
+6. Review: create card, optional LinkedIn enrich that only fills missing details
 
-On connect/skip: `createNewCard()` → `setCard()` → root layout redirects to `/(tabs)`.
+On create: `createCardFromOnboardingDraft()` → `setCard()` → root layout redirects to `/(tabs)`.
 
-Legacy `linkedin.tsx` / `preview.tsx` / `_shared.ts` were removed so the onboarding story only exists once.
+LinkedIn import is no longer the entry gate. It only enriches the already-owned identity on the review step.
 
 [PROTOCOL]: Update this on any file add/remove/rename, then check app/CLAUDE.md

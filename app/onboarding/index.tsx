@@ -1,41 +1,51 @@
 /**
- * [INPUT]: expo-router useRouter, react-native ScrollView/Pressable/Text/TextInput/View/Alert,
- *          react-native-reanimated FadeIn, expo-image-picker, @/src/stores/cardStore,
- *          @/src/services/linkedin, @/src/components/card/profile-card, @/src/components/shared/adaptive-glass,
- *          @/src/lib/card-presets, @/src/lib/haptics, @/src/lib/platform-color, @/src/types
- * [OUTPUT]: OnboardingScreen — single-path identity builder with live card preview, personality tuning, and optional LinkedIn enrichment
- * [POS]: Onboarding entry — creates the first card through ownership, role, vibe, reachability, and review instead of intro slides
+ * [INPUT]: expo-router useRouter, react-native KeyboardAvoidingView/Pressable/Text/TextInput/View/Alert/Image,
+ *          react-native-reanimated FadeIn, expo-image-picker, expo-image Image,
+ *          @/src/stores/cardStore, @/src/services/linkedin, @/src/components/shared/avatar,
+ *          @/src/components/shared/adaptive-glass, @/src/lib/card-presets, @/src/lib/haptics,
+ *          @/src/lib/platform-color, @/src/lib/name-fonts, @/src/types
+ * [OUTPUT]: OnboardingScreen — immersive single-screen identity builder with progressive card preview
+ * [POS]: Onboarding entry — welcome splash → 6 steps → card creation, no scrolling
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, {
+  FadeIn, FadeInUp, FadeOut,
+  runOnJS,
+  useAnimatedStyle, useSharedValue, withDelay, withTiming,
+} from "react-native-reanimated";
+import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { Stack } from "expo-router/stack";
 
-import { ProfileCard } from "@/src/components/card/profile-card";
-import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
-import { createCardFromOnboardingDraft, createProfileFromOnboardingDraft, useCardStore } from "@/src/stores/cardStore";
+import { Avatar } from "@/src/components/shared/avatar";
+import { GlassButton, SecondaryButton } from "@/src/components/shared/glass-button";
+import { createCardFromOnboardingDraft, useCardStore } from "@/src/stores/cardStore";
 import { fetchLinkedInProfile } from "@/src/services/linkedin";
-import { createDefaultCardVersions } from "@/src/lib/card-presets";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
-import type { ContactAction, ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPersonalityAxes } from "@/src/types";
+import type { ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPersonalityAxes } from "@/src/types";
 
-type StepKey = "claim" | "role" | "signature" | "vibe" | "reach" | "review";
+/* ── Constants ─────────────────────────────────────────────── */
+
+type StepKey = "welcome" | "claim" | "role" | "signature" | "vibe" | "reach" | "review";
 type PersonalityAxisKey = keyof OnboardingPersonalityAxes;
 
-const STEPS: StepKey[] = ["claim", "role", "signature", "vibe", "reach", "review"];
+const BUILDER_STEPS: StepKey[] = ["claim", "role", "signature", "vibe", "reach", "review"];
 
 const PERSONALITY_QUESTIONS: Array<{
   key: PersonalityAxisKey;
@@ -43,966 +53,659 @@ const PERSONALITY_QUESTIONS: Array<{
   left: { label: string; value: OnboardingPersonalityAxes[PersonalityAxisKey] };
   right: { label: string; value: OnboardingPersonalityAxes[PersonalityAxisKey] };
 }> = [
-  {
-    key: "energy",
-    title: "Energy",
-    left: { label: "With people", value: "people" },
-    right: { label: "Solo", value: "solo" },
-  },
-  {
-    key: "focus",
-    title: "Focus",
-    left: { label: "Facts", value: "facts" },
-    right: { label: "Possibilities", value: "possibilities" },
-  },
-  {
-    key: "decision",
-    title: "Decisions",
-    left: { label: "Logic", value: "logic" },
-    right: { label: "People", value: "people" },
-  },
-  {
-    key: "rhythm",
-    title: "Rhythm",
-    left: { label: "Plan ahead", value: "plan" },
-    right: { label: "Adapt", value: "adapt" },
-  },
+  { key: "energy", title: "Energy", left: { label: "With people", value: "people" }, right: { label: "Solo", value: "solo" } },
+  { key: "focus", title: "Focus", left: { label: "Facts", value: "facts" }, right: { label: "Possibilities", value: "possibilities" } },
+  { key: "decision", title: "Decisions", left: { label: "Logic", value: "logic" }, right: { label: "People", value: "people" } },
+  { key: "rhythm", title: "Rhythm", left: { label: "Plan ahead", value: "plan" }, right: { label: "Adapt", value: "adapt" } },
 ];
 
-const TRAIT_OPTIONS = [
-  "Curious",
-  "Warm",
-  "Sharp",
-  "Calm",
-  "Bold",
-  "Thoughtful",
-  "Playful",
-  "Grounded",
-] as const;
-
-const INTEREST_OPTIONS = [
-  "AI",
-  "Design",
-  "Startups",
-  "Products",
-  "Research",
-  "Writing",
-  "Investing",
-  "Communities",
-  "Developer Tools",
-  "Brand",
-] as const;
+const TRAITS = ["Curious", "Warm", "Sharp", "Calm", "Bold", "Thoughtful", "Playful", "Grounded"] as const;
+const INTERESTS = ["AI", "Design", "Startups", "Products", "Research", "Writing", "Investing", "Communities", "Dev Tools", "Brand"] as const;
 
 const CONTACT_METHODS: Array<{
   type: ContactActionType;
   label: string;
   placeholder: string;
   keyboardType?: "default" | "email-address" | "url";
-  autoCapitalize?: "none" | "words" | "sentences";
 }> = [
-  {
-    type: "email",
-    label: "Email",
-    placeholder: "name@company.com",
-    keyboardType: "email-address",
-    autoCapitalize: "none",
-  },
-  {
-    type: "linkedin",
-    label: "LinkedIn",
-    placeholder: "linkedin.com/in/you",
-    keyboardType: "url",
-    autoCapitalize: "none",
-  },
-  {
-    type: "url",
-    label: "Website",
-    placeholder: "yourwebsite.com",
-    keyboardType: "url",
-    autoCapitalize: "none",
-  },
-  {
-    type: "wechat",
-    label: "WeChat",
-    placeholder: "your WeChat ID",
-    keyboardType: "default",
-    autoCapitalize: "none",
-  },
+  { type: "email", label: "Email", placeholder: "name@company.com", keyboardType: "email-address" },
+  { type: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/in/you", keyboardType: "url" },
+  { type: "url", label: "Website", placeholder: "yourwebsite.com", keyboardType: "url" },
+  { type: "wechat", label: "WeChat", placeholder: "your WeChat ID" },
 ];
 
 const EMPTY_DRAFT: OnboardingDraft = {
-  name: "",
-  photoUrl: null,
-  jobTitle: "",
-  company: "",
-  headline: "",
-  location: "",
-  personalityAxes: {},
-  traits: [],
-  interests: [],
-  primaryContactAction: undefined,
-  contactValue: "",
+  name: "", photoUrl: null, jobTitle: "", company: "", headline: "",
+  location: "", personalityAxes: {}, traits: [], interests: [],
+  primaryContactAction: undefined, contactValue: "",
 };
 
-function StepDots({ activeIndex }: { activeIndex: number }) {
+/* ── Shared Primitives ─────────────────────────────────────── */
+
+function ChoiceCard({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
-    <View style={styles.dotsRow}>
-      {STEPS.map((step, index) => (
-        <View
-          key={step}
-          style={[
-            styles.dot,
-            index === activeIndex ? styles.dotActive : styles.dotInactive,
-          ]}
-        />
+    <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
+      <View style={[styles.choiceCard, selected && styles.choiceCardSelected]}>
+        <Text style={[styles.choiceLabel, selected && styles.choiceLabelSelected]}>{label}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
+      <View style={[styles.chip, selected && styles.chipSelected]}>
+        <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+/* ── Blur Title Animation ──────────────────────────────────── */
+
+function BlurWord({ word, delay }: { word: string; delay: number }) {
+  const blur = useSharedValue(8);
+  const opacity = useSharedValue(0);
+
+  React.useEffect(() => {
+    blur.value = withDelay(delay, withTiming(0, { duration: 350 }));
+    opacity.value = withDelay(delay, withTiming(1, { duration: 250 }));
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    filter: `blur(${blur.value}px)`,
+  }));
+
+  return (
+    <Animated.Text style={[styles.stepTitle, style as any]}>
+      {word}{" "}
+    </Animated.Text>
+  );
+}
+
+function BlurTitle({ text, key: k }: { text: string; key?: string }) {
+  const words = text.split(" ");
+  return (
+    <View style={styles.blurTitleRow} key={k}>
+      {words.map((word, i) => (
+        <BlurWord key={`${k}-${word}-${i}`} word={word} delay={i * 80} />
       ))}
     </View>
   );
 }
 
-function PrimaryButton({
-  label,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable disabled={disabled} onPress={onPress}>
-      <AdaptiveGlass
-        style={StyleSheet.flatten([styles.primaryButton, disabled && styles.primaryButtonDisabled])}
-        glassEffectStyle="regular"
-        tintColor={disabled ? "#8E8E93" : "#111827"}
-        intensity={42}
-        blurTint="dark"
-        fallbackColor={disabled ? "#C7C7CC" : "#111827"}
-      >
-        <Text selectable style={styles.primaryButtonLabel}>
-          {label}
-        </Text>
-      </AdaptiveGlass>
-    </Pressable>
-  );
-}
+/* ── Progressive Preview ───────────────────────────────────── */
 
-function SecondaryButton({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable hitSlop={12} onPress={onPress} style={styles.secondaryButton}>
-      <Text selectable style={styles.secondaryButtonLabel}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
+function CardPreview({ draft }: { draft: OnboardingDraft }) {
+  const hasName = draft.name.trim().length > 0;
+  const hasPhoto = Boolean(draft.photoUrl);
+  const hasTitle = draft.jobTitle.trim().length > 0;
+  const hasHeadline = draft.headline.trim().length > 0;
 
-function ChoiceCard({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.pressed]}>
-      <View style={[styles.choiceCard, selected && styles.choiceCardSelected]}>
-        <Text selectable style={[styles.choiceTitle, selected && styles.choiceTitleSelected]}>
-          {label}
-        </Text>
+  if (!hasName && !hasPhoto) {
+    return (
+      <View style={styles.previewEmpty}>
+        <Image source={require("@/assets/lc-logo.svg")} style={styles.previewLogo} contentFit="contain" />
       </View>
-    </Pressable>
-  );
-}
-
-function SelectChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.pressed]}>
-      <View style={[styles.chip, selected && styles.chipSelected]}>
-        <Text selectable style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
-const buildPreviewContactAction = (draft: OnboardingDraft, profile: LinkedInProfile): ContactAction | undefined => {
-  switch (draft.primaryContactAction) {
-    case "email":
-      return profile.email
-        ? { type: "email", label: "Email Me", value: profile.email }
-        : undefined;
-    case "linkedin":
-      return profile.url
-        ? { type: "linkedin", label: "Connect on LinkedIn", value: profile.url }
-        : undefined;
-    case "url":
-      return profile.website
-        ? { type: "url", label: "Visit Website", value: profile.website }
-        : undefined;
-    case "wechat":
-      return draft.contactValue.trim()
-        ? { type: "wechat", label: "Add on WeChat", value: draft.contactValue.trim() }
-        : undefined;
-    default:
-      return undefined;
+    );
   }
-};
 
-const summarizeImportedProfile = (profile: LinkedInProfile): string => {
-  const facts = [
-    profile.photoUrl ? "photo" : null,
-    profile.socialLinks?.length ? "social links" : null,
-    profile.publications?.length ? "publications" : null,
-    profile.website ? "website" : null,
-  ].filter(Boolean);
+  return (
+    <View style={styles.previewCard}>
+      {hasPhoto && (
+        <Avatar source={draft.photoUrl} name={draft.name || "?"} size={120} glassPadding={8} glassIntensity={18} />
+      )}
+      {hasName && (
+        <Text style={styles.previewName} numberOfLines={1}>{draft.name}</Text>
+      )}
+      {hasTitle && (
+        <Text style={styles.previewRole} numberOfLines={1}>
+          {draft.company ? `${draft.jobTitle} · ${draft.company}` : draft.jobTitle}
+        </Text>
+      )}
+      {hasHeadline && (
+        <Text style={styles.previewHeadline} numberOfLines={2}>{draft.headline}</Text>
+      )}
+    </View>
+  );
+}
 
-  return facts.length > 0
-    ? `Added ${facts.join(", ")} without overwriting your core identity.`
-    : "LinkedIn is connected and ready to enrich later.";
-};
+/* ── Main Screen ───────────────────────────────────────────── */
 
 export default function OnboardingScreen() {
-  const router = useRouter();
-  const { width } = useWindowDimensions();
   const setCard = useCardStore((s) => s.setCard);
 
-  const [stepIndex, setStepIndex] = useState(0);
+  const [step, setStep] = useState<StepKey>("welcome");
   const [vibeStage, setVibeStage] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_DRAFT);
   const [linkedInInput, setLinkedInInput] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [importedProfile, setImportedProfile] = useState<LinkedInProfile | null>(null);
 
-  const previewVersion = useMemo(() => {
-    const base = createDefaultCardVersions()[0];
-    return {
-      ...base,
-      visibleFields: Array.from(
-        new Set([...base.visibleFields, "website", "email"])
-      ) as typeof base.visibleFields,
-    };
-  }, []);
-
-  const previewProfile = useMemo(
-    () => createProfileFromOnboardingDraft(draft, importedProfile ?? undefined),
-    [draft, importedProfile]
-  );
-
-  const previewContactAction = useMemo(
-    () => buildPreviewContactAction(draft, previewProfile),
-    [draft, previewProfile]
-  );
-
-  const step = STEPS[stepIndex];
+  const stepIndex = BUILDER_STEPS.indexOf(step);
 
   const canContinue = useMemo(() => {
     switch (step) {
-      case "claim":
-        return draft.name.trim().length > 0;
-      case "role":
-        return draft.jobTitle.trim().length > 0;
-      case "signature":
-        return draft.headline.trim().length > 0;
+      case "claim": return draft.name.trim().length > 0;
+      case "role": return draft.jobTitle.trim().length > 0;
+      case "signature": return draft.headline.trim().length > 0;
       case "vibe":
-        if (vibeStage === PERSONALITY_QUESTIONS.length) {
-          return draft.traits.length >= 2;
-        }
-        if (vibeStage === PERSONALITY_QUESTIONS.length + 1) {
-          return draft.interests.length >= 2;
-        }
+        if (vibeStage === PERSONALITY_QUESTIONS.length) return draft.traits.length >= 2;
+        if (vibeStage === PERSONALITY_QUESTIONS.length + 1) return draft.interests.length >= 2;
         return true;
-      case "reach":
-        return Boolean(draft.primaryContactAction && draft.contactValue.trim());
-      case "review":
-        return Boolean(draft.name.trim() && draft.jobTitle.trim() && draft.headline.trim() && draft.primaryContactAction && draft.contactValue.trim());
-      default:
-        return false;
+      case "reach": return Boolean(draft.primaryContactAction && draft.contactValue.trim());
+      case "review": return Boolean(draft.name.trim() && draft.jobTitle.trim() && draft.headline.trim());
+      default: return false;
     }
   }, [draft, step, vibeStage]);
 
   const setField = useCallback(<K extends keyof OnboardingDraft>(field: K, value: OnboardingDraft[K]) => {
-    setDraft((current) => ({ ...current, [field]: value }));
+    setDraft((c) => ({ ...c, [field]: value }));
   }, []);
 
-  const advanceStep = useCallback(() => {
-    if (!canContinue) {
-      haptic.warning();
+  const goNext = useCallback(() => {
+    if (!canContinue) { haptic.warning(); return; }
+    haptic.light();    if (step === "vibe" && vibeStage < PERSONALITY_QUESTIONS.length + 1) {
+      setVibeStage((c) => c + 1);
       return;
     }
+    const i = BUILDER_STEPS.indexOf(step);
+    if (i < BUILDER_STEPS.length - 1) setStep(BUILDER_STEPS[i + 1]);
+  }, [canContinue, step, vibeStage]);
 
-    haptic.light();
-    if (step === "vibe" && vibeStage === PERSONALITY_QUESTIONS.length) {
-      setVibeStage((current) => current + 1);
-      return;
-    }
+  const goBack = useCallback(() => {
+    if (step === "vibe" && vibeStage > 0) { haptic.selection(); setVibeStage((c) => c - 1); return; }
+    const i = BUILDER_STEPS.indexOf(step);
+    if (i > 0) { haptic.selection(); setStep(BUILDER_STEPS[i - 1]); }
+    else { haptic.selection(); setStep("welcome"); }
+  }, [step, vibeStage]);
 
-    if (step === "vibe" && vibeStage === PERSONALITY_QUESTIONS.length + 1) {
-      setStepIndex((current) => current + 1);
-      return;
-    }
-
-    if (stepIndex < STEPS.length - 1) {
-      setStepIndex((current) => current + 1);
-    }
-  }, [canContinue, step, stepIndex, vibeStage]);
-
-  const handleBack = useCallback(() => {
-    if (step === "vibe" && vibeStage > 0) {
-      haptic.selection();
-      setVibeStage((current) => current - 1);
-      return;
-    }
-
-    if (stepIndex > 0) {
-      haptic.selection();
-      setStepIndex((current) => current - 1);
-    }
-  }, [step, stepIndex, vibeStage]);
+  const skipVibe = useCallback(() => {
+    haptic.light();    setStep("reach");
+  }, []);
 
   const handlePhotoPick = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      mediaTypes: ["images"],
-      quality: 0.8,
+      allowsEditing: true, aspect: [1, 1], mediaTypes: ["images"], quality: 0.8,
     });
-
-    if (!result.canceled && result.assets[0]) {
-      haptic.selection();
-      setField("photoUrl", result.assets[0].uri);
-    }
+    if (!result.canceled && result.assets[0]) { haptic.selection(); setField("photoUrl", result.assets[0].uri); }
   }, [setField]);
 
   const handleAxisSelect = useCallback(
     (key: PersonalityAxisKey, value: OnboardingPersonalityAxes[PersonalityAxisKey]) => {
       haptic.selection();
-      setDraft((current) => ({
-        ...current,
-        personalityAxes: {
-          ...current.personalityAxes,
-          [key]: value,
-        },
-      }));
-
-      if (vibeStage < PERSONALITY_QUESTIONS.length - 1) {
-        setVibeStage((current) => current + 1);
-      } else {
-        setVibeStage(PERSONALITY_QUESTIONS.length);
-      }
+      setDraft((c) => ({ ...c, personalityAxes: { ...c.personalityAxes, [key]: value } }));
+      setTimeout(() => {
+               if (vibeStage < PERSONALITY_QUESTIONS.length - 1) setVibeStage((c) => c + 1);
+        else setVibeStage(PERSONALITY_QUESTIONS.length);
+      }, 400);
     },
     [vibeStage]
   );
 
-  const toggleSelection = useCallback(
-    (field: "traits" | "interests", value: string, limit: number) => {
-      setDraft((current) => {
-        const active = current[field];
-        const exists = active.includes(value);
-
-        if (exists) {
-          haptic.selection();
-          return {
-            ...current,
-            [field]: active.filter((item) => item !== value),
-          };
-        }
-
-        if (active.length >= limit) {
-          haptic.warning();
-          return current;
-        }
-
-        haptic.selection();
-        return {
-          ...current,
-          [field]: [...active, value],
-        };
-      });
-    },
-    []
-  );
-
-  const handleImportLinkedIn = useCallback(async () => {
-    if (!linkedInInput.trim()) {
-      haptic.warning();
-      Alert.alert("Add a LinkedIn URL", "Paste your LinkedIn URL or username first.");
-      return;
-    }
-
-    setIsImporting(true);
-    haptic.medium();
-
-    try {
-      const profile = await fetchLinkedInProfile(linkedInInput.trim());
-      setImportedProfile(profile);
-      haptic.success();
-      Alert.alert("LinkedIn Added", summarizeImportedProfile(profile));
-    } catch (error) {
-      haptic.error();
-      Alert.alert(
-        "Import Failed",
-        error instanceof Error
-          ? error.message
-          : "We couldn’t fetch your LinkedIn profile right now."
-      );
-    } finally {
-      setIsImporting(false);
-    }
-  }, [linkedInInput]);
-
-  const handleCreateCard = useCallback(() => {
-    if (!canContinue) {
-      haptic.warning();
-      return;
-    }
-
-    const card = createCardFromOnboardingDraft(draft, {
-      importedProfile: importedProfile ?? undefined,
+  const toggleSelection = useCallback((field: "traits" | "interests", value: string, limit: number) => {
+    setDraft((c) => {
+      const arr = c[field];
+      if (arr.includes(value)) { haptic.selection(); return { ...c, [field]: arr.filter((v) => v !== value) }; }
+      if (arr.length >= limit) { haptic.warning(); return c; }
+      haptic.selection();
+      return { ...c, [field]: [...arr, value] };
     });
-
-    setCard(card);
-    haptic.success();
-    router.replace("/(tabs)" as any);
-  }, [canContinue, draft, importedProfile, router, setCard]);
-
-  const renderClaim = () => (
-    <View style={styles.stepBody}>
-      <Text selectable style={styles.stepTitle}>Your name</Text>
-
-      <View style={styles.groupCard}>
-        <TextInput
-          autoCapitalize="words"
-          autoCorrect={false}
-          autoFocus
-          onChangeText={(value) => setField("name", value)}
-          placeholder="Full name"
-          placeholderTextColor="rgba(60,60,67,0.45)"
-          style={styles.textInput}
-          value={draft.name}
-        />
-      </View>
-
-      <Pressable onPress={handlePhotoPick} style={({ pressed }) => [pressed && styles.pressed]}>
-        <View style={styles.photoButton}>
-          <Text selectable style={styles.photoButtonLabel}>
-            {draft.photoUrl ? "Change photo" : "Add photo"}
-          </Text>
-        </View>
-      </Pressable>
-    </View>
-  );
-
-  const renderRole = () => (
-    <View style={styles.stepBody}>
-      <Text selectable style={styles.stepTitle}>What you do</Text>
-
-      <View style={styles.groupCard}>
-        <Text selectable style={styles.fieldLabel}>Title</Text>
-        <TextInput
-          autoCapitalize="words"
-          autoCorrect={false}
-          autoFocus
-          onChangeText={(value) => setField("jobTitle", value)}
-          placeholder="Founder, Designer, Engineer..."
-          placeholderTextColor="rgba(60,60,67,0.45)"
-          style={styles.textInput}
-          value={draft.jobTitle}
-        />
-      </View>
-
-      <View style={styles.groupCard}>
-        <Text selectable style={styles.fieldLabel}>Company</Text>
-        <TextInput
-          autoCapitalize="words"
-          autoCorrect={false}
-          onChangeText={(value) => setField("company", value)}
-          placeholder="Optional"
-          placeholderTextColor="rgba(60,60,67,0.45)"
-          style={styles.textInput}
-          value={draft.company}
-        />
-      </View>
-    </View>
-  );
-
-  const renderSignature = () => (
-    <View style={styles.stepBody}>
-      <Text selectable style={styles.stepTitle}>One-liner</Text>
-
-      <View style={styles.groupCard}>
-        <TextInput
-          autoCapitalize="sentences"
-          autoFocus
-          multiline
-          onChangeText={(value) => setField("headline", value)}
-          placeholder="What should people remember you for?"
-          placeholderTextColor="rgba(60,60,67,0.45)"
-          style={[styles.textInput, styles.multilineInput]}
-          value={draft.headline}
-        />
-      </View>
-    </View>
-  );
-
-  const skipVibe = useCallback(() => {
-    haptic.light();
-    setStepIndex((current) => current + 1);
   }, []);
 
-  const renderVibe = () => {
-    if (vibeStage < PERSONALITY_QUESTIONS.length) {
-      const question = PERSONALITY_QUESTIONS[vibeStage];
-      const selected = draft.personalityAxes[question.key];
-      return (
-        <View style={styles.stepBody}>
-          <Text selectable style={styles.stepEyebrow}>
-            {question.title} ({vibeStage + 1}/{PERSONALITY_QUESTIONS.length + 2})
-          </Text>
-          <Text selectable style={styles.stepTitle}>Vibe check</Text>
+  const handleImportLinkedIn = useCallback(async () => {
+    if (!linkedInInput.trim()) { haptic.warning(); Alert.alert("LinkedIn URL", "Paste your URL first."); return; }
+    setIsImporting(true); haptic.medium();
+    try {
+      const profile = await fetchLinkedInProfile(linkedInInput.trim());
+      setImportedProfile(profile); haptic.success();
+      const facts = [profile.photoUrl && "photo", profile.socialLinks?.length && "links", profile.website && "website"].filter(Boolean);
+      Alert.alert("Imported", facts.length ? `Added ${facts.join(", ")}.` : "Connected.");
+    } catch (e) {
+      haptic.error(); Alert.alert("Failed", e instanceof Error ? e.message : "Try again later.");
+    } finally { setIsImporting(false); }
+  }, [linkedInInput]);
 
-          <View style={styles.choicesColumn}>
-            <ChoiceCard
-              label={question.left.label}
-              onPress={() => handleAxisSelect(question.key, question.left.value)}
-              selected={selected === question.left.value}
-            />
-            <ChoiceCard
-              label={question.right.label}
-              onPress={() => handleAxisSelect(question.key, question.right.value)}
-              selected={selected === question.right.value}
-            />
-          </View>
-        </View>
-      );
-    }
+  const handleCreate = useCallback(() => {
+    if (!canContinue) { haptic.warning(); return; }
+    const card = createCardFromOnboardingDraft(draft, { importedProfile: importedProfile ?? undefined });
+    setCard(card); haptic.success();
+    // Root layout gate handles navigation when card is set
+  }, [canContinue, draft, importedProfile, setCard]);
 
-    if (vibeStage === PERSONALITY_QUESTIONS.length) {
-      return (
-        <View style={styles.stepBody}>
-          <Text selectable style={styles.stepEyebrow}>
-            Traits (5/{PERSONALITY_QUESTIONS.length + 2})
-          </Text>
-          <Text selectable style={styles.stepTitle}>Pick 2</Text>
+  /* ── Welcome ────────────────────────────────────────────── */
 
-          <View style={styles.chipsWrap}>
-            {TRAIT_OPTIONS.map((trait) => (
-              <SelectChip
-                key={trait}
-                label={trait}
-                onPress={() => toggleSelection("traits", trait, 2)}
-                selected={draft.traits.includes(trait)}
-              />
-            ))}
-          </View>
-        </View>
-      );
-    }
-
+  if (step === "welcome") {
     return (
-      <View style={styles.stepBody}>
-        <Text selectable style={styles.stepEyebrow}>
-          Interests (6/{PERSONALITY_QUESTIONS.length + 2})
-        </Text>
-        <Text selectable style={styles.stepTitle}>Pick 2–3</Text>
+      <View style={styles.welcomeContainer}>
+        <Stack.Screen options={{ headerShown: false }} />
 
-        <View style={styles.chipsWrap}>
-          {INTEREST_OPTIONS.map((interest) => (
-            <SelectChip
-              key={interest}
-              label={interest}
-              onPress={() => toggleSelection("interests", interest, 3)}
-              selected={draft.interests.includes(interest)}
-            />
-          ))}
+        {/* Hero image — fills top, fades to black */}
+        <Image
+          source={require("@/assets/onboarding-hero.jpg")}
+          style={styles.welcomeHero}
+          contentFit="cover"
+        />
+        <View style={[styles.welcomeHeroFade, {
+          experimental_backgroundImage: "linear-gradient(to bottom, transparent 0%, #0A0A0A 100%)",
+        } as any]} />
+
+        {/* Content overlay */}
+        <View style={styles.welcomeContent}>
+          <View style={{ flex: 1 }} />
+
+          <Animated.View entering={FadeIn.duration(600)} style={styles.welcomeLogoWrap}>
+            <Image source={require("@/assets/lc-logo.svg")} style={styles.welcomeLogo} contentFit="contain" tintColor="#FFFFFF" />
+          </Animated.View>
+
+          <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.welcomeTextBlock}>
+            <Text style={styles.welcomeTitle}>LinkCard</Text>
+            <Text style={styles.welcomeSubtitle}>Your identity, amplified.</Text>
+          </Animated.View>
+
+          <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.welcomeCta}>
+            <Pressable
+              onPress={() => { haptic.medium(); setStep("claim"); }}
+              style={({ pressed }) => [pressed && { opacity: 0.88 }]}
+            >
+              <View style={styles.welcomeButton}>
+                <Text style={styles.welcomeButtonLabel}>Get Started</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
         </View>
       </View>
     );
-  };
+  }
 
-  const renderReach = () => {
-    const activeMethod = CONTACT_METHODS.find(
-      (method) => method.type === draft.primaryContactAction
-    );
+  /* ── Builder Steps ──────────────────────────────────────── */
 
-    return (
-      <View style={styles.stepBody}>
-        <Text selectable style={styles.stepTitle}>Reach</Text>
+  const renderStepContent = () => {
+    switch (step) {
+      case "claim":
+        return (
+          <>
+            <BlurTitle text="Your name" />
+            <Animated.View entering={FadeIn.delay(250).duration(200)} style={styles.stepContent}>
+              <View style={styles.inputCard}>
+                <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
+                  onChangeText={(v) => setField("name", v)} placeholder="Full name"
+                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.name}
+                />
+              </View>
+            </Animated.View>
+          </>
+        );
 
-        <View style={styles.choicesColumn}>
-          {CONTACT_METHODS.map((method) => (
-            <ChoiceCard
-              label={method.label}
-              key={method.type}
-              onPress={() => {
-                haptic.selection();
-                setDraft((current) => ({
-                  ...current,
-                  primaryContactAction: method.type,
-                  contactValue:
-                    current.primaryContactAction === method.type
-                      ? current.contactValue
-                      : "",
-                }));
-              }}
-              selected={draft.primaryContactAction === method.type}
-            />
-          ))}
-        </View>
+      case "role":
+        return (
+          <>
+            <BlurTitle text="What you do" />
+            <Animated.View entering={FadeIn.delay(320).duration(200)} style={styles.stepContent}>
+              <View style={styles.inputCard}>
+                <Text style={styles.fieldLabel}>Title</Text>
+                <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
+                  onChangeText={(v) => setField("jobTitle", v)} placeholder="Founder, Designer..."
+                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.jobTitle}
+                />
+              </View>
+              <View style={styles.inputCard}>
+                <Text style={styles.fieldLabel}>Company</Text>
+                <TextInput autoCapitalize="words" autoCorrect={false}
+                  onChangeText={(v) => setField("company", v)} placeholder="Optional"
+                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.company}
+                />
+              </View>
+            </Animated.View>
+          </>
+        );
 
-        {activeMethod ? (
-          <View style={styles.groupCard}>
-            <TextInput
-              autoCapitalize={activeMethod.autoCapitalize ?? "none"}
-              autoCorrect={false}
-              autoFocus
-              keyboardType={activeMethod.keyboardType ?? "default"}
-              onChangeText={(value) => setField("contactValue", value)}
-              placeholder={activeMethod.placeholder}
-              placeholderTextColor="rgba(60,60,67,0.45)"
-              style={styles.textInput}
-              value={draft.contactValue}
-            />
-          </View>
-        ) : null}
-      </View>
-    );
-  };
+      case "signature":
+        return (
+          <>
+            <BlurTitle text="One-liner" />
+            <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.stepContent}>
+              <View style={styles.inputCard}>
+                <TextInput autoCapitalize="sentences" autoFocus multiline
+                  onChangeText={(v) => setField("headline", v)}
+                  placeholder="What should people remember you for?"
+                  placeholderTextColor="rgba(60,60,67,0.4)"
+                  style={[styles.textInput, { minHeight: 72, textAlignVertical: "top" as any }]}
+                  value={draft.headline}
+                />
+              </View>
+            </Animated.View>
+          </>
+        );
 
-  const renderReview = () => (
-    <View style={styles.stepBody}>
-      <Text selectable style={styles.stepTitle}>Ready</Text>
+      case "vibe": {
+        if (vibeStage < PERSONALITY_QUESTIONS.length) {
+          const q = PERSONALITY_QUESTIONS[vibeStage];
+          const sel = draft.personalityAxes[q.key];
+          return (
+            <>
+              <Text style={styles.stepEyebrow}>{vibeStage + 1} / {PERSONALITY_QUESTIONS.length + 2}</Text>
+              <BlurTitle text={q.title} />
+              <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.vibeChoices}>
+                <Pressable onPress={() => handleAxisSelect(q.key, q.left.value)} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
+                  <View style={styles.vibeCard}>
+                    <Text style={styles.vibeCardLabel}>{q.left.label}</Text>
+                    {sel === q.left.value && <Image source={"sf:checkmark" as any} style={styles.vibeCheck} tintColor="#007AFF" />}
+                  </View>
+                </Pressable>
+                <Pressable onPress={() => handleAxisSelect(q.key, q.right.value)} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
+                  <View style={styles.vibeCard}>
+                    <Text style={styles.vibeCardLabel}>{q.right.label}</Text>
+                    {sel === q.right.value && <Image source={"sf:checkmark" as any} style={styles.vibeCheck} tintColor="#007AFF" />}
+                  </View>
+                </Pressable>
+              </Animated.View>
+            </>
+          );
+        }
+        if (vibeStage === PERSONALITY_QUESTIONS.length) {
+          return (
+            <>
+              <Text style={styles.stepEyebrow}>5 / {PERSONALITY_QUESTIONS.length + 2}</Text>
+              <BlurTitle text="Pick 2 traits" />
+              <Animated.View entering={FadeIn.delay(320).duration(200)} style={styles.chipsWrap}>
+                {TRAITS.map((t) => <Chip key={t} label={t} selected={draft.traits.includes(t)} onPress={() => toggleSelection("traits", t, 2)} />)}
+              </Animated.View>
+            </>
+          );
+        }
+        return (
+          <>
+            <Text style={styles.stepEyebrow}>6 / {PERSONALITY_QUESTIONS.length + 2}</Text>
+            <BlurTitle text="Interests" />
+            <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.chipsWrap}>
+              {INTERESTS.map((t) => <Chip key={t} label={t} selected={draft.interests.includes(t)} onPress={() => toggleSelection("interests", t, 3)} />)}
+            </Animated.View>
+          </>
+        );
+      }
 
-      <View style={styles.reviewCard}>
-        <Text selectable style={styles.reviewLabel}>LinkedIn (optional)</Text>
-
-        <View style={styles.inlineInputRow}>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            onChangeText={setLinkedInInput}
-            placeholder="linkedin.com/in/you"
-            placeholderTextColor="rgba(60,60,67,0.45)"
-            style={[styles.textInput, styles.inlineInput]}
-            value={linkedInInput}
-          />
-          <Pressable
-            disabled={isImporting}
-            onPress={handleImportLinkedIn}
-            style={({ pressed }) => [pressed && styles.pressed]}
-          >
-            <View style={[styles.inlineActionButton, isImporting && styles.inlineActionButtonDisabled]}>
-              <Text selectable style={styles.inlineActionLabel}>
-                {isImporting ? "..." : "Import"}
-              </Text>
+      case "reach": {
+        const active = CONTACT_METHODS.find((m) => m.type === draft.primaryContactAction);
+        return (
+          <>
+            <BlurTitle text="Reach" />
+            <View style={styles.choicesCol}>
+              {CONTACT_METHODS.map((m) => (
+                <ChoiceCard key={m.type} label={m.label}
+                  selected={draft.primaryContactAction === m.type}
+                  onPress={() => { haptic.selection(); setDraft((c) => ({ ...c, primaryContactAction: m.type, contactValue: c.primaryContactAction === m.type ? c.contactValue : "" })); }}
+                />
+              ))}
             </View>
-          </Pressable>
-        </View>
+            {active && (
+              <View style={styles.inputCard}>
+                <TextInput autoCapitalize="none" autoCorrect={false} autoFocus
+                  keyboardType={active.keyboardType ?? "default"}
+                  onChangeText={(v) => setField("contactValue", v)}
+                  placeholder={active.placeholder} placeholderTextColor="rgba(60,60,67,0.4)"
+                  style={styles.textInput} value={draft.contactValue}
+                />
+              </View>
+            )}
+          </>
+        );
+      }
 
-        {importedProfile ? (
-          <Text selectable style={styles.reviewSuccess}>
-            {summarizeImportedProfile(importedProfile)}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
+      case "review":
+        return (
+          <>
+            <BlurTitle text="Ready" />
+            <View style={styles.inputCard}>
+              <Text style={styles.fieldLabel}>LinkedIn (optional)</Text>
+              <View style={styles.inlineRow}>
+                <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="url"
+                  onChangeText={setLinkedInInput} placeholder="linkedin.com/in/you"
+                  placeholderTextColor="rgba(60,60,67,0.4)" style={[styles.textInput, { flex: 1 }]}
+                  value={linkedInInput}
+                />
+                <Pressable disabled={isImporting} onPress={handleImportLinkedIn}>
+                  <View style={[styles.inlineAction, isImporting && { opacity: 0.6 }]}>
+                    <Text style={styles.inlineActionLabel}>{isImporting ? "..." : "Import"}</Text>
+                  </View>
+                </Pressable>
+              </View>
+              {importedProfile && (
+                <Text style={styles.importSuccess}>Imported successfully.</Text>
+              )}
+            </View>
+          </>
+        );
+
+      default: return null;
+    }
+  };
+
+  const swipeBack = Gesture.Fling().direction(Directions.RIGHT).onEnd(() => { runOnJS(goBack)(); });
+  const swipeForward = Gesture.Fling().direction(Directions.LEFT).onEnd(() => { if (canContinue) runOnJS(goNext)(); });
+  const swipe = Gesture.Race(swipeBack, swipeForward);
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.scrollContent}
+    <GestureDetector gesture={swipe}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* ── Brand banner with progressive blur ────────────── */}
+      <View style={styles.bannerWrap}>
+        <Image
+          source={require("@/assets/onboarding-banner.png")}
+          style={styles.bannerImage}
+          contentFit="cover"
+        />
+        <BlurView intensity={15}  tint="default" style={[styles.bannerBlur, { top: "30%", opacity: 0.15 }]} />
+        <BlurView intensity={30}  tint="default" style={[styles.bannerBlur, { top: "38%", opacity: 0.25 }]} />
+        <BlurView intensity={50}  tint="default" style={[styles.bannerBlur, { top: "46%", opacity: 0.35 }]} />
+        <BlurView intensity={70}  tint="default" style={[styles.bannerBlur, { top: "54%", opacity: 0.50 }]} />
+        <BlurView intensity={85}  tint="default" style={[styles.bannerBlur, { top: "62%", opacity: 0.65 }]} />
+        <BlurView intensity={100} tint="default" style={[styles.bannerBlur, { top: "70%", opacity: 0.80 }]} />
+        <BlurView intensity={100} tint="default" style={[styles.bannerBlur, { top: "78%", opacity: 0.90 }]} />
+        <BlurView intensity={100} tint="default" style={[styles.bannerBlur, { top: "86%", opacity: 1.0  }]} />
+        <LinearGradient
+          colors={["transparent", "rgba(242,242,247,0.3)", "rgba(242,242,247,0.8)", "#F2F2F7"] as const}
+          locations={[0, 0.4, 0.7, 1]}
+          style={styles.bannerFade}
+        />
+      </View>
+
+      {/* ── Preview overlay on banner (hidden during vibe) ── */}
+      {step !== "vibe" && (
+        <View style={styles.previewZone}>
+          <CardPreview draft={draft} />
+        </View>
+      )}
+
+      {/* ── Dots ──────────────────────────────────────────── */}
+      <View style={styles.dotsCenter}>
+        {BUILDER_STEPS.map((s, i) => (
+          <View key={s} style={[styles.dot, i === stepIndex ? styles.dotActive : styles.dotInactive]} />
+        ))}
+      </View>
+
+      {/* ── Bottom: Step Content + CTA ────────────────────── */}
+      <Animated.View
+        exiting={FadeOut.duration(150)}
+        key={`${step}-${vibeStage}`}
+        style={[styles.stepZone, step === "vibe" && styles.stepZoneExpanded]}
       >
-        <View style={styles.previewWrap}>
-          <View style={[styles.previewFrame, { maxWidth: Math.min(width - 32, 420) }]}>
-            <ProfileCard
-              contactAction={previewContactAction}
-              profile={previewProfile}
-              version={previewVersion}
-            />
-          </View>
+        <View style={[styles.stepContent, step === "vibe" && { flex: 1, justifyContent: "center" }]}>
+          {renderStepContent()}
         </View>
-
-        <View style={styles.chromeRow}>
-          <SecondaryButton label="Back" onPress={handleBack} />
-          <StepDots activeIndex={stepIndex} />
-          <View style={styles.chromeSpacer} />
-        </View>
-
-        <Animated.View entering={FadeIn.duration(180)} key={`${step}-${vibeStage}`}>
-          {step === "claim" ? renderClaim() : null}
-          {step === "role" ? renderRole() : null}
-          {step === "signature" ? renderSignature() : null}
-          {step === "vibe" ? renderVibe() : null}
-          {step === "reach" ? renderReach() : null}
-          {step === "review" ? renderReview() : null}
-        </Animated.View>
 
         <View style={styles.ctaBlock}>
-          {step === "review" ? (
-            <PrimaryButton
-              disabled={!canContinue}
-              label="Create card"
-              onPress={handleCreateCard}
-            />
+          {step === "claim" ? (
+            draft.photoUrl ? (
+              <>
+                <GlassButton label="Next" onPress={goNext} disabled={!canContinue} />
+                <SecondaryButton label="Change picture" onPress={handlePhotoPick} />
+              </>
+            ) : (
+              <>
+                <GlassButton label="Add profile picture" onPress={handlePhotoPick} disabled={!canContinue} />
+                {canContinue && <SecondaryButton label="Skip for now" onPress={goNext} />}
+              </>
+            )
           ) : (
-            <PrimaryButton
-              disabled={!canContinue}
-              label="Next"
-              onPress={advanceStep}
-            />
+            <>
+              <GlassButton
+                label={step === "review" ? "Create card" : "Next"}
+                onPress={step === "review" ? handleCreate : goNext}
+                disabled={!canContinue}
+              />
+              {step === "vibe" && <SecondaryButton label="Skip" onPress={skipVibe} />}
+            </>
           )}
-
-          {step === "vibe" ? (
-            <SecondaryButton label="Skip" onPress={skipVibe} />
-          ) : null}
         </View>
-      </ScrollView>
-    </View>
+      </Animated.View>
+    </KeyboardAvoidingView>
+    </GestureDetector>
   );
 }
 
+/* ── Styles ─────────────────────────────────────────────────── */
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: platformColor("systemGroupedBackground"),
+  /* Welcome */
+  welcomeContainer: { flex: 1, backgroundColor: "#0A0A0A" },
+  welcomeHero: {
+    position: "absolute", top: 0, left: 0, right: 0, height: "70%",
   },
-  scrollContent: {
-    gap: 24,
-    paddingBottom: 48,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+  welcomeHeroFade: {
+    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
   },
-  previewWrap: {
-    alignItems: "center",
+  welcomeContent: {
+    flex: 1, alignItems: "center", justifyContent: "flex-end",
+    paddingBottom: 56, paddingHorizontal: 24,
   },
-  previewFrame: {
-    width: "100%",
+  welcomeLogoWrap: { width: 80, height: 72, marginBottom: 16 },
+  welcomeLogo: { width: 80, height: 72 },
+  welcomeTextBlock: { alignItems: "center", marginBottom: 40 },
+  welcomeTitle: {
+    color: "#FFFFFF",
+    fontFamily: "GoudyBookletter1911_400Regular",
+    fontSize: 42, textAlign: "center",
   },
-  chromeRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: 28,
+  welcomeSubtitle: { color: "rgba(255,255,255,0.6)", fontSize: 17, textAlign: "center", marginTop: 8 },
+  welcomeCta: { width: "100%" },
+  welcomeButton: {
+    alignItems: "center", backgroundColor: "#FFFFFF",
+    borderCurve: "continuous" as any, borderRadius: 16,
+    justifyContent: "center", minHeight: 50,
   },
-  chromeSpacer: {
-    width: 52,
+  welcomeButtonLabel: { color: "#0A0A0A", fontSize: 17, fontWeight: "600" },
+
+  /* Builder layout */
+  container: { flex: 1, backgroundColor: platformColor("systemGroupedBackground") },
+
+  bannerWrap: {
+    position: "absolute", top: 0, left: 0, right: 0, height: "55%", zIndex: 0,
   },
-  dotsRow: {
-    flexDirection: "row",
-    gap: 8,
+  bannerImage: { width: "100%", height: "100%" },
+  bannerBlur: {
+    position: "absolute", left: 0, right: 0, bottom: 0,
   },
-  dot: {
-    borderRadius: 4,
-    height: 8,
-    width: 8,
+  bannerFade: {
+    position: "absolute", left: 0, right: 0, bottom: 0, height: "100%",
   },
-  dotActive: {
-    backgroundColor: platformColor("label"),
+
+  previewZone: {
+    flex: 382, alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 24, paddingTop: 60, zIndex: 1,
   },
-  dotInactive: {
-    backgroundColor: platformColor("quaternaryLabel"),
-  },
-  stepBody: {
-    gap: 18,
-  },
-  stepEyebrow: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  stepTitle: {
+  previewEmpty: { alignItems: "center", justifyContent: "center" },
+  previewLogo: { width: 56, height: 50, opacity: 0.15 },
+  previewCard: { alignItems: "center", gap: 8 },
+  previewName: {
     color: platformColor("label"),
     fontFamily: "GoudyBookletter1911_400Regular",
-    fontSize: 36,
-    letterSpacing: -0.4,
-    lineHeight: 42,
+    fontSize: 28,
   },
-  groupCard: {
+  previewRole: { color: platformColor("secondaryLabel"), fontSize: 15 },
+  previewHeadline: {
+    color: platformColor("secondaryLabel"), fontSize: 14,
+    textAlign: "center", lineHeight: 20, maxWidth: 280,
+  },
+
+  dotsCenter: { flexDirection: "row", justifyContent: "center", gap: 8, paddingVertical: 8 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  dotActive: { backgroundColor: platformColor("label") },
+  dotInactive: { backgroundColor: platformColor("quaternaryLabel") },
+
+  stepZone: { paddingHorizontal: 24, paddingBottom: 40, gap: 16, flex: 618 },
+  stepZoneExpanded: { flex: 1 },
+  stepContent: { gap: 16 },
+  blurTitleRow: { flexDirection: "row", flexWrap: "wrap" },
+
+  stepEyebrow: {
+    color: platformColor("secondaryLabel"), fontSize: 13,
+    fontWeight: "600", textTransform: "uppercase",
+  },
+  stepTitle: {
+    color: platformColor("label"), fontFamily: "GoudyBookletter1911_400Regular",
+    fontSize: 32, letterSpacing: -0.4,
+  },
+  inputCard: {
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderCurve: "continuous" as any,
-    borderRadius: 18,
-    gap: 10,
-    padding: 18,
+    borderCurve: "continuous" as any, borderRadius: 16, gap: 8, padding: 16,
   },
   fieldLabel: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
+    color: platformColor("secondaryLabel"), fontSize: 13,
+    fontWeight: "600", textTransform: "uppercase",
   },
   textInput: {
-    color: platformColor("label"),
-    fontSize: 18,
-    lineHeight: 24,
-    minHeight: 24,
-    padding: 0,
+    color: platformColor("label"), fontSize: 17, lineHeight: 22, minHeight: 22, padding: 0,
   },
-  multilineInput: {
-    minHeight: 96,
-    paddingTop: 2,
-    textAlignVertical: "top",
-  },
-  photoButton: {
+
+  vibeChoices: { gap: 12 },
+  vibeCard: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderCurve: "continuous" as any,
-    borderRadius: 999,
-    minHeight: 40,
-    justifyContent: "center",
-    paddingHorizontal: 16,
+    borderRadius: 16, minHeight: 56, paddingHorizontal: 20,
   },
-  photoButtonLabel: {
-    color: platformColor("label"),
-    fontSize: 15,
-    fontWeight: "600",
+  vibeCardLabel: {
+    color: platformColor("label"), fontSize: 18, fontWeight: "600",
   },
-  choicesColumn: {
-    gap: 12,
-  },
+  vibeCheck: { width: 22, height: 22 },
+
+  choicesCol: { gap: 10 },
   choiceCard: {
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderColor: "transparent",
-    borderCurve: "continuous" as any,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    gap: 6,
-    padding: 18,
+    borderColor: "transparent", borderCurve: "continuous" as any,
+    borderRadius: 16, borderWidth: 1.5, padding: 16,
   },
-  choiceCardSelected: {
-    backgroundColor: "#EEF4FF",
-    borderColor: "#0066CC",
-  },
-  choiceTitle: {
-    color: platformColor("label"),
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  choiceTitleSelected: {
-    color: "#0A4FB3",
-  },
-  chipsWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
+  choiceCardSelected: { borderColor: platformColor("systemBlue") },
+  choiceLabel: { color: platformColor("label"), fontSize: 17, fontWeight: "600" },
+  choiceLabelSelected: { color: platformColor("systemBlue") },
+
+  chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   chip: {
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderColor: "transparent",
-    borderCurve: "continuous" as any,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    minHeight: 40,
-    justifyContent: "center",
-    paddingHorizontal: 16,
+    borderColor: "transparent", borderCurve: "continuous" as any,
+    borderRadius: 999, borderWidth: 1.5, justifyContent: "center",
+    minHeight: 36, paddingHorizontal: 14,
   },
-  chipSelected: {
-    backgroundColor: "#EEF4FF",
-    borderColor: "#0066CC",
+  chipSelected: { borderColor: platformColor("systemBlue"), backgroundColor: "rgba(0,122,255,0.08)" },
+  chipLabel: { color: platformColor("label"), fontSize: 14, fontWeight: "600" },
+  chipLabelSelected: { color: platformColor("systemBlue") },
+
+  inlineRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  inlineAction: {
+    alignItems: "center", backgroundColor: platformColor("systemFill"),
+    borderCurve: "continuous" as any, borderRadius: 10,
+    justifyContent: "center", minHeight: 40, paddingHorizontal: 14,
   },
-  chipLabel: {
-    color: platformColor("label"),
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  chipLabelSelected: {
-    color: "#0A4FB3",
-  },
-  reviewCard: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderCurve: "continuous" as any,
-    borderRadius: 18,
-    gap: 12,
-    padding: 18,
-  },
-  reviewLabel: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  inlineInputRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10,
-  },
-  inlineInput: {
-    flex: 1,
-  },
-  inlineActionButton: {
-    alignItems: "center",
-    backgroundColor: platformColor("systemFill"),
-    borderCurve: "continuous" as any,
-    borderRadius: 12,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 16,
-  },
-  inlineActionButtonDisabled: {
-    opacity: 0.6,
-  },
-  inlineActionLabel: {
-    color: platformColor("label"),
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  reviewSuccess: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  ctaBlock: {
-    gap: 14,
-    marginTop: 4,
-  },
-  primaryButton: {
-    alignItems: "center",
-    borderCurve: "continuous" as any,
-    borderRadius: 18,
-    justifyContent: "center",
-    minHeight: 54,
-    overflow: "hidden",
-    paddingHorizontal: 20,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.7,
-  },
-  primaryButtonLabel: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "600",
-    lineHeight: 22,
-  },
-  secondaryButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 24,
-  },
-  secondaryButtonLabel: {
-    color: platformColor("secondaryLabel"),
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  pressed: {
-    opacity: 0.88,
-  },
+  inlineActionLabel: { color: platformColor("label"), fontSize: 15, fontWeight: "600" },
+  importSuccess: { color: platformColor("secondaryLabel"), fontSize: 13 },
+
+  ctaBlock: { gap: 12, marginTop: "auto" },
 });

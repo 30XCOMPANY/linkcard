@@ -74,7 +74,7 @@ export function AdaptiveGlass({
       <GlassView
         glassEffectStyle={glassEffectStyle}
         tintColor={tintColor}
-        style={[{ borderCurve: "continuous" as any }, style]}
+        style={[{ borderCurve: "continuous" as any, backgroundColor: fallbackColor }, style]}
         className={className}
       >
         {children}
