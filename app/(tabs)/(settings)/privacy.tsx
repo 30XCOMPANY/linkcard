@@ -1,13 +1,14 @@
 /**
  * [INPUT]: react-native ScrollView/Text/Switch/Alert/Platform/PlatformColor/StyleSheet,
- *          @/src/stores/cardStore, @/src/design-system/settings primitives,
- *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/types ContactActionType
+ *          @/src/stores/cardStore (card, includeQRCode, setIncludeQRCode, updateContactAction,
+ *          setDefaultVersion), @/src/design-system/settings primitives,
+ *          @/src/lib/haptics, @/src/types ContactActionType
  * [OUTPUT]: PrivacyScreen — sharing defaults, contact preferences, share history
  * [POS]: Settings sub-page — privacy controls and contact method configuration
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Alert,
   Platform,
@@ -23,6 +24,7 @@ import { haptic } from "@/src/lib/haptics";
 import type { ContactActionType } from "@/src/types";
 import {
   SettingsGroup,
+  SettingsGroupFooter,
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
@@ -40,8 +42,10 @@ const CONTACT_METHODS: { type: ContactActionType; label: string; placeholder: st
 export default function PrivacyScreen() {
   const card = useCardStore((s) => s.card);
   const updateContactAction = useCardStore((s) => s.updateContactAction);
+  const setDefaultVersion = useCardStore((s) => s.setDefaultVersion);
+  const includeQR = useCardStore((s) => s.includeQRCode);
+  const setIncludeQR = useCardStore((s) => s.setIncludeQRCode);
   const contactAction = card?.contactAction;
-  const [includeQR, setIncludeQR] = useState(true);
 
   const defaultVersion = card?.versions.find((v) => v.isDefault) ?? card?.versions[0];
 
@@ -78,6 +82,34 @@ export default function PrivacyScreen() {
     }
   };
 
+  const handleVersionPick = () => {
+    haptic.light();
+    const versions = card?.versions ?? [];
+    if (!versions.length) return;
+    const options = [...versions.map((v) => v.name), "Cancel"];
+    if (Platform.OS === "ios") {
+      const ActionSheetIOS = require("react-native").ActionSheetIOS;
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: versions.length },
+        (index: number) => {
+          if (index >= versions.length) return;
+          setDefaultVersion(versions[index].id);
+        }
+      );
+    } else {
+      Alert.alert(
+        "Default Card Version",
+        "Choose the version used for Quick Share",
+        versions
+          .map((v) => ({
+            text: v.name,
+            onPress: () => setDefaultVersion(v.id),
+          }))
+          .concat({ text: "Cancel", onPress: () => {} })
+      );
+    }
+  };
+
   const handleContactValueEdit = () => {
     const method = CONTACT_METHODS.find((m) => m.type === contactAction?.type);
     Alert.prompt(
@@ -109,10 +141,7 @@ export default function PrivacyScreen() {
           subtitle={defaultVersion?.name ?? "None"}
           leading={<SettingsIconTile web="creditcard" color="#5856D6" />}
           trailing={<SettingsChevron />}
-          onPress={() => {
-            haptic.light();
-            Alert.alert("Card Versions", `Currently using "${defaultVersion?.name ?? "None"}"`);
-          }}
+          onPress={handleVersionPick}
         />
         <SettingsSeparator />
         <SettingsRow
@@ -130,6 +159,7 @@ export default function PrivacyScreen() {
           }
         />
       </SettingsGroup>
+      <SettingsGroupFooter text="The default card version is shared when you use Quick Share. You can always choose a different version when sharing manually." />
 
       <SettingsSectionHeader title="CONTACT PREFERENCES" />
       <SettingsGroup>
@@ -152,6 +182,7 @@ export default function PrivacyScreen() {
           onPress={handleContactValueEdit}
         />
       </SettingsGroup>
+      <SettingsGroupFooter text="The contact method appears as a button on your shared card, allowing recipients to reach you directly." />
 
       <SettingsSectionHeader title="SHARE HISTORY" />
       <SettingsGroup>
