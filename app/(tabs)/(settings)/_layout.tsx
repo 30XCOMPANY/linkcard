@@ -8,6 +8,8 @@
 import { Stack } from "expo-router/stack";
 import { PlatformColor } from "react-native";
 
+const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
+
 const pushed = {
   headerLargeTitle: false,
   headerTransparent: false,
@@ -23,6 +25,7 @@ export default function SettingsLayout() {
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
         headerTitleStyle: { color: PlatformColor("label") as unknown as string },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",

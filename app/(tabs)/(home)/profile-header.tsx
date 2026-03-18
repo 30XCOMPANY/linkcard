@@ -40,7 +40,7 @@ export function HomeProfileHeader({
 
   return (
     <>
-      <Stack.Screen.Title large>{currentVersion.name}</Stack.Screen.Title>
+      <Stack.Screen.Title large largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular" }}>{currentVersion.name}</Stack.Screen.Title>
 
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Menu icon="chevron.up.chevron.down" elementSize="small">
