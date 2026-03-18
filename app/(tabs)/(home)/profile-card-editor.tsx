@@ -110,7 +110,7 @@ export function ProfileCardEditor({
         />
       </Pressable>
 
-      <Pressable onPress={onAvatarPress}>
+      <Pressable onPress={onAvatarPress} style={{ zIndex: 1 }}>
         <Avatar
           accentColor={version.accentColor}
           glassIntensity={18}
