@@ -235,7 +235,7 @@ export default function SettingsScreen() {
                   ]
                 );
               }}
-              leading={<SettingsIconTile web="arrow-forward" color="#FF9500" />}
+              leading={<SettingsIconTile web="reload" color="#FF9500" />}
               trailing={<SettingsChevron />}
             />
             <SettingsSeparator />
