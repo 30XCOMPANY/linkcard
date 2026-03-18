@@ -4,14 +4,14 @@
  *          react-native-gesture-handler Gesture/GestureDetector,
  *          @/src/stores/contactsStore, @/src/components/card/profile-card ProfileCard,
  *          @/src/components/shared/adaptive-glass AdaptiveGlass,
- *          @/src/lib/haptics, @/src/lib/springs, @/src/lib/icons Icon,
+ *          @/src/lib/haptics, @/src/lib/icons Icon,
  *          @/src/lib/contact-actions, @/src/types CardVersion
  * [OUTPUT]: DiscoverScreen — discover feed with swipe gestures and card browsing
  * [POS]: Discover tab main screen — Tinder-style swipe + Next/Say Hi buttons
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -25,12 +25,12 @@ import {
 import { Stack } from "expo-router/stack";
 import { useRouter } from "expo-router";
 import Animated, {
-  Easing,
   interpolate,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  Easing,
+  runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
@@ -43,12 +43,8 @@ import { Icon } from "@/src/lib/icons";
 import type { CardVersion, DiscoverProfile } from "@/src/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_OUT_DURATION = 200;
-const SWIPE_OUT_CONFIG = { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.cubic) };
-const SNAP_BACK_CONFIG = { duration: 150, easing: Easing.out(Easing.cubic) };
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.2;
 
-// ── Synthesize CardVersion from DiscoverProfile fields ───────────
 function toCardVersion(p: DiscoverProfile): CardVersion {
   return {
     id: "discover-preview",
@@ -73,10 +69,6 @@ export default function DiscoverScreen() {
   const removeContact = useContactsStore((s) => s.removeContact);
 
   const current = index < batch.length ? batch[index] : null;
-  const nextIndex = batch.length > 0 ? (index + 1) % batch.length : 0;
-  const prevIndex = batch.length > 0 ? (index - 1 + batch.length) % batch.length : 0;
-  const nextProfile = batch.length > 1 ? batch[nextIndex] : null;
-  const prevProfile = batch.length > 1 ? batch[prevIndex] : null;
 
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
@@ -87,18 +79,19 @@ export default function DiscoverScreen() {
   }, [resetDaily]);
 
   useEffect(() => {
-    if (batch.length === 0) {
-      refreshBatch();
-    }
+    if (batch.length === 0) refreshBatch();
   }, [batch.length, refreshBatch]);
 
-  // ── Swipe gesture ──────────────────────────────────────────────
+  // ── Swipe state ────────────────────────────────────────────────
   const translateX = useSharedValue(0);
-
   const [shownLoopAlert, setShownLoopAlert] = useState(false);
 
-  const onSwipeComplete = useCallback(
+  // Track swipe direction for enter animation
+  const lastSwipeDir = useRef<"left" | "right">("left");
+
+  const doSwipe = useCallback(
     (direction: "left" | "right") => {
+      lastSwipeDir.current = direction;
       haptic.selection();
       if (direction === "left") {
         const justCompletedFirstLoop = nextCard();
@@ -112,10 +105,19 @@ export default function DiscoverScreen() {
       } else {
         prevCard();
       }
-      translateX.value = 0;
     },
-    [nextCard, prevCard, translateX, shownLoopAlert]
+    [nextCard, prevCard, shownLoopAlert]
   );
+
+  // When index changes, animate the new card entering from the swipe direction
+  useEffect(() => {
+    const enterFrom = lastSwipeDir.current === "left" ? SCREEN_WIDTH : -SCREEN_WIDTH;
+    translateX.value = enterFrom;
+    translateX.value = withTiming(0, {
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [index, translateX]);
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-15, 15])
@@ -124,26 +126,14 @@ export default function DiscoverScreen() {
     })
     .onEnd((e) => {
       if (e.translationX < -SWIPE_THRESHOLD) {
-        // Swipe left → next card
-        translateX.value = withTiming(
-          -SCREEN_WIDTH,
-          SWIPE_OUT_CONFIG,
-          () => {
-            runOnJS(onSwipeComplete)("left");
-          }
-        );
+        runOnJS(doSwipe)("left");
       } else if (e.translationX > SWIPE_THRESHOLD) {
-        // Swipe right → prev card (wraps around)
-        translateX.value = withTiming(
-          SCREEN_WIDTH,
-          SWIPE_OUT_CONFIG,
-          () => {
-            runOnJS(onSwipeComplete)("right");
-          }
-        );
+        runOnJS(doSwipe)("right");
       } else {
-        // Snap back
-        translateX.value = withTiming(0, SNAP_BACK_CONFIG);
+        translateX.value = withTiming(0, {
+          duration: 150,
+          easing: Easing.out(Easing.cubic),
+        });
       }
     });
 
@@ -160,21 +150,15 @@ export default function DiscoverScreen() {
     ],
   }));
 
-  // Reset translateX instantly when index changes (no animation)
-  useEffect(() => {
-    translateX.value = 0;
-  }, [index, translateX]);
-
   const handleNext = useCallback(() => {
+    lastSwipeDir.current = "left";
     haptic.selection();
     translateX.value = withTiming(
       -SCREEN_WIDTH,
-      SWIPE_OUT_CONFIG,
-      () => {
-        runOnJS(onSwipeComplete)("left");
-      }
+      { duration: 200, easing: Easing.out(Easing.cubic) },
+      () => runOnJS(doSwipe)("left")
     );
-  }, [translateX, onSwipeComplete]);
+  }, [translateX, doSwipe]);
 
   const handleSayHi = useCallback(() => {
     if (!current) return;
@@ -195,7 +179,6 @@ export default function DiscoverScreen() {
 
   return (
     <>
-      {/* ── Header toolbar ──────────────────────────────────── */}
       <Stack.Screen options={{ title: "Discover", headerLargeTitle: true }} />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
@@ -211,50 +194,35 @@ export default function DiscoverScreen() {
         </Stack.Toolbar.View>
       </Stack.Toolbar>
 
-      {/* ── Body ────────────────────────────────────────────── */}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
         {current ? (
-          <View style={styles.cardStack}>
-            {/* Next card behind — ready to show when front card leaves */}
-            {nextProfile ? (
-              <View style={styles.cardBehind}>
-                <ProfileCard
-                  profile={nextProfile.profile}
-                  version={toCardVersion(nextProfile)}
-                />
-              </View>
-            ) : null}
-
-            {/* Current card on top — draggable */}
-            <GestureDetector gesture={panGesture}>
-              <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
-                <ProfileCard
-                  profile={current.profile}
-                  version={toCardVersion(current)}
-                />
-                {/* Bookmark — glass chip overlaid on card top-right */}
-                <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
-                  <AdaptiveGlass
-                    style={styles.bookmarkGlass}
-                    glassEffectStyle="regular"
-                    intensity={50}
-                    blurTint="light"
-                    fallbackColor="rgba(255,255,255,0.75)"
-                  >
-                    <Icon
-                      web="bookmark"
-                      size={18}
-                      color={saved ? "#FF9500" : "#FFFFFF"}
-                    />
-                  </AdaptiveGlass>
-                </Pressable>
-              </Animated.View>
-            </GestureDetector>
-          </View>
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
+              <ProfileCard
+                profile={current.profile}
+                version={toCardVersion(current)}
+              />
+              <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
+                <AdaptiveGlass
+                  style={styles.bookmarkGlass}
+                  glassEffectStyle="regular"
+                  intensity={50}
+                  blurTint="light"
+                  fallbackColor="rgba(255,255,255,0.75)"
+                >
+                  <Icon
+                    web="bookmark"
+                    size={18}
+                    color={saved ? "#FF9500" : "#FFFFFF"}
+                  />
+                </AdaptiveGlass>
+              </Pressable>
+            </Animated.View>
+          </GestureDetector>
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Loading...</Text>
@@ -262,13 +230,9 @@ export default function DiscoverScreen() {
         )}
       </ScrollView>
 
-      {/* ── Floating action chips — liquid glass ─────────────── */}
       {current ? (
         <View style={styles.floatingBar}>
-          <Pressable
-            onPress={handleNext}
-            style={styles.glassChipWrap}
-          >
+          <Pressable onPress={handleNext} style={styles.glassChipWrap}>
             <AdaptiveGlass
               style={styles.glassChip}
               glassEffectStyle="regular"
@@ -280,10 +244,7 @@ export default function DiscoverScreen() {
             </AdaptiveGlass>
           </Pressable>
           <View style={styles.btnSpacer} />
-          <Pressable
-            onPress={handleSayHi}
-            style={styles.glassChipWrap}
-          >
+          <Pressable onPress={handleSayHi} style={styles.glassChipWrap}>
             <AdaptiveGlass
               style={styles.glassChipPrimary}
               glassEffectStyle="regular"
@@ -353,15 +314,6 @@ const styles = StyleSheet.create({
     minWidth: 32,
     alignItems: "center",
     justifyContent: "center",
-  },
-  cardStack: {
-    position: "relative",
-  },
-  cardBehind: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
   },
   cardWrap: {
     position: "relative",
