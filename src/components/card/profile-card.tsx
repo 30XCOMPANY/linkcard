@@ -81,9 +81,12 @@ export function ProfileCard({
     tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
     pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
     pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
-    link: dark ? "#60A5FA" : (PlatformColor("systemBlue") as unknown as string),
+    link: accent,
     separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
   };
+
+  const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
+  const nameWeight = nameWeightMap[(version.fieldStyles?.name?.fontWeight as keyof typeof nameWeightMap)] ?? "400";
 
   const showWebsite = vis.has("website") && profile.website;
   const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
@@ -132,7 +135,7 @@ export function ProfileCard({
         <Text
           style={[
             s.profileName,
-            { color: colors.label },
+            { color: colors.label, fontWeight: nameWeight as any },
             nameFonts[nameFont].fontFamily
               ? { fontFamily: nameFonts[nameFont].fontFamily }
               : undefined,
