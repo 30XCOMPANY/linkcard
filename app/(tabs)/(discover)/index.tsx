@@ -242,7 +242,7 @@ export default function DiscoverScreen() {
               onPress={handleNext}
               label="Next"
               modifiers={[
-                frame({ maxWidth: 9999, minHeight: 50 }),
+                frame({ maxWidth: 9999, minHeight: 40 }),
                 glassEffect({ glass: { variant: "regular" } }),
                 foregroundStyle({ type: "hierarchical", style: "primary" }),
               ]}
@@ -254,7 +254,7 @@ export default function DiscoverScreen() {
               onPress={handleSayHi}
               label={current.contactAction?.label ?? "Say Hi"}
               modifiers={[
-                frame({ maxWidth: 9999, minHeight: 50 }),
+                frame({ maxWidth: 9999, minHeight: 40 }),
                 glassEffect({ glass: { variant: "regular", tint: "#007AFF" } }),
                 foregroundStyle("#FFFFFF"),
               ]}
@@ -282,11 +282,11 @@ const styles = StyleSheet.create({
   },
   glassHostLeft: {
     flex: 1,
-    height: 50,
+    height: 40,
   },
   glassHostRight: {
     flex: 1,
-    height: 50,
+    height: 40,
   },
   btnSpacer: { width: 12 },
   toolbarBtn: {
