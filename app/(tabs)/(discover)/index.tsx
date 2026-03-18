@@ -154,31 +154,13 @@ export default function DiscoverScreen() {
         rotate: `${interpolate(
           translateX.value,
           [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-          [-8, 0, 8]
+          [-6, 0, 6]
         )}deg`,
       },
     ],
-    opacity: interpolate(
-      Math.abs(translateX.value),
-      [0, SCREEN_WIDTH],
-      [1, 0.5]
-    ),
   }));
 
-  // Background card scales up as front card moves away
-  const nextCardStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: interpolate(
-          Math.abs(translateX.value),
-          [0, SCREEN_WIDTH],
-          [0.95, 1]
-        ),
-      },
-    ],
-  }));
-
-  // Reset translateX when index changes
+  // Reset translateX instantly when index changes (no animation)
   useEffect(() => {
     translateX.value = 0;
   }, [index, translateX]);
@@ -237,14 +219,14 @@ export default function DiscoverScreen() {
       >
         {current ? (
           <View style={styles.cardStack}>
-            {/* Next card behind — scales up as front card moves */}
+            {/* Next card behind — ready to show when front card leaves */}
             {nextProfile ? (
-              <Animated.View style={[styles.cardBehind, nextCardStyle]}>
+              <View style={styles.cardBehind}>
                 <ProfileCard
                   profile={nextProfile.profile}
                   version={toCardVersion(nextProfile)}
                 />
-              </Animated.View>
+              </View>
             ) : null}
 
             {/* Current card on top — draggable */}
