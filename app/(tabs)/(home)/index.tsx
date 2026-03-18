@@ -9,7 +9,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -26,6 +26,8 @@ import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-s
 
 export default function HomeScreen() {
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
+  const [shareViewportKey, setShareViewportKey] = useState(0);
   const card = useCardStore((state) => state.card);
   const nameFont = useCardStore((state) => state.nameFont) ?? "classic";
   const addVersion = useCardStore((state) => state.addVersion);
@@ -82,6 +84,7 @@ export default function HomeScreen() {
     releaseTick,
     handleScroll: handleShareScroll,
     handleRelease: handleShareRelease,
+    handleReset: resetShareOverscroll,
   } = useShareOverscroll();
   const backdropStyle = useAnimatedStyle(() => {
     const progress = Math.min(1, overscroll.value / COMMIT_THRESHOLD);
@@ -95,14 +98,34 @@ export default function HomeScreen() {
     handleShareScroll(contentOffset.y, contentSize.height, layoutMeasurement.height);
   }, [handleShareScroll]);
 
+  const waitForViewportReset = useCallback(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+  }, []);
+
+  const resetShareViewport = useCallback(async () => {
+    setShareViewportKey((value) => value + 1);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    resetShareOverscroll();
+    await waitForViewportReset();
+  }, [resetShareOverscroll, waitForViewportReset]);
+
   const handleShare = useCallback(async () => {
     if (!card || !currentVersion) return;
+
+    await resetShareViewport();
+
     try {
       await shareCard(card, currentVersion, currentVersion.visibleFields as string[]);
     } catch (error) {
       Alert.alert("Share failed", "Please try again.");
+    } finally {
+      await resetShareViewport();
     }
-  }, [card, currentVersion]);
+  }, [card, currentVersion, resetShareViewport]);
 
   if (!card || !currentVersion) {
     return (
@@ -137,20 +160,9 @@ export default function HomeScreen() {
         versions={card.versions}
       />
 
-      <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none">
-        <LinearGradient
-          colors={[
-            currentVersion.accentColor + "00",
-            currentVersion.accentColor + "00",
-            currentVersion.accentColor + "40",
-            currentVersion.accentColor,
-          ]}
-          locations={[0, 0.35, 0.65, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </Animated.View>
-
       <ScrollView
+        key={shareViewportKey}
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -172,6 +184,20 @@ export default function HomeScreen() {
           />
         </SwipeToShare>
       </ScrollView>
+
+      {/* Backdrop AFTER ScrollView — absolute positioned, doesn't block native header connection */}
+      <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={[
+            currentVersion.accentColor + "00",
+            currentVersion.accentColor + "00",
+            currentVersion.accentColor + "40",
+            currentVersion.accentColor,
+          ]}
+          locations={[0, 0.35, 0.65, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
     </>
   );
 }
