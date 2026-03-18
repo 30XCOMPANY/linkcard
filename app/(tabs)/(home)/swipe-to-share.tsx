@@ -1,10 +1,11 @@
 /**
  * [INPUT]: react-native-gesture-handler Gesture/GestureDetector,
- *          react-native-reanimated shared values/interpolate/withSpring/withRepeat/withTiming/runOnJS/useReducedMotion,
- *          expo-blur BlurView,
+ *          react-native-reanimated shared values/interpolate/withSpring/withTiming/runOnJS/useReducedMotion,
+ *          expo-linear-gradient LinearGradient,
  *          react-native View/StyleSheet,
- *          @/src/lib/springs, @/src/lib/haptics
- * [OUTPUT]: SwipeToShare — gesture wrapper: card tilts up on pan, accent blur rises inside card, fires onShare
+ *          @/src/lib/springs, @/src/lib/haptics, @/src/lib/platform-color
+ * [OUTPUT]: SwipeToShare — card tilts up on pan, edge glows, trapezoid accent zone appears below,
+ *           committed = card flies out + fades back, cancelled = spring back
  * [POS]: (home) gesture layer — wraps ProfileCard, owns drag state, delegates share action upward
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
@@ -21,13 +22,14 @@ import Animated, {
   useDerivedValue,
   useReducedMotion,
   useSharedValue,
-  withRepeat,
+  withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import { springs } from "@/src/lib/springs";
 
 /* ------------------------------------------------------------------ */
@@ -37,6 +39,7 @@ import { springs } from "@/src/lib/springs";
 const COMMIT_OFFSET = -120;
 const COMMIT_VELOCITY = -800;
 const MAX_TILT = -5;
+const TRAPEZOID_HEIGHT = 100;
 
 /* ------------------------------------------------------------------ */
 /*  SwipeToShare                                                       */
@@ -52,8 +55,13 @@ interface SwipeToShareProps {
 export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: SwipeToShareProps) {
   const translateY = useSharedValue(0);
   const wasCommitted = useSharedValue(0);
-  const gestureActive = useSharedValue(0); // 1 = share gesture activated this drag
+  const gestureActive = useSharedValue(0);
   const reducedMotion = useReducedMotion();
+
+  // Fly-out / fade-back state: 0=normal, 1=flying out, 2=fading back
+  const flyState = useSharedValue(0);
+  const cardOpacity = useSharedValue(1);
+  const cardScale = useSharedValue(1);
 
   const progress = useDerivedValue(() =>
     Math.min(1, Math.abs(translateY.value) / Math.abs(COMMIT_OFFSET))
@@ -68,14 +76,16 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
     .activeOffsetY(-10)
     .onStart(() => {
       "worklet";
+      if (flyState.value !== 0) return;
       wasCommitted.value = 0;
       gestureActive.value = 0;
     })
     .onUpdate((e) => {
       "worklet";
-      // Only activate share gesture if scroll is at bottom
+      if (flyState.value !== 0) return;
+
       if (gestureActive.value === 0) {
-        if (!isAtBottom.value) return; // not at bottom — ignore
+        if (!isAtBottom.value) return;
         gestureActive.value = 1;
       }
 
@@ -87,20 +97,48 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
     })
     .onEnd((e) => {
       "worklet";
-      if (gestureActive.value === 0) return; // was never activated
+      if (flyState.value !== 0) return;
+      if (gestureActive.value === 0) return;
 
       const committed =
         translateY.value < COMMIT_OFFSET || e.velocityY < COMMIT_VELOCITY;
 
-      if (committed) runOnJS(fireSuccessHaptic)();
+      if (committed) {
+        // === FLY OUT ===
+        runOnJS(fireSuccessHaptic)();
+        flyState.value = 1;
 
-      translateY.value = withSpring(0, springs.share, (finished) => {
-        "worklet";
-        if (finished && committed) runOnJS(fireShare)();
-        else if (finished && !committed) runOnJS(fireCancelHaptic)();
-      });
+        // Card flies up and fades out
+        translateY.value = withTiming(-800, { duration: 350 });
+        cardScale.value = withTiming(0.92, { duration: 350 });
+        cardOpacity.value = withTiming(0, { duration: 250 });
+
+        // After fly-out: reset to invisible start position, then fade back
+        translateY.value = withDelay(400, withTiming(20, { duration: 0 }));
+        cardScale.value = withDelay(400, withTiming(0.96, { duration: 0 }));
+        cardOpacity.value = withDelay(400, withTiming(0, { duration: 0 }));
+
+        // Fade back in — new card materializing
+        translateY.value = withDelay(450, withSpring(0, springs.gentle));
+        cardScale.value = withDelay(450, withSpring(1, springs.gentle));
+        cardOpacity.value = withDelay(450, withTiming(1, { duration: 600 }));
+
+        // Fire share + reset state after sequence
+        translateY.value = withDelay(1100, withTiming(0, { duration: 0 }, () => {
+          "worklet";
+          flyState.value = 0;
+          runOnJS(fireShare)();
+        }));
+      } else {
+        // === CANCELLED ===
+        translateY.value = withSpring(0, springs.share, (finished) => {
+          "worklet";
+          if (finished) runOnJS(fireCancelHaptic)();
+        });
+      }
     });
 
+  /* Card transform: translate + tilt + fly-out scale/opacity */
   const cardStyle = useAnimatedStyle(() => {
     const tilt = reducedMotion
       ? 0
@@ -109,24 +147,45 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
       transform: [
         { translateY: translateY.value },
         { perspective: 800 },
-        { rotateX: `${tilt}deg` },
+        { rotateX: flyState.value === 0 ? `${tilt}deg` : "0deg" },
+        { scale: cardScale.value },
       ],
+      opacity: cardOpacity.value,
     };
   });
 
-  /* Condensation: accent-tinted blur layers inside the card, rising from bottom */
-  const condensationStyle = useAnimatedStyle(() => ({
-    height: interpolate(progress.value, [0, 1], [0, 180], Extrapolation.CLAMP),
-    opacity: interpolate(progress.value, [0, 0.08], [0, 1], Extrapolation.CLAMP),
-  }));
+  /* Edge glow: accent shadow around card */
+  const glowStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    if (p < 0.02 || flyState.value !== 0) return { opacity: 0 };
+    return {
+      opacity: 1,
+      shadowColor: accentColor,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: interpolate(p, [0, 1], [0, 0.4], Extrapolation.CLAMP),
+      shadowRadius: interpolate(p, [0, 1], [0, 30], Extrapolation.CLAMP),
+    };
+  });
 
-  /* Hint text fade */
-  const hintWrapStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.15], [0, 1], Extrapolation.CLAMP),
-    transform: [
-      { translateY: interpolate(progress.value, [0, 0.3], [8, 0], Extrapolation.CLAMP) },
-    ],
-  }));
+  /* Trapezoid zone opacity */
+  const trapStyle = useAnimatedStyle(() => {
+    if (flyState.value !== 0) return { opacity: 0, height: 0 };
+    return {
+      opacity: interpolate(progress.value, [0, 0.08], [0, 1], Extrapolation.CLAMP),
+      height: interpolate(progress.value, [0, 1], [0, TRAPEZOID_HEIGHT], Extrapolation.CLAMP),
+    };
+  });
+
+  /* Hint text */
+  const hintWrapStyle = useAnimatedStyle(() => {
+    if (flyState.value !== 0) return { opacity: 0 };
+    return {
+      opacity: interpolate(progress.value, [0, 0.15], [0, 1], Extrapolation.CLAMP),
+      transform: [
+        { translateY: interpolate(progress.value, [0, 0.3], [8, 0], Extrapolation.CLAMP) },
+      ],
+    };
+  });
 
   const swipeTextStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0.1, 0.55, 0.65], [0.5, 0.5, 0], Extrapolation.CLAMP),
@@ -139,82 +198,76 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
     ],
   }));
 
-  /* Breathing pulse */
-  const breathe = useSharedValue(0.05);
-  React.useEffect(() => {
-    breathe.value = withRepeat(withTiming(0.12, { duration: 1500 }), -1, true);
-  }, []);
-
-  const breathStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.05], [breathe.value, 0], Extrapolation.CLAMP),
+  /* Drag indicator: hidden at idle, fades in when gesture starts */
+  const indicatorStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.05, 0.15], [0, 0.3, 0.6], Extrapolation.CLAMP),
   }));
 
+  /* Card border color animated */
+  const cardBorderStyle = useAnimatedStyle(() => {
+    if (flyState.value !== 0) return { borderColor: "rgba(255,255,255,0.40)" };
+    const p = progress.value;
+    // Interpolate from white 40% to accent
+    const alpha = interpolate(p, [0, 1], [0.08, 0.45], Extrapolation.CLAMP);
+    return {
+      borderColor: p < 0.02
+        ? "rgba(255,255,255,0.40)"
+        : `rgba(${hexToRgb(accentColor)},${alpha})`,
+    };
+  });
+
   return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View
-        style={[st.root, cardStyle]}
-        accessible
-        accessibilityRole="button"
-        accessibilityHint="Swipe up to share your card"
-      >
-        {/* Card content */}
-        {children}
+    <View style={st.root}>
+      {/* Edge glow — behind card */}
+      <Animated.View style={[st.glowLayer, glowStyle]} pointerEvents="none" />
 
-        {/* Condensation overlay — inside card, anchored to bottom */}
-        <Animated.View style={[st.condensation, condensationStyle]} pointerEvents="none">
-          {BLUR_LAYERS.map((layer, i) => (
-            <BlurView
-              key={i}
-              intensity={layer.intensity}
-              tint="default"
-              style={[
-                st.blurLayer,
-                {
-                  bottom: `${(i / 8) * 100}%`,
-                  height: `${(1 / 8) * 100}%`,
-                  opacity: layer.opacity,
-                },
-              ]}
-            >
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: accentColor, opacity: 0.06 }]} />
-            </BlurView>
-          ))}
-        </Animated.View>
-
-        {/* Hint text — inside card at bottom */}
-        <Animated.View style={[st.hintWrap, hintWrapStyle]} pointerEvents="none">
-          <Animated.Text style={[st.hintText, { color: accentColor, opacity: 0.6 }, swipeTextStyle]}>
-            ↑ swipe up to share
-          </Animated.Text>
-          <Animated.Text style={[st.hintText, st.hintAbsolute, { color: accentColor }, releaseTextStyle]}>
-            ↑ Release to share
-          </Animated.Text>
-        </Animated.View>
-
-        {/* Breathing pulse — accent line at card bottom */}
+      {/* Card */}
+      <GestureDetector gesture={gesture}>
         <Animated.View
-          style={[st.breathLine, { backgroundColor: accentColor }, breathStyle]}
-          pointerEvents="none"
+          style={[st.cardWrap, cardStyle, cardBorderStyle]}
+          accessible
+          accessibilityRole="button"
+          accessibilityHint="Swipe up to share your card"
+        >
+          {children}
+          {/* Drag indicator — inside card bottom, fades in on gesture */}
+          <Animated.View style={[st.dragIndicator, indicatorStyle]} pointerEvents="none" />
+        </Animated.View>
+      </GestureDetector>
+
+
+      {/* Trapezoid accent zone — below card */}
+      <Animated.View style={[st.trapezoid, trapStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={[accentColor + "40", accentColor + "15", accentColor + "00"]}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFill}
         />
       </Animated.View>
-    </GestureDetector>
+
+      {/* Hint text — below card in trapezoid area */}
+      <Animated.View style={[st.hintWrap, hintWrapStyle]} pointerEvents="none">
+        <Animated.Text style={[st.hintText, { color: accentColor, opacity: 0.7 }, swipeTextStyle]}>
+          ↑ swipe up to share
+        </Animated.Text>
+        <Animated.Text style={[st.hintText, st.hintAbsolute, { color: accentColor }, releaseTextStyle]}>
+          ↑ Release to share
+        </Animated.Text>
+      </Animated.View>
+    </View>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Blur layer config                                                  */
+/*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const BLUR_LAYERS = [
-  { intensity: 100, opacity: 1.00 },
-  { intensity: 100, opacity: 0.90 },
-  { intensity: 100, opacity: 0.80 },
-  { intensity: 85,  opacity: 0.65 },
-  { intensity: 70,  opacity: 0.50 },
-  { intensity: 50,  opacity: 0.35 },
-  { intensity: 30,  opacity: 0.25 },
-  { intensity: 15,  opacity: 0.15 },
-] as const;
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r},${g},${b}`;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Styles                                                             */
@@ -224,28 +277,49 @@ const st = StyleSheet.create({
   root: {
     position: "relative",
   },
-  condensation: {
+  glowLayer: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    overflow: "hidden",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    zIndex: 10,
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 28,
+    zIndex: 0,
   },
-  blurLayer: {
+  cardWrap: {
+    zIndex: 1,
+    borderRadius: 24,
+    borderCurve: "continuous" as any,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.40)",
+    overflow: "hidden",
+  },
+  dragIndicator: {
     position: "absolute",
-    left: 0,
-    right: 0,
+    bottom: 8,
+    left: "50%",
+    marginLeft: -18,
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: platformColor("separator"),
+    zIndex: 12,
+  },
+  trapezoid: {
+    marginTop: 4,
+    marginHorizontal: -16, // extend to screen edges (counteract parent padding)
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    overflow: "hidden",
+    zIndex: 0,
   },
   hintWrap: {
     position: "absolute",
-    bottom: 24,
+    bottom: -60,
     left: 0,
     right: 0,
     alignItems: "center",
-    zIndex: 11,
+    zIndex: 2,
   },
   hintText: {
     fontSize: 13,
@@ -254,14 +328,5 @@ const st = StyleSheet.create({
   },
   hintAbsolute: {
     position: "absolute",
-  },
-  breathLine: {
-    position: "absolute",
-    bottom: 8,
-    left: "25%",
-    right: "25%",
-    height: 1.5,
-    borderRadius: 1,
-    zIndex: 11,
   },
 });
