@@ -250,7 +250,7 @@ export default function HomeScreen() {
                 tintColor={currentVersion.accentColor}
               />
             </View>
-            <Text style={[styles.shareTitle, { color: currentVersion.accentColor }]}>Share with...</Text>
+            <Text style={[styles.shareTitle, { color: currentVersion.accentColor }]}>Choose how to share</Text>
           </AdaptiveGlass>
         </Animated.View>
       ) : null}
