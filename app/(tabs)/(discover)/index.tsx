@@ -211,14 +211,15 @@ export default function DiscoverScreen() {
                 <AdaptiveGlass
                   style={styles.bookmarkGlass}
                   glassEffectStyle="regular"
-                  intensity={50}
-                  blurTint="light"
-                  fallbackColor="rgba(255,255,255,0.75)"
+                  tintColor={saved ? "#FF950030" : "#00000015"}
+                  intensity={40}
+                  blurTint="default"
+                  fallbackColor={saved ? "rgba(255,149,0,0.15)" : "rgba(0,0,0,0.08)"}
                 >
                   <Icon
                     web="bookmark"
                     size={18}
-                    color={saved ? "#FF9500" : "#FFFFFF"}
+                    color={saved ? "#FF9500" : "rgba(60,60,67,0.6)"}
                   />
                 </AdaptiveGlass>
               </Pressable>
