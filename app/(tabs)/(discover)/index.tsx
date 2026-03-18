@@ -234,9 +234,16 @@ export default function DiscoverScreen() {
       {current ? (
         <View style={styles.floatingBar}>
           <Pressable onPress={handleNext} style={styles.glassChipWrap}>
-            <View style={styles.glassChip}>
+            <AdaptiveGlass
+              style={styles.glassChip}
+              glassEffectStyle="clear"
+              tintColor="#FFFFFF08"
+              intensity={20}
+              blurTint="light"
+              fallbackColor="rgba(255,255,255,0.12)"
+            >
               <Text style={styles.glassChipLabel}>Next</Text>
-            </View>
+            </AdaptiveGlass>
           </Pressable>
           <View style={styles.btnSpacer} />
           <Pressable onPress={handleSayHi} style={styles.glassChipWrapPrimary}>
@@ -280,10 +287,9 @@ const styles = StyleSheet.create({
     minHeight: 50,
     borderRadius: 25,
     borderCurve: "continuous" as any,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(120,120,128,0.2)",
   },
   glassChipLabel: {
     fontSize: 17,
