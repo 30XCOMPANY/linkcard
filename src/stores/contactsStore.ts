@@ -13,7 +13,6 @@ import type { DiscoverProfile, SavedContact } from "@/src/types";
 import { getRandomBatch } from "@/src/lib/mock-discover";
 
 const BATCH_SIZE = 5;
-const MAX_DAILY_REFRESHES = 5;
 
 export type DiscoverStatus =
   | "loading"

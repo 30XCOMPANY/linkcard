@@ -50,6 +50,9 @@ coverage/
 *.swp
 *.swo
 
+# Agent workspace
+.superpowers/
+
 # API build
 api/dist/
 

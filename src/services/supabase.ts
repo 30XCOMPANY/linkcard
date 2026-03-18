@@ -8,7 +8,7 @@
 import 'react-native-url-polyfill/auto';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
-import { BusinessCard, LinkedInProfile, CardVersion, ShareSession } from '@/src/types';
+import { BusinessCard, CardTagState, LinkedInProfile, CardVersion, ShareSession } from '@/src/types';
 import { normalizeCardVersion } from '@/src/lib/card-presets';
 
 // Supabase configuration
@@ -76,6 +76,7 @@ export interface DbCard {
   user_id: string;
   profile: LinkedInProfile;
   versions: CardVersion[];
+  tag_state?: CardTagState;
   qr_code_data: string;
   created_at: string;
   updated_at: string;
@@ -109,6 +110,7 @@ export const cardService = {
       user_id: user.id,
       profile: card.profile,
       versions: card.versions,
+      tag_state: card.tagState,
       qr_code_data: card.qrCodeData,
       updated_at: new Date().toISOString(),
     };
@@ -148,6 +150,7 @@ export const cardService = {
       id: data.id,
       profile: data.profile,
       versions: data.versions.map(normalizeCardVersion),
+      tagState: data.tag_state ?? { custom: [], hidden: [], renamed: {} },
       qrCodeData: data.qr_code_data,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
@@ -189,6 +192,7 @@ export const cardService = {
             id: data.id,
             profile: data.profile,
             versions: data.versions.map(normalizeCardVersion),
+            tagState: data.tag_state ?? { custom: [], hidden: [], renamed: {} },
             qrCodeData: data.qr_code_data,
             createdAt: new Date(data.created_at),
             updatedAt: new Date(data.updated_at),
@@ -322,69 +326,10 @@ export const authService = {
    * Listen to auth state changes
    */
   onAuthStateChange(callback: (user: any) => void) {
-    return supabase.auth.onAuthStateChange((event, session) => {
+    return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session?.user || null);
     });
   },
 };
 
-// SQL for creating tables (reference for Supabase dashboard)
-export const SUPABASE_SCHEMA = `
--- Cards table
-CREATE TABLE cards (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  profile JSONB NOT NULL,
-  versions JSONB NOT NULL DEFAULT '[]',
-  qr_code_data TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Share sessions table
-CREATE TABLE share_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  card_id UUID REFERENCES cards(id) ON DELETE CASCADE,
-  version_id TEXT NOT NULL,
-  shared_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  view_count INTEGER DEFAULT 0,
-  recipient_note TEXT
-);
-
--- Function to increment view count
-CREATE OR REPLACE FUNCTION increment_view_count(session_id UUID)
-RETURNS VOID AS $$
-BEGIN
-  UPDATE share_sessions
-  SET view_count = view_count + 1
-  WHERE id = session_id;
-END;
-$$ LANGUAGE plpgsql;
-
--- Enable Row Level Security
-ALTER TABLE cards ENABLE ROW LEVEL SECURITY;
-ALTER TABLE share_sessions ENABLE ROW LEVEL SECURITY;
-
--- Policies
-CREATE POLICY "Users can manage their own cards"
-  ON cards FOR ALL
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Anyone can view shared sessions"
-  ON share_sessions FOR SELECT
-  USING (true);
-
-CREATE POLICY "Users can create share sessions for their cards"
-  ON share_sessions FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM cards
-      WHERE cards.id = card_id
-      AND cards.user_id = auth.uid()
-    )
-  );
-
--- Enable realtime for cards
-ALTER PUBLICATION supabase_realtime ADD TABLE cards;
-`;
 

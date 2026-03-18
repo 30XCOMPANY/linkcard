@@ -22,7 +22,6 @@ import {
   SettingsSectionHeader,
   SettingsSeparator,
   SettingsSegmented,
-  SettingsIconTile,
 } from "@/src/design-system/settings";
 
 const THEME_OPTIONS = ["Light", "Dark", "System"] as const;

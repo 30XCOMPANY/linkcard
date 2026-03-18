@@ -99,10 +99,8 @@ export function AdaptiveGlass({
         style={[
           {
             backgroundColor: fallbackColor,
-            // @ts-expect-error web-only CSS properties
             backdropFilter: "blur(40px) saturate(180%)",
-            WebkitBackdropFilter: "blur(40px) saturate(180%)",
-          },
+          } as ViewStyle,
           style,
         ]}
       >

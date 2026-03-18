@@ -22,7 +22,8 @@ import { useRouter } from "expo-router";
 import { View } from "@/src/tw";
 
 import { platformColor } from "@/src/lib/platform-color";
-import { useCardStore, MOCK_CARD, MOCK_CARD_ESHAW } from "@/src/stores/cardStore";
+import { useCardStore } from "@/src/stores/cardStore";
+import { MOCK_CARD, MOCK_CARD_ESHAW } from "@/src/lib/mock-cards";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import {

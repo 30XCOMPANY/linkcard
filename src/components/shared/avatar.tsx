@@ -118,7 +118,7 @@ export function Avatar({
       glassEffectStyle="clear"
       blurTint="default"
       fallbackColor="rgba(255,255,255,0.08)"
-      style={[shellStyle, style]}
+      style={{ ...shellStyle, ...style }}
     >
       {avatar}
     </AdaptiveGlass>

@@ -313,7 +313,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  btnSpacer: { width: 12 },
   emptyState: {
     alignItems: "center",
     paddingTop: 80,

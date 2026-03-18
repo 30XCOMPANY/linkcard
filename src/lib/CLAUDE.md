@@ -14,6 +14,11 @@ Core utility library — platform primitives and pure constants consumed across 
 - `social-platforms.ts`: Social platform registry — label, icon, color, URL prefix for 24 platforms
 - `social-icon.tsx`: SocialIcon component — Majesticons line SVGs via SvgXml for platform icons
 - `mock-discover.ts`: Mock profile pool for discover feed development (20 profiles, getRandomBatch)
+- `mock-cards.ts`: Dev-only mock BusinessCard instances for settings screen testing
+- `onboarding-card.ts`: OnboardingDraft → BusinessCard transformer (personality, profile, card creation)
 - `contact-actions.ts`: Contact action executor — opens email/linkedin/wechat/url based on action type
+- `name-fonts.ts`: Name font registry — family, label, key for card name typography
+- `profile-tags.ts`: Tag derivation and resolution from LinkedInProfile + CardTagState
+- `platform-color.ts`: Platform-adaptive color abstraction (PlatformColor on iOS, fallback on web/Android)
 
 [PROTOCOL]: Update this header on change, then check CLAUDE.md

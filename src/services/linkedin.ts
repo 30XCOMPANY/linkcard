@@ -128,18 +128,4 @@ const generateChecksum = (data: any): string => {
   return Math.abs(hash).toString(16);
 };
 
-/**
- * Build LinkedIn profile URL
- */
-export const getLinkedInUrl = (username: string): string => {
-  return `https://www.linkedin.com/in/${username}`;
-};
-
-/**
- * Build LinkedIn QR code data URL
- * LinkedIn's QR codes simply link to the profile
- */
-export const getLinkedInQRData = (username: string): string => {
-  return `https://www.linkedin.com/in/${username}`;
-};
 
