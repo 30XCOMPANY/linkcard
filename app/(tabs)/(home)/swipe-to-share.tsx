@@ -106,9 +106,9 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
     }
   });
 
-  // Watch for release after commit — when overscroll snaps back to 0
+  // Watch for release after commit — when overscroll snaps back near 0
   useDerivedValue(() => {
-    if (wasCommitted.value && overscroll.value === 0 && flyState.value === 0) {
+    if (wasCommitted.value && overscroll.value < 2 && flyState.value === 0) {
       // User released after passing threshold — trigger fly-out
       wasCommitted.value = false;
       flyState.value = 1;
@@ -194,21 +194,7 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
 
   return (
     <View style={st.root}>
-      {/* Accent gradient background */}
-      <Animated.View style={[st.bgFill, bgStyle]} pointerEvents="none">
-        <LinearGradient
-          colors={[accentColor + "00", accentColor + "00", accentColor + "40", accentColor]}
-          locations={[0, 0.35, 0.65, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </Animated.View>
-
-      {/* "Swipe to Share" text */}
-      <Animated.View style={[st.shareTextWrap, textStyle]} pointerEvents="none">
-        <Text style={[st.shareText, { color: accentColor }]}>Swipe to Share</Text>
-      </Animated.View>
-
-      {/* Card */}
+      {/* Card — rendered first, highest z-order */}
       <Animated.View
         style={[st.cardWrap, cardStyle, cardBorderStyle]}
         accessible
@@ -225,10 +211,23 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
             height: 4,
             borderRadius: 2,
             backgroundColor: platformColor("separator"),
-            zIndex: 12,
           }, indicatorStyle]}
           pointerEvents="none"
         />
+      </Animated.View>
+
+      {/* Accent gradient background — behind card */}
+      <Animated.View style={[st.bgFill, bgStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={[accentColor + "00", accentColor + "00", accentColor + "40", accentColor]}
+          locations={[0, 0.35, 0.65, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
+      {/* "Swipe to Share" text — behind card */}
+      <Animated.View style={[st.shareTextWrap, textStyle]} pointerEvents="none">
+        <Text style={[st.shareText, { color: accentColor }]}>Swipe to Share</Text>
       </Animated.View>
     </View>
   );
@@ -264,7 +263,8 @@ const st = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cardWrap: {
-    zIndex: 3,
+    zIndex: 10,
+    elevation: 10,
     borderRadius: 24,
     borderCurve: "continuous" as any,
     borderWidth: 2,
