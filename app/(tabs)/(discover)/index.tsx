@@ -33,8 +33,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
-import { Host, HStack, Button as SwiftButton, Spacer } from "@expo/ui/swift-ui";
-import { glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
+import { Host, Button as SwiftButton } from "@expo/ui/swift-ui";
+import { frame, glassEffect } from "@expo/ui/swift-ui/modifiers";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
@@ -237,28 +237,26 @@ export default function DiscoverScreen() {
 
       {current ? (
         <View style={styles.floatingBar}>
-          <Host style={styles.glassHost}>
-            <HStack modifiers={[padding({ horizontal: 8 })]}>
-              <SwiftButton
-                onPress={handleNext}
-                modifiers={[
-                  glassEffect({ glass: { variant: "regular" } }),
-                  padding({ horizontal: 24, vertical: 14 }),
-                ]}
-              >
-                Next
-              </SwiftButton>
-              <Spacer />
-              <SwiftButton
-                onPress={handleSayHi}
-                modifiers={[
-                  glassEffect({ glass: { variant: "regular", tint: "#007AFF" } }),
-                  padding({ horizontal: 24, vertical: 14 }),
-                ]}
-              >
-                {current.contactAction?.label ?? "Say Hi"}
-              </SwiftButton>
-            </HStack>
+          <Host style={styles.glassHostLeft}>
+            <SwiftButton
+              onPress={handleNext}
+              label="Next"
+              modifiers={[
+                frame({ maxWidth: 9999, minHeight: 50 }),
+                glassEffect({ glass: { variant: "regular" } }),
+              ]}
+            />
+          </Host>
+          <View style={styles.btnSpacer} />
+          <Host style={styles.glassHostRight}>
+            <SwiftButton
+              onPress={handleSayHi}
+              label={current.contactAction?.label ?? "Say Hi"}
+              modifiers={[
+                frame({ maxWidth: 9999, minHeight: 50 }),
+                glassEffect({ glass: { variant: "regular", tint: "#007AFF" } }),
+              ]}
+            />
           </Host>
         </View>
       ) : null}
@@ -280,10 +278,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  glassHost: {
+  glassHostLeft: {
     flex: 1,
-    height: 56,
+    height: 50,
   },
+  glassHostRight: {
+    flex: 1,
+    height: 50,
+  },
+  btnSpacer: { width: 12 },
   toolbarBtn: {
     minHeight: 32,
     minWidth: 32,
