@@ -219,7 +219,7 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
 
       {/* "Swipe to Share" text — below card */}
       <Animated.View style={[st.shareTextWrap, textStyle]} pointerEvents="none">
-        <Text style={[st.shareText, { color: "#fff" }]}>Swipe to Share</Text>
+        <Text style={[st.shareText, { color: accentColor }]}>Swipe to Share</Text>
       </Animated.View>
 
       {/* Edge glow */}
@@ -268,7 +268,7 @@ const st = StyleSheet.create({
     left: -16,
     right: -16,
     bottom: -200,
-    zIndex: 0,
+    zIndex: -1,
   },
   shareTextWrap: {
     position: "absolute",
@@ -276,7 +276,7 @@ const st = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    zIndex: 0,
+    zIndex: -1,
   },
   shareText: {
     fontSize: 17,
