@@ -73,6 +73,10 @@ export default function DiscoverScreen() {
   const removeContact = useContactsStore((s) => s.removeContact);
 
   const current = index < batch.length ? batch[index] : null;
+  const nextIndex = batch.length > 0 ? (index + 1) % batch.length : 0;
+  const prevIndex = batch.length > 0 ? (index - 1 + batch.length) % batch.length : 0;
+  const nextProfile = batch.length > 1 ? batch[nextIndex] : null;
+  const prevProfile = batch.length > 1 ? batch[prevIndex] : null;
 
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
@@ -161,6 +165,24 @@ export default function DiscoverScreen() {
     ),
   }));
 
+  // Background card scales up as front card moves away
+  const nextCardStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(
+          Math.abs(translateX.value),
+          [0, SCREEN_WIDTH],
+          [0.92, 1]
+        ),
+      },
+    ],
+    opacity: interpolate(
+      Math.abs(translateX.value),
+      [0, SCREEN_WIDTH * 0.5],
+      [0.6, 1]
+    ),
+  }));
+
   // Reset translateX when index changes
   useEffect(() => {
     translateX.value = 0;
@@ -168,9 +190,9 @@ export default function DiscoverScreen() {
 
   const handleNext = useCallback(() => {
     haptic.selection();
-    translateX.value = withSpring(
+    translateX.value = withTiming(
       -SCREEN_WIDTH,
-      SPRING_CONFIG,
+      SWIPE_OUT_CONFIG,
       () => {
         runOnJS(onSwipeComplete)("left");
       }
@@ -219,30 +241,43 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
       >
         {current ? (
-          <GestureDetector gesture={panGesture}>
-            <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
-              <ProfileCard
-                profile={current.profile}
-                version={toCardVersion(current)}
-              />
-              {/* Bookmark — glass chip overlaid on card top-right */}
-              <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
-                <AdaptiveGlass
-                  style={styles.bookmarkGlass}
-                  glassEffectStyle="regular"
-                  intensity={50}
-                  blurTint="light"
-                  fallbackColor="rgba(255,255,255,0.75)"
-                >
-                  <Icon
-                    web="bookmark"
-                    size={18}
-                    color={saved ? "#FF9500" : "#FFFFFF"}
-                  />
-                </AdaptiveGlass>
-              </Pressable>
-            </Animated.View>
-          </GestureDetector>
+          <View style={styles.cardStack}>
+            {/* Next card behind — scales up as front card moves */}
+            {nextProfile ? (
+              <Animated.View style={[styles.cardBehind, nextCardStyle]}>
+                <ProfileCard
+                  profile={nextProfile.profile}
+                  version={toCardVersion(nextProfile)}
+                />
+              </Animated.View>
+            ) : null}
+
+            {/* Current card on top — draggable */}
+            <GestureDetector gesture={panGesture}>
+              <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
+                <ProfileCard
+                  profile={current.profile}
+                  version={toCardVersion(current)}
+                />
+                {/* Bookmark — glass chip overlaid on card top-right */}
+                <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
+                  <AdaptiveGlass
+                    style={styles.bookmarkGlass}
+                    glassEffectStyle="regular"
+                    intensity={50}
+                    blurTint="light"
+                    fallbackColor="rgba(255,255,255,0.75)"
+                  >
+                    <Icon
+                      web="bookmark"
+                      size={18}
+                      color={saved ? "#FF9500" : "#FFFFFF"}
+                    />
+                  </AdaptiveGlass>
+                </Pressable>
+              </Animated.View>
+            </GestureDetector>
+          </View>
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Loading...</Text>
@@ -341,6 +376,15 @@ const styles = StyleSheet.create({
     minWidth: 32,
     alignItems: "center",
     justifyContent: "center",
+  },
+  cardStack: {
+    position: "relative",
+  },
+  cardBehind: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
   },
   cardWrap: {
     position: "relative",
