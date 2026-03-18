@@ -28,7 +28,17 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { Canvas, Fill, Shader, Skia } from "@shopify/react-native-skia";
+// Lazy-loaded to avoid crash when Skia native module is not linked (Expo Go)
+let Canvas: any, Fill: any, Shader: any, Skia: any;
+try {
+  const skia = require("@shopify/react-native-skia");
+  Canvas = skia.Canvas;
+  Fill = skia.Fill;
+  Shader = skia.Shader;
+  Skia = skia.Skia;
+} catch {
+  // Skia not available — RippleCanvas will render nothing
+}
 
 import { haptic } from "@/src/lib/haptics";
 import { springs } from "@/src/lib/springs";
@@ -143,7 +153,7 @@ function RippleCanvas({
   accentColor: string;
   width: number;
 }) {
-  const source = React.useMemo(() => Skia.RuntimeEffect.Make(RIPPLE_SKSL), []);
+  const source = React.useMemo(() => Skia?.RuntimeEffect?.Make(RIPPLE_SKSL) ?? null, []);
 
   const time = useSharedValue(0);
   React.useEffect(() => {
