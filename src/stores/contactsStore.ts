@@ -29,6 +29,7 @@ interface ContactsState {
   discoverBatch: DiscoverProfile[];
   discoverIndex: number;
   discoverStatus: DiscoverStatus;
+  hasCompletedFirstLoop: boolean;
   refreshesUsed: number;
   lastRefreshDate: string;
   seenIds: string[];
@@ -36,7 +37,7 @@ interface ContactsState {
   // Actions
   saveContact: (profile: DiscoverProfile) => void;
   removeContact: (id: string) => void;
-  nextCard: () => void;
+  nextCard: () => boolean; // returns true if just completed first loop
   prevCard: () => void;
   refreshBatch: () => void;
   resetDailyIfNeeded: () => void;
@@ -51,6 +52,7 @@ export const useContactsStore = create<ContactsState>()(
       discoverBatch: [],
       discoverIndex: 0,
       discoverStatus: "batch_exhausted" as DiscoverStatus,
+      hasCompletedFirstLoop: false,
       refreshesUsed: 0,
       lastRefreshDate: "",
       seenIds: [],
@@ -77,24 +79,28 @@ export const useContactsStore = create<ContactsState>()(
         })),
 
       nextCard: () => {
-        const { discoverIndex, discoverBatch, refreshesUsed } = get();
+        const { discoverIndex, discoverBatch, hasCompletedFirstLoop } = get();
+        if (discoverBatch.length === 0) return false;
         const nextIndex = discoverIndex + 1;
         if (nextIndex >= discoverBatch.length) {
+          // Wrap to first card, mark first loop done
           set({
-            discoverIndex: nextIndex,
-            discoverStatus:
-              refreshesUsed >= MAX_DAILY_REFRESHES
-                ? "daily_limit_reached"
-                : "batch_exhausted",
+            discoverIndex: 0,
+            hasCompletedFirstLoop: true,
           });
-        } else {
-          set({ discoverIndex: nextIndex });
+          return !hasCompletedFirstLoop; // true only the first time
         }
+        set({ discoverIndex: nextIndex });
+        return false;
       },
 
       prevCard: () => {
-        const { discoverIndex } = get();
-        if (discoverIndex > 0) {
+        const { discoverIndex, discoverBatch } = get();
+        if (discoverBatch.length === 0) return;
+        if (discoverIndex <= 0) {
+          // Wrap to last card
+          set({ discoverIndex: discoverBatch.length - 1 });
+        } else {
           set({ discoverIndex: discoverIndex - 1 });
         }
       },
@@ -111,6 +117,7 @@ export const useContactsStore = create<ContactsState>()(
           discoverBatch: batch,
           discoverIndex: 0,
           discoverStatus: "browsing",
+          hasCompletedFirstLoop: false,
           refreshesUsed: refreshesUsed + 1,
           seenIds: newSeenIds,
           lastRefreshDate: todayUTC(),
