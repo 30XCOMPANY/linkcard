@@ -299,5 +299,6 @@ const st = StyleSheet.create({
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.40)",
     overflow: "hidden",
+    backgroundColor: "#FFFFFF",
   },
 });
