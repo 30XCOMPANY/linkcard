@@ -10,6 +10,7 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   Switch,
   StyleSheet,
   ScrollView as RNScrollView,
@@ -151,6 +152,26 @@ export default function EditorScreen() {
     }
   }, [updateProfile]);
 
+  const handleAvatarPick = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      mediaTypes: ["images"],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      updateProfile({ photoUrl: result.assets[0].uri });
+    }
+  }, [updateProfile]);
+
+  const handleFieldSave = useCallback(
+    (field: string, value: string) => {
+      updateProfile({ [field]: value });
+    },
+    [updateProfile]
+  );
+
   const handleTagAdd = useCallback(
     (input: string) => {
       const parsed = parseCustomTagInput(input);
@@ -198,9 +219,9 @@ export default function EditorScreen() {
         <View style={styles.cardWrap}>
           <ProfileCardEditor
             nameFont={nameFont}
+            onAvatarPress={handleAvatarPick}
             onBannerPress={handleBannerPick}
-            onHeadlineSave={(value) => updateProfile({ headline: value })}
-            onNameSave={(value) => updateProfile({ name: value })}
+            onFieldSave={handleFieldSave}
             onTagAdd={handleTagAdd}
             onTagDelete={removeTag}
             onTagRename={renameTag}
@@ -282,6 +303,60 @@ export default function EditorScreen() {
               }}
             />
           </LabeledBody>
+        </SettingsGroup>
+
+        <SettingsSectionHeader title="LINKS" />
+        <SettingsGroup>
+          <SettingsRow
+            title="LinkedIn URL"
+            subtitle={card.profile.url || "Not set"}
+            leading={<SettingsIconTile web="link" color="#0A66C2" />}
+            onPress={() => {
+              Alert.prompt(
+                "LinkedIn URL",
+                "Enter your LinkedIn profile URL",
+                (text?: string) => {
+                  if (text?.trim()) {
+                    updateProfile({ url: text.trim() });
+                  }
+                },
+                "plain-text",
+                card.profile.url
+              );
+            }}
+            trailing={<SettingsChevron />}
+          />
+        </SettingsGroup>
+
+        <SettingsSectionHeader title="PUBLICATIONS" />
+        <SettingsGroup>
+          {card.profile.publications?.map((pub, i) => (
+            <React.Fragment key={`pub-${i}`}>
+              {i > 0 ? <SettingsSeparator /> : null}
+              <SettingsRow
+                title={pub.title}
+                subtitle={[pub.publisher, pub.url].filter(Boolean).join(" · ")}
+                onPress={() => {
+                  Alert.prompt(
+                    "Edit Title",
+                    undefined,
+                    (text?: string) => {
+                      if (!text?.trim()) return;
+                      const pubs = [...(card.profile.publications ?? [])];
+                      pubs[i] = { ...pubs[i], title: text.trim() };
+                      updateProfile({ publications: pubs });
+                    },
+                    "plain-text",
+                    pub.title
+                  );
+                }}
+                trailing={<SettingsChevron />}
+              />
+            </React.Fragment>
+          )) ?? null}
+          {(!card.profile.publications || card.profile.publications.length === 0) ? (
+            <SettingsRow title="No publications" subtitle="Add from your LinkedIn profile" />
+          ) : null}
         </SettingsGroup>
       </RNScrollView>
     </>

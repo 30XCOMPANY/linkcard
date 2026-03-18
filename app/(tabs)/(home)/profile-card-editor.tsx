@@ -33,9 +33,9 @@ import { EditableText } from "./editable-text";
 
 interface ProfileCardEditorProps {
   nameFont: NameFontKey;
+  onAvatarPress: () => void;
   onBannerPress: () => void;
-  onHeadlineSave: (value: string) => void;
-  onNameSave: (value: string) => void;
+  onFieldSave: (field: string, value: string) => void;
   onTagAdd: (input: string) => void;
   onTagDelete: (id: string) => void;
   onTagRename: (id: string, label: string) => void;
@@ -48,9 +48,9 @@ interface ProfileCardEditorProps {
 
 export function ProfileCardEditor({
   nameFont,
+  onAvatarPress,
   onBannerPress,
-  onHeadlineSave,
-  onNameSave,
+  onFieldSave,
   onTagAdd,
   onTagDelete,
   onTagRename,
@@ -73,12 +73,12 @@ export function ProfileCardEditor({
     tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
     pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
     pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
-    link: dark ? "#60A5FA" : (PlatformColor("systemBlue") as unknown as string),
+    link: version.accentColor,
     separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
   };
 
-  const showWebsite = vis.has("website") && profile.website;
-  const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
+  const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
+  const nameWeight = nameWeightMap[(version.fieldStyles?.name?.fontWeight as keyof typeof nameWeightMap)] ?? "400";
 
   return (
     <View style={[styles.card, { backgroundColor: background.surface, borderColor: background.border }]}>
@@ -107,22 +107,24 @@ export function ProfileCardEditor({
         />
       </Pressable>
 
-      <Avatar
-        accentColor={version.accentColor}
-        glassIntensity={18}
-        glassPadding={8}
-        name={profile.name}
-        size={120}
-        source={profile.photoUrl}
-      />
+      <Pressable onPress={onAvatarPress}>
+        <Avatar
+          accentColor={version.accentColor}
+          glassIntensity={18}
+          glassPadding={8}
+          name={profile.name}
+          size={120}
+          source={profile.photoUrl}
+        />
+      </Pressable>
 
       {vis.has("name") && (
         <EditableText
-          onSave={onNameSave}
+          onSave={(v) => onFieldSave("name", v)}
           placeholder="Your Name"
           style={[
             styles.profileName,
-            { color: colors.label },
+            { color: colors.label, fontWeight: nameWeight as any },
             nameFonts[nameFont].fontFamily
               ? { fontFamily: nameFonts[nameFont].fontFamily }
               : undefined,
@@ -131,38 +133,35 @@ export function ProfileCardEditor({
         />
       )}
 
-      {(showWebsite || showJobTitle) ? (
-        <View style={styles.identityLine}>
-          {showWebsite ? (
-            <Pressable
-              onPress={() => {
-                haptic.light();
-                const url = profile.website!.startsWith("http")
-                  ? profile.website!
-                  : `https://${profile.website}`;
-                Linking.openURL(url);
-              }}
-              style={styles.identityLink}
-            >
-              <Text style={styles.identityEmoji}>🗺</Text>
-              <Text style={[styles.identityLinkText, { color: colors.link }]}>
-                {profile.website!.replace(/^https?:\/\//, "")}
-              </Text>
-            </Pressable>
-          ) : null}
-          {showWebsite && showJobTitle ? (
-            <Text style={[styles.identitySeparator, { color: colors.secondaryLabel }]}> | </Text>
-          ) : null}
-          {showJobTitle ? (
-            <Text style={[styles.identityRole, { color: colors.label }]}>{profile.jobTitle}</Text>
-          ) : null}
-        </View>
-      ) : null}
+      <View style={styles.identityLine}>
+        {vis.has("website") && (
+          <>
+            <Text style={styles.identityEmoji}>🗺</Text>
+            <EditableText
+              onSave={(v) => onFieldSave("website", v)}
+              placeholder="website.com"
+              style={[styles.identityLinkText, { color: colors.link }]}
+              value={profile.website?.replace(/^https?:\/\//, "") ?? ""}
+            />
+          </>
+        )}
+        {vis.has("website") && vis.has("jobTitle") && profile.website && profile.jobTitle ? (
+          <Text style={[styles.identitySeparator, { color: colors.secondaryLabel }]}> | </Text>
+        ) : null}
+        {vis.has("jobTitle") && (
+          <EditableText
+            onSave={(v) => onFieldSave("jobTitle", v)}
+            placeholder="Job Title"
+            style={[styles.identityRole, { color: colors.label }]}
+            value={profile.jobTitle ?? ""}
+          />
+        )}
+      </View>
 
       {vis.has("headline") && (
         <EditableText
           multiline
-          onSave={onHeadlineSave}
+          onSave={(v) => onFieldSave("headline", v)}
           placeholder="Set a status..."
           style={[styles.statusText, { color: colors.label }]}
           value={profile.headline}
@@ -184,9 +183,12 @@ export function ProfileCardEditor({
         <View style={styles.contactRow}>
           <View style={[styles.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
             <Text style={styles.contactPillIcon}>✉</Text>
-            <Text style={[styles.contactPillText, { color: colors.secondaryLabel }]}>
-              {profile.email ?? "No contact set"}
-            </Text>
+            <EditableText
+              onSave={(v) => onFieldSave("email", v)}
+              placeholder="email@example.com"
+              style={[styles.contactPillText, { color: colors.secondaryLabel }]}
+              value={profile.email ?? ""}
+            />
           </View>
           <View style={styles.statsRow}>
             <Text style={[styles.statNumber, { color: colors.link }]}>0</Text>
