@@ -7,7 +7,8 @@
 
 import "@/src/css/global.css";
 
-import { Stack } from "expo-router/stack";
+import { useEffect } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoudyBookletter1911_400Regular } from "@expo-google-fonts/goudy-bookletter-1911";
@@ -17,6 +18,8 @@ import { useCardStore } from "@/src/stores/cardStore";
 
 export default function RootLayout() {
   const card = useCardStore((s) => s.card);
+  const router = useRouter();
+  const segments = useSegments();
 
   const [fontsLoaded] = useFonts({
     GoudyBookletter1911_400Regular,
@@ -24,16 +27,25 @@ export default function RootLayout() {
     JetBrainsMono_400Regular,
   });
 
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const inOnboarding = segments[0] === "onboarding";
+
+    if (!card && !inOnboarding) {
+      router.replace("/onboarding" as any);
+    } else if (card && inOnboarding) {
+      router.replace("/(tabs)" as any);
+    }
+  }, [card, fontsLoaded, segments]);
+
   if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
-        {!card ? (
-          <Stack.Screen name="onboarding" />
-        ) : (
-          <Stack.Screen name="(tabs)" />
-        )}
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="(tabs)" />
       </Stack>
     </GestureHandlerRootView>
   );
