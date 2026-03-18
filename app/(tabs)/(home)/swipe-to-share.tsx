@@ -53,6 +53,14 @@ interface SwipeToShareProps {
 }
 
 export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: SwipeToShareProps) {
+  // Pre-compute RGB for worklet use (JS functions can't be called in worklets)
+  const accentRgb = React.useMemo(() => {
+    const r = parseInt(accentColor.slice(1, 3), 16);
+    const g = parseInt(accentColor.slice(3, 5), 16);
+    const b = parseInt(accentColor.slice(5, 7), 16);
+    return `${r},${g},${b}`;
+  }, [accentColor]);
+
   const translateY = useSharedValue(0);
   const wasCommitted = useSharedValue(0);
   const gestureActive = useSharedValue(0);
@@ -212,7 +220,7 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
     return {
       borderColor: p < 0.02
         ? "rgba(255,255,255,0.40)"
-        : `rgba(${hexToRgb(accentColor)},${alpha})`,
+        : `rgba(${accentRgb},${alpha})`,
     };
   });
 
@@ -261,13 +269,6 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-function hexToRgb(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r},${g},${b}`;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Styles                                                             */
