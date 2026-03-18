@@ -11,7 +11,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSharedValue } from "react-native-reanimated";
 
 import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
@@ -20,7 +19,7 @@ import type { CardVersion } from "@/src/types";
 
 import { shareCard } from "@/src/services/share";
 import { HomeProfileHeader } from "./profile-header";
-import { SwipeToShare } from "./swipe-to-share";
+import { SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -75,12 +74,11 @@ export default function HomeScreen() {
     setSelectedVersionId(nextVersion.id);
   }, [addVersion, card]);
 
-  const isAtBottom = useSharedValue(true); // true initially — short cards don't need scroll
+  const { overscroll, handleScroll: handleShareScroll } = useShareOverscroll();
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
-    isAtBottom.value = distanceFromBottom < 20;
+    handleShareScroll(contentOffset.y, contentSize.height, layoutMeasurement.height);
   }, []);
 
   const handleShare = useCallback(async () => {
@@ -135,7 +133,7 @@ export default function HomeScreen() {
         <SwipeToShare
           accentColor={currentVersion.accentColor}
           onShare={handleShare}
-          isAtBottom={isAtBottom}
+          overscroll={overscroll}
         >
           <ProfileCard
             nameFont={nameFont}
