@@ -12,7 +12,6 @@ import React, { useRef, useState } from "react";
 import Constants from "expo-constants";
 import {
   Alert,
-  PlatformColor,
   Pressable,
   ScrollView as RNScrollView,
   StyleSheet,
@@ -22,6 +21,7 @@ import {
 import { useRouter } from "expo-router";
 import { View } from "@/src/tw";
 
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore, MOCK_CARD } from "@/src/stores/cardStore";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     lineHeight: 13,
-    color: PlatformColor("tertiaryLabel") as unknown as string,
+    color: platformColor("tertiaryLabel"),
   },
   versionStack: {
     flexDirection: "row",

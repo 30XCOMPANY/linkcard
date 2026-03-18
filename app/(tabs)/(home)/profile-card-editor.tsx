@@ -13,7 +13,6 @@ import React from "react";
 import {
   Image,
   Linking,
-  PlatformColor,
   Pressable,
   StyleSheet,
   Text,
@@ -23,6 +22,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
 import { haptic } from "@/src/lib/haptics";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
@@ -71,13 +71,13 @@ export function ProfileCardEditor({
     : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
 
   const colors = {
-    label: dark ? "#F9FAFB" : (PlatformColor("label") as unknown as string),
-    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string),
-    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
-    pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
-    pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
+    label: dark ? "#F9FAFB" : (platformColor("label")),
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel")),
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (platformColor("tertiaryLabel")),
+    pillBg: dark ? "rgba(255,255,255,0.10)" : (platformColor("systemBackground")),
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : (platformColor("separator")),
     link: version.accentColor,
-    separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
+    separator: dark ? "rgba(255,255,255,0.10)" : (platformColor("separator")),
   };
 
   const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
@@ -282,8 +282,8 @@ export function ProfileCardEditor({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: PlatformColor("secondarySystemGroupedBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("secondarySystemGroupedBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   profileName: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 32,
     letterSpacing: 0.2,
   },
@@ -338,21 +338,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   identityLinkText: {
-    color: PlatformColor("systemBlue") as unknown as string,
+    color: platformColor("systemBlue"),
     fontSize: 15,
     fontWeight: "600",
   },
   identitySeparator: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
   identityRole: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 15,
   },
   statusBox: {
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   statusText: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 15,
     lineHeight: 20,
   },
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
   },
   contactPill: {
     alignItems: "center",
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   contactPillText: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   statsRow: {
@@ -394,16 +394,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   statNumber: {
-    color: PlatformColor("systemBlue") as unknown as string,
+    color: platformColor("systemBlue"),
     fontSize: 15,
     fontWeight: "700",
   },
   statLabel: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   statsSeparator: {
-    backgroundColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("separator"),
     flex: 1,
     height: StyleSheet.hairlineWidth,
     marginLeft: 8,
@@ -423,8 +423,8 @@ const styles = StyleSheet.create({
   },
   publicationCard: {
     alignItems: "center",
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -439,23 +439,23 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   publicationTitle: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 15,
     fontWeight: "600",
   },
   publicationMeta: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   publicationVisit: {
-    backgroundColor: PlatformColor("secondarySystemGroupedBackground") as unknown as string,
+    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   publicationVisitText: {
-    color: PlatformColor("systemBlue") as unknown as string,
+    color: platformColor("systemBlue"),
     fontSize: 13,
     fontWeight: "600",
   },

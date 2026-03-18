@@ -12,7 +12,6 @@ import {
   Image,
   Linking,
   Platform,
-  PlatformColor,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import {
 import Constants from "expo-constants";
 
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import {
   SettingsGroup,
   SettingsRow,
@@ -151,18 +151,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 22,
     fontWeight: "700",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
   heroTagline: {
     marginTop: 4,
     fontSize: 15,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   // ── Rows ──────────────────────────────────────────────────────
   detailText: {
     fontSize: 17,
     lineHeight: 22,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   // ── Footer ────────────────────────────────────────────────────
   footer: {
@@ -170,6 +170,6 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     textAlign: "center",
     fontSize: 13,
-    color: PlatformColor("tertiaryLabel") as unknown as string,
+    color: platformColor("tertiaryLabel"),
   },
 });

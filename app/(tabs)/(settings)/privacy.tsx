@@ -12,13 +12,13 @@ import React from "react";
 import {
   Alert,
   Platform,
-  PlatformColor,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
 } from "react-native";
 
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 import { haptic } from "@/src/lib/haptics";
 import type { ContactActionType } from "@/src/types";
@@ -209,6 +209,6 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 17,
     lineHeight: 22,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
 });

@@ -10,7 +10,6 @@
 import React from "react";
 import {
   Alert,
-  PlatformColor,
   ScrollView,
   StyleSheet,
   View,
@@ -19,6 +18,7 @@ import {
 import { Stack } from "expo-router";
 
 import { Icon } from "@/src/lib/icons";
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 import {
   SettingsChevron,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyText: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
   trailing: {

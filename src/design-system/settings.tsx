@@ -8,17 +8,18 @@
  */
 
 import React from "react";
-import { Platform, PlatformColor, StyleSheet, type TextStyle, type ViewStyle } from "react-native";
+import { StyleSheet, type TextStyle, type ViewStyle } from "react-native";
 import { View, Text, Pressable } from "@/src/tw";
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 
 const settingsColors = {
-  page: Platform.OS === "ios" ? PlatformColor("systemGroupedBackground") : "#F2F2F7",
-  group: Platform.OS === "ios" ? PlatformColor("secondarySystemGroupedBackground") : "#FFFFFF",
-  separator: Platform.OS === "ios" ? PlatformColor("separator") : "rgba(60,60,67,0.29)",
+  page: platformColor("systemGroupedBackground"),
+  group: platformColor("secondarySystemGroupedBackground"),
+  separator: platformColor("separator"),
 };
 
 export const settingsPageStyle = {

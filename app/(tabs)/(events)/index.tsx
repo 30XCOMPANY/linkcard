@@ -8,8 +8,9 @@
  */
 
 import React from "react";
-import { Image, PlatformColor, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { BlurView } from "expo-blur";
+import { platformColor } from "@/src/lib/platform-color";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function EventsScreen() {
@@ -93,18 +94,18 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 28,
     fontWeight: "700",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     marginBottom: 12,
   },
   body: {
     fontSize: 15,
     lineHeight: 22,
-    color: PlatformColor("tertiaryLabel") as unknown as string,
+    color: platformColor("tertiaryLabel"),
   },
 });

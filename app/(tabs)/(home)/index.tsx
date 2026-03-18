@@ -8,9 +8,10 @@
  */
 
 import React, { useCallback, useMemo, useState } from "react";
-import { Alert, PlatformColor, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import type { CardVersion } from "@/src/types";
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyText: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
 });

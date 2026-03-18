@@ -11,13 +11,13 @@ import React from "react";
 import {
   Alert,
   Linking,
-  PlatformColor,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 17,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
   profileRow: {
     flexDirection: "row",
@@ -200,12 +200,12 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     fontWeight: "700",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
   profileDetail: {
     marginTop: 2,
     fontSize: 15,
     lineHeight: 20,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
   },
 });

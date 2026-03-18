@@ -11,7 +11,6 @@
 
 import React, { useCallback, useState } from "react";
 import {
-  PlatformColor,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +24,7 @@ import { Avatar } from "@/src/components/shared/avatar";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import { springs } from "@/src/lib/springs";
 import {
   SettingsGroup,
@@ -180,13 +180,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     fontWeight: "700",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
   emptySubtitle: {
     marginTop: 8,
     fontSize: 15,
     lineHeight: 20,
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     textAlign: "center",
   },
   detail: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     borderRadius: 22,
     borderCurve: "continuous" as any,
-    backgroundColor: PlatformColor("systemBlue") as unknown as string,
+    backgroundColor: platformColor("systemBlue"),
     alignItems: "center",
     justifyContent: "center",
   },
@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
   detailBtnDestructiveLabel: {
     fontSize: 15,
     lineHeight: 20,
-    color: PlatformColor("systemRed") as unknown as string,
+    color: platformColor("systemRed"),
   },
 });

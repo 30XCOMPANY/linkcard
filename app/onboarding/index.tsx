@@ -11,7 +11,6 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
-  PlatformColor,
   Pressable,
   StyleSheet,
   Text,
@@ -25,6 +24,7 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
+import { platformColor } from "@/src/lib/platform-color";
 import { haptic } from "@/src/lib/haptics";
 import { createNewCard, useCardStore } from "@/src/stores/cardStore";
 import { fetchLinkedInProfile } from "@/src/services/linkedin";
@@ -244,7 +244,7 @@ function ConnectPage({
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={PlatformColor("tertiaryLabel") as unknown as string}
+              color={platformColor("tertiaryLabel")}
             />
           </Pressable>
         </Animated.View>
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontFamily: "GoudyBookletter1911_400Regular",
     fontSize: 38,
     letterSpacing: -0.3,
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   subtitle: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 17,
     lineHeight: 24,
     maxWidth: 320,
@@ -493,9 +493,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   connectCard: {
-    backgroundColor: PlatformColor(
-      "secondarySystemGroupedBackground"
-    ) as unknown as string,
+    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderCurve: "continuous" as any,
     borderRadius: 16,
     gap: 14,
@@ -525,25 +523,23 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   connectCardTitle: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 17,
     fontWeight: "600",
   },
   connectCardSub: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 14,
   },
   urlInputWrap: {
-    backgroundColor: PlatformColor(
-      "tertiarySystemFill"
-    ) as unknown as string,
+    backgroundColor: platformColor("tertiarySystemFill"),
     borderCurve: "continuous" as any,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   urlInput: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 16,
   },
   connectBtn: {
@@ -570,7 +566,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   skipText: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
 
@@ -592,10 +588,10 @@ const styles = StyleSheet.create({
     width: 8,
   },
   dotActive: {
-    backgroundColor: PlatformColor("label") as unknown as string,
+    backgroundColor: platformColor("label"),
   },
   dotInactive: {
-    backgroundColor: PlatformColor("quaternaryLabel") as unknown as string,
+    backgroundColor: platformColor("quaternaryLabel"),
   },
   nextBtn: {
     alignItems: "center" as const,

@@ -9,7 +9,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  PlatformColor,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +23,7 @@ import Animated, {
 import { SymbolView } from "expo-symbols";
 
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
+import { platformColor } from "@/src/lib/platform-color";
 import { haptic } from "@/src/lib/haptics";
 import type { CardTag } from "@/src/types";
 
@@ -106,7 +106,7 @@ function EditableTagItem({
                   name="xmark.circle.fill"
                   resizeMode="scaleAspectFit"
                   style={styles.tagDelete}
-                  tintColor={PlatformColor("systemGray3") as unknown as string}
+                  tintColor={platformColor("systemGray3")}
                 />
               </Pressable>
             </Animated.View>
@@ -172,7 +172,7 @@ export function EditableTagList({
                 name="plus"
                 resizeMode="scaleAspectFit"
                 style={styles.addTagIcon}
-                tintColor={isDark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string)}
+                tintColor={isDark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel"))}
               />
             </View>
           </Pressable>
@@ -221,8 +221,8 @@ const styles = StyleSheet.create({
   },
   tag: {
     alignItems: "center",
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   tagLabel: {
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
     fontSize: 14,
     fontWeight: "500",
   },
@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
   },
   addTagPill: {
     alignItems: "center",
-    backgroundColor: PlatformColor("systemBackground") as unknown as string,
-    borderColor: PlatformColor("separator") as unknown as string,
+    backgroundColor: platformColor("systemBackground"),
+    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,

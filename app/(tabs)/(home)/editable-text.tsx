@@ -7,7 +7,6 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  PlatformColor,
   Pressable,
   Text,
   TextInput,
@@ -18,6 +17,7 @@ import {
 } from "react-native";
 
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 
 interface EditableTextProps {
   value: string;
@@ -67,7 +67,7 @@ export function EditableText({
           }}
           onChangeText={setDraft}
           placeholder={placeholder}
-          placeholderTextColor={PlatformColor("tertiaryLabel") as unknown as string}
+          placeholderTextColor={platformColor("tertiaryLabel")}
           returnKeyType={multiline ? "default" : "done"}
           style={[style, { margin: 0, padding: 0 }]}
           value={draft}
@@ -91,7 +91,7 @@ export function EditableText({
           <Text
             style={[
               style,
-              { color: PlatformColor("tertiaryLabel") as unknown as string },
+              { color: platformColor("tertiaryLabel") },
             ]}
           >
             {placeholder}

@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useState } from "react";
-import { PlatformColor, StyleSheet, View, Text as RNText } from "react-native";
+import { StyleSheet, View, Text as RNText } from "react-native";
 import { Stack } from "expo-router";
 import { Host, LabeledContent, List, Section, Text } from "@expo/ui/swift-ui";
 import {
@@ -24,6 +24,7 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
 
 export default function VersionsNativeScreen() {
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyText: {
-    color: PlatformColor("secondaryLabel") as unknown as string,
+    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
 });
