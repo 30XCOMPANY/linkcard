@@ -214,10 +214,12 @@ export function SettingsSegmented({
   values,
   selectedIndex,
   onChange,
+  renderLabel,
 }: {
   values: readonly string[];
   selectedIndex: number;
   onChange: (index: number) => void;
+  renderLabel?: (value: string, index: number, selected: boolean) => React.ReactNode;
 }) {
   return (
     <View style={styles.segmentedContainer}>
@@ -232,12 +234,14 @@ export function SettingsSegmented({
               onChange(index);
             }}
           >
-            <Text
-              className={selected ? "text-sf-text" : "text-sf-text-2"}
-              style={[styles.segmentedLabel, selected && styles.segmentedLabelSelected]}
-            >
-              {value}
-            </Text>
+            {renderLabel ? renderLabel(value, index, selected) : (
+              <Text
+                className={selected ? "text-sf-text" : "text-sf-text-2"}
+                style={[styles.segmentedLabel, selected && styles.segmentedLabelSelected]}
+              >
+                {value}
+              </Text>
+            )}
           </Pressable>
         );
       })}

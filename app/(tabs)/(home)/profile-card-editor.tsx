@@ -121,7 +121,7 @@ export function ProfileCardEditor({
       {vis.has("name") && (
         <EditableText
           onSave={(v) => onFieldSave("name", v)}
-          placeholder="Your Name"
+          placeholder="Add your name"
           style={[
             styles.profileName,
             { color: colors.label, fontWeight: nameWeight as any },
@@ -139,7 +139,7 @@ export function ProfileCardEditor({
             <Text style={styles.identityEmoji}>🗺</Text>
             <EditableText
               onSave={(v) => onFieldSave("website", v)}
-              placeholder="website.com"
+              placeholder="Add website"
               style={[styles.identityLinkText, { color: colors.link }]}
               value={profile.website?.replace(/^https?:\/\//, "") ?? ""}
             />
@@ -151,7 +151,7 @@ export function ProfileCardEditor({
         {vis.has("jobTitle") && (
           <EditableText
             onSave={(v) => onFieldSave("jobTitle", v)}
-            placeholder="Job Title"
+            placeholder="Add title"
             style={[styles.identityRole, { color: colors.label }]}
             value={profile.jobTitle ?? ""}
           />
@@ -162,7 +162,7 @@ export function ProfileCardEditor({
         <EditableText
           multiline
           onSave={(v) => onFieldSave("headline", v)}
-          placeholder="Set a status..."
+          placeholder="What do you do?"
           style={[styles.statusText, { color: colors.label }]}
           value={profile.headline}
           wrapperStyle={[styles.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
@@ -185,7 +185,7 @@ export function ProfileCardEditor({
             <Text style={styles.contactPillIcon}>✉</Text>
             <EditableText
               onSave={(v) => onFieldSave("email", v)}
-              placeholder="email@example.com"
+              placeholder="Add email"
               style={[styles.contactPillText, { color: colors.secondaryLabel }]}
               value={profile.email ?? ""}
             />

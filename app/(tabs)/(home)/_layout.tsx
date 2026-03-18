@@ -28,8 +28,6 @@ export default function HomeStackLayout() {
         options={{
           title: "Edit Card",
           headerLargeTitle: false,
-          headerTransparent: false,
-          headerBlurEffect: "systemMaterial",
         }}
       />
       <Stack.Screen

@@ -184,7 +184,7 @@ export function ProfileCard({
           </View>
         ) : (
           <View style={[s.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
-            <Text style={[s.statusPlaceholder, { color: colors.tertiaryLabel }]}>Set a status...</Text>
+            <Text style={[s.statusPlaceholder, { color: colors.tertiaryLabel }]}>What do you do?</Text>
           </View>
         )
       )}
