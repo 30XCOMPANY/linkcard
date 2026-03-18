@@ -106,11 +106,7 @@ export const useContactsStore = create<ContactsState>()(
       },
 
       refreshBatch: () => {
-        const { refreshesUsed, seenIds } = get();
-        if (refreshesUsed >= MAX_DAILY_REFRESHES) {
-          set({ discoverStatus: "daily_limit_reached" });
-          return;
-        }
+        const { seenIds } = get();
         const batch = getRandomBatch(BATCH_SIZE, seenIds);
         const newSeenIds = [...seenIds, ...batch.map((p) => p.id)];
         set({
@@ -118,7 +114,6 @@ export const useContactsStore = create<ContactsState>()(
           discoverIndex: 0,
           discoverStatus: "browsing",
           hasCompletedFirstLoop: false,
-          refreshesUsed: refreshesUsed + 1,
           seenIds: newSeenIds,
           lastRefreshDate: todayUTC(),
         });

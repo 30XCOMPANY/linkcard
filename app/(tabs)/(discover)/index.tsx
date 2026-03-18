@@ -62,8 +62,6 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const batch = useContactsStore((s) => s.discoverBatch);
   const index = useContactsStore((s) => s.discoverIndex);
-  const status = useContactsStore((s) => s.discoverStatus);
-  const refreshesUsed = useContactsStore((s) => s.refreshesUsed);
   const nextCard = useContactsStore((s) => s.nextCard);
   const prevCard = useContactsStore((s) => s.prevCard);
   const refreshBatch = useContactsStore((s) => s.refreshBatch);
@@ -82,14 +80,10 @@ export default function DiscoverScreen() {
   }, [resetDaily]);
 
   useEffect(() => {
-    if (
-      batch.length === 0 &&
-      status === "batch_exhausted" &&
-      refreshesUsed < 5
-    ) {
+    if (batch.length === 0) {
       refreshBatch();
     }
-  }, [batch.length, status, refreshesUsed, refreshBatch]);
+  }, [batch.length, refreshBatch]);
 
   // ── Swipe gesture ──────────────────────────────────────────────
   const translateX = useSharedValue(0);
@@ -221,7 +215,7 @@ export default function DiscoverScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {status === "browsing" && current ? (
+        {current ? (
           <GestureDetector gesture={panGesture}>
             <Animated.View style={[styles.cardWrap, cardAnimatedStyle]}>
               <ProfileCard
@@ -254,7 +248,7 @@ export default function DiscoverScreen() {
       </ScrollView>
 
       {/* ── Floating action chips — liquid glass ─────────────── */}
-      {status === "browsing" && current ? (
+      {current ? (
         <View style={styles.floatingBar}>
           <Pressable
             onPress={handleNext}
