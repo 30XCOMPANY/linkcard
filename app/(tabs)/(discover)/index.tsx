@@ -15,7 +15,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
-  PlatformColor,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,6 +38,7 @@ import { ProfileCard } from "@/src/components/card/profile-card";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
+import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
 import type { CardVersion, DiscoverProfile } from "@/src/types";
 
@@ -189,7 +189,7 @@ export default function DiscoverScreen() {
             }}
             style={styles.toolbarBtn}
           >
-            <Icon web="wallet" size={20} color={PlatformColor("label") as unknown as string} />
+            <Icon web="wallet" size={20} color={platformColor("label")} />
           </Pressable>
         </Stack.Toolbar.View>
       </Stack.Toolbar>
@@ -245,7 +245,7 @@ export default function DiscoverScreen() {
             </AdaptiveGlass>
           </Pressable>
           <View style={styles.btnSpacer} />
-          <Pressable onPress={handleSayHi} style={styles.glassChipWrap}>
+          <Pressable onPress={handleSayHi} style={styles.glassChipWrapPrimary}>
             <AdaptiveGlass
               style={styles.glassChipPrimary}
               glassEffectStyle="regular"
@@ -281,6 +281,11 @@ const styles = StyleSheet.create({
   },
   glassChipWrap: {
     flex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   glassChip: {
     minHeight: 50,
@@ -289,17 +294,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
   },
   glassChipLabel: {
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
+  },
+  glassChipWrapPrimary: {
+    flex: 1,
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   glassChipPrimary: {
     minHeight: 50,
@@ -308,11 +316,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
   },
   glassChipPrimaryLabel: {
     fontSize: 17,
@@ -353,6 +356,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     fontWeight: "700",
-    color: PlatformColor("label") as unknown as string,
+    color: platformColor("label"),
   },
 });
