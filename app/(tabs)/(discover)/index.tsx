@@ -249,11 +249,11 @@ export default function DiscoverScreen() {
           <Pressable onPress={handleSayHi} style={styles.glassChipWrapPrimary}>
             <AdaptiveGlass
               style={styles.glassChipPrimary}
-              glassEffectStyle="clear"
-              tintColor="#007AFF70"
+              glassEffectStyle="regular"
+              tintColor="#007AFFCC"
               intensity={30}
               blurTint="default"
-              fallbackColor="rgba(0,122,255,0.65)"
+              fallbackColor="rgba(0,122,255,0.80)"
             >
               <Text style={styles.glassChipPrimaryLabel}>
                 {current.contactAction?.label ?? "Say Hi"}
@@ -299,6 +299,10 @@ const styles = StyleSheet.create({
   },
   glassChipWrapPrimary: {
     flex: 1,
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
   },
   glassChipPrimary: {
     minHeight: 50,
