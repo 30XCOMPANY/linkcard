@@ -1,14 +1,14 @@
 /**
- * [INPUT]: react-native ScrollView/Text/View/PlatformColor/StyleSheet,
+ * [INPUT]: react-native ScrollView/Text/View/StyleSheet,
  *          @/src/stores/cardStore, @/src/design-system/settings primitives,
  *          @/src/lib/icons Icon, @/src/lib/name-fonts nameFonts/NameFontKey
- * [OUTPUT]: AppearanceScreen — theme mode segmented control + name font picker
+ * [OUTPUT]: AppearanceScreen — theme mode segmented control + name font picker with live preview
  * [POS]: Settings sub-page — visual customization for theme and card name font
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { PlatformColor, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useCardStore } from "@/src/stores/cardStore";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
@@ -17,6 +17,7 @@ import { Icon } from "@/src/lib/icons";
 import type { ThemeMode } from "@/src/types";
 import {
   SettingsGroup,
+  SettingsGroupFooter,
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
@@ -37,24 +38,22 @@ const THEME_REVERSE: Record<ThemeMode, number> = {
 };
 
 const FONT_KEYS: NameFontKey[] = ["classic", "modern", "mono", "system"];
-const FONT_LABELS: Record<NameFontKey, string> = {
-  classic: "Classic",
-  modern: "Modern",
-  mono: "Mono",
-  system: "System",
-};
 
 export default function AppearanceScreen() {
   const themeMode = useCardStore((s) => s.themeMode);
   const nameFont = useCardStore((s) => s.nameFont) ?? "classic";
   const setThemeMode = useCardStore((s) => s.setThemeMode);
   const setNameFont = useCardStore((s) => s.setNameFont);
+  const profileName = useCardStore((s) => s.card?.profile?.name) ?? "Your Name";
+
+  const activeFontFamily = nameFonts[nameFont].fontFamily;
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
+      {/* ── THEME ── */}
       <SettingsSectionHeader title="THEME" />
       <SettingsGroup>
         <View style={styles.segmentedWrap}>
@@ -68,13 +67,20 @@ export default function AppearanceScreen() {
           />
         </View>
       </SettingsGroup>
+      <SettingsGroupFooter text="Choose how LinkCard appears. System follows your device settings." />
 
+      {/* ── NAME FONT ── */}
       <SettingsSectionHeader title="NAME FONT" />
       <SettingsGroup>
         {FONT_KEYS.map((key, i) => (
           <React.Fragment key={key}>
             <SettingsRow
-              title={FONT_LABELS[key]}
+              title={nameFonts[key].label}
+              titleStyle={
+                nameFonts[key].fontFamily
+                  ? { fontFamily: nameFonts[key].fontFamily }
+                  : undefined
+              }
               onPress={() => {
                 haptic.selection();
                 setNameFont(key);
@@ -89,6 +95,24 @@ export default function AppearanceScreen() {
           </React.Fragment>
         ))}
       </SettingsGroup>
+      <SettingsGroupFooter text="The name font applies to your name on all card versions." />
+
+      {/* ── LIVE PREVIEW ── */}
+      <SettingsSectionHeader title="PREVIEW" />
+      <SettingsGroup>
+        <View style={styles.previewWrap}>
+          <Text
+            style={[
+              styles.previewName,
+              activeFontFamily ? { fontFamily: activeFontFamily } : undefined,
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {profileName}
+          </Text>
+        </View>
+      </SettingsGroup>
     </ScrollView>
   );
 }
@@ -100,5 +124,17 @@ const styles = StyleSheet.create({
   segmentedWrap: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  previewWrap: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewName: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "400",
+    textAlign: "center",
   },
 });
