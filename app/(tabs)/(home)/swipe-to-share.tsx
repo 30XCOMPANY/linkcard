@@ -267,11 +267,12 @@ export function SwipeToShare({ children, onShare, accentColor }: SwipeToSharePro
 
   /* JS-thread callbacks */
   const fireThresholdHaptic = useCallback(() => haptic.medium(), []);
-  const fireShareHaptic = useCallback(() => { haptic.success(); onShare(); }, [onShare]);
+  const fireSuccessHaptic = useCallback(() => haptic.success(), []);
+  const fireShare = useCallback(() => onShare(), [onShare]);
   const fireCancelHaptic = useCallback(() => haptic.light(), []);
 
   const gesture = Gesture.Pan()
-    .activeOffsetY([-10, 10])  // 10px dead zone — lets ScrollView handle small scrolls
+    .activeOffsetY(-10)  // upward-only activation — ScrollView owns downward pulls
     .onStart(() => {
       "worklet";
       wasCommitted.value = 0;
@@ -289,11 +290,16 @@ export function SwipeToShare({ children, onShare, accentColor }: SwipeToSharePro
       const committed =
         translateY.value < COMMIT_OFFSET || e.velocityY < COMMIT_VELOCITY;
 
-      // Spring back first, THEN fire share after card settles
+      // Haptic fires immediately on finger-lift
+      if (committed) {
+        runOnJS(fireSuccessHaptic)();
+      }
+
+      // Spring back, THEN fire share/cancel after card settles
       translateY.value = withSpring(0, springs.share, (finished) => {
         "worklet";
         if (finished && committed) {
-          runOnJS(fireShareHaptic)();
+          runOnJS(fireShare)();
         } else if (finished && !committed) {
           runOnJS(fireCancelHaptic)();
         }
@@ -317,11 +323,16 @@ export function SwipeToShare({ children, onShare, accentColor }: SwipeToSharePro
     <View
       style={s.root}
       onLayout={(e) => setCardWidth(e.nativeEvent.layout.width)}
-      accessibilityHint="Swipe up to share"
-      accessibilityRole="button"
     >
       <GestureDetector gesture={gesture}>
-        <Animated.View style={[s.cardWrap, cardStyle]}>{children}</Animated.View>
+        <Animated.View
+          style={[s.cardWrap, cardStyle]}
+          accessible
+          accessibilityRole="button"
+          accessibilityHint="Swipe up to share your card"
+        >
+          {children}
+        </Animated.View>
       </GestureDetector>
 
       <CondensationStack progress={progress} accentColor={accentColor} />

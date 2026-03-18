@@ -7,7 +7,7 @@ Core utility library — platform primitives and pure constants consumed across 
 
 - `cn.ts`: Tailwind className merging via clsx + tailwind-merge
 - `haptics.ts`: Platform-guarded haptic feedback (iOS-only, no-op elsewhere)
-- `springs.ts`: Named spring animation parameter presets (snappy, gesture, bouncy, gentle)
+- `springs.ts`: Named spring animation parameter presets (snappy, gesture, bouncy, gentle, share)
 - `accent-colors.ts`: Accent color palette constants + AccentColorKey type
 - `card-presets.ts`: Version background presets, default version factory, and migration-safe normalization
 - `icons.tsx`: Platform-adaptive Icon component (SF Symbols on iOS, Ionicons on web/Android)
