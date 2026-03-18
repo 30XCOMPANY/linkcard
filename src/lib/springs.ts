@@ -14,4 +14,6 @@ export const springs = {
   bouncy: { stiffness: 600, damping: 15 },
   // Settle: list items, stagger (gentle ease-in)
   gentle: { stiffness: 300, damping: 25 },
+  // Share gesture: card spring-back after release
+  share: { stiffness: 400, damping: 28 },
 } as const;
