@@ -22,7 +22,7 @@ import {
 import { useRouter } from "expo-router";
 import { View } from "@/src/tw";
 
-import { useCardStore } from "@/src/stores/cardStore";
+import { useCardStore, MOCK_CARD } from "@/src/stores/cardStore";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import {
@@ -38,6 +38,7 @@ import {
 export default function SettingsScreen() {
   const router = useRouter();
   const card = useCardStore((s) => s.card);
+  const setCard = useCardStore((s) => s.setCard);
   const clearCard = useCardStore((s) => s.clearCard);
   const themeMode = useCardStore((s) => s.themeMode);
   const autoSync = useCardStore((s) => s.autoSync);
@@ -235,6 +236,17 @@ export default function SettingsScreen() {
                 );
               }}
               leading={<SettingsIconTile web="arrow-forward" color="#FF9500" />}
+              trailing={<SettingsChevron />}
+            />
+            <SettingsSeparator />
+            <SettingsRow
+              title="Reset as Default User"
+              subtitle="Restore Zihan Huang demo card"
+              onPress={() => {
+                haptic.success();
+                setCard(MOCK_CARD);
+              }}
+              leading={<SettingsIconTile web="person" color="#007AFF" />}
               trailing={<SettingsChevron />}
             />
           </SettingsGroup>

@@ -101,7 +101,7 @@ interface CardState {
 }
 
 // ── Mock card for frontend development ──────────────────────────
-const MOCK_CARD: BusinessCard = {
+export const MOCK_CARD: BusinessCard = {
     id: 'mock-card-001',
     profile: {
         url: 'https://linkedin.com/in/zihanhuang',
