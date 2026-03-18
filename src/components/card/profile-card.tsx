@@ -23,12 +23,14 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { platformColor } from "@/src/lib/platform-color";
 import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
+import { candyColor } from "@/src/lib/accent-colors";
 import type { ContactAction, LinkedInProfile, CardVersion } from "@/src/types";
 
 /* ------------------------------------------------------------------ */
@@ -235,7 +237,6 @@ export function ProfileCard({
         ).map((link) => (
           <Pressable
             key={link.platform}
-            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
             onPress={() => {
               if (!link.url) return;
               haptic.light();
@@ -243,7 +244,16 @@ export function ProfileCard({
               Linking.openURL(url);
             }}
           >
-            <SocialIcon platform={link.platform} size={18} color={colors.link} />
+            <AdaptiveGlass
+              style={s.socialIcon}
+              glassEffectStyle="regular"
+              tintColor={`${candyColor(accent)}CC`}
+              intensity={50}
+              blurTint="default"
+              fallbackColor={candyColor(accent)}
+            >
+              <SocialIcon platform={link.platform} size={18} color="#FFFFFF" />
+            </AdaptiveGlass>
           </Pressable>
         ))}
       </View>
@@ -445,9 +455,9 @@ const s = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderCurve: "continuous" as any,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   pubCard: {

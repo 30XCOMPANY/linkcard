@@ -47,7 +47,7 @@ import type { ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPer
 type StepKey = "welcome" | "claim" | "location" | "role" | "signature" | "vibe" | "reach" | "review";
 type PersonalityAxisKey = keyof OnboardingPersonalityAxes;
 
-const BUILDER_STEPS: StepKey[] = ["claim", "location", "role", "signature", "vibe", "reach", "review"];
+const BUILDER_STEPS: StepKey[] = ["claim", "role", "signature", "location", "vibe", "reach", "review"];
 
 const PERSONALITY_QUESTIONS: Array<{
   key: PersonalityAxisKey;
@@ -55,10 +55,10 @@ const PERSONALITY_QUESTIONS: Array<{
   left: { label: string; value: OnboardingPersonalityAxes[PersonalityAxisKey] };
   right: { label: string; value: OnboardingPersonalityAxes[PersonalityAxisKey] };
 }> = [
-  { key: "energy", title: "Energy", left: { label: "With people", value: "people" }, right: { label: "Solo", value: "solo" } },
-  { key: "focus", title: "Focus", left: { label: "Facts", value: "facts" }, right: { label: "Possibilities", value: "possibilities" } },
-  { key: "decision", title: "Decisions", left: { label: "Logic", value: "logic" }, right: { label: "People", value: "people" } },
-  { key: "rhythm", title: "Rhythm", left: { label: "Plan ahead", value: "plan" }, right: { label: "Adapt", value: "adapt" } },
+  { key: "energy", title: "Energy", left: { label: "🤝 With people", value: "people" }, right: { label: "🧘 Solo", value: "solo" } },
+  { key: "focus", title: "Focus", left: { label: "📊 Facts", value: "facts" }, right: { label: "🔮 Possibilities", value: "possibilities" } },
+  { key: "decision", title: "Decisions", left: { label: "🧠 Logic", value: "logic" }, right: { label: "💛 People", value: "people" } },
+  { key: "rhythm", title: "Rhythm", left: { label: "📋 Plan ahead", value: "plan" }, right: { label: "🌊 Adapt", value: "adapt" } },
 ];
 
 const TRAITS = ["Curious", "Warm", "Sharp", "Calm", "Bold", "Thoughtful", "Playful", "Grounded"] as const;
@@ -228,7 +228,7 @@ export default function OnboardingScreen() {
       case "signature": return draft.headline.trim().length > 0;
       case "vibe":
         if (vibeStage === PERSONALITY_QUESTIONS.length) return draft.traits.length >= 2;
-        if (vibeStage === PERSONALITY_QUESTIONS.length + 1) return draft.interests.length >= 2;
+        if (vibeStage === PERSONALITY_QUESTIONS.length + 1) return draft.interests.length >= 1;
         return true;
       case "reach": return Boolean(draft.primaryContactAction && draft.contactValue.trim());
       case "review": return Boolean(draft.name.trim() && draft.jobTitle.trim() && draft.headline.trim());
@@ -401,9 +401,9 @@ export default function OnboardingScreen() {
       case "location":
         return (
           <>
-            <BlurTitle text="Your city" />
+            <BlurTitle text="Where are you" />
             <Text style={styles.permExplain}>
-              We only detect your city — never precise location. This helps people at events know you're nearby.
+              Your city shows on your card. Just city-level, nothing more.
             </Text>
             <Animated.View entering={FadeIn.delay(300).duration(200)} style={styles.stepContent}>
               {/* Simulated iOS 26 permission sheet (display only) */}
@@ -517,7 +517,7 @@ export default function OnboardingScreen() {
             <Text style={styles.stepEyebrow}>6 / {PERSONALITY_QUESTIONS.length + 2}</Text>
             <BlurTitle text="Interests" />
             <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.chipsWrap}>
-              {INTERESTS.map((t) => <Chip key={t} label={t} selected={draft.interests.includes(t)} onPress={() => toggleSelection("interests", t, 3)} />)}
+              {INTERESTS.map((t) => <Chip key={t} label={t} selected={draft.interests.includes(t)} onPress={() => toggleSelection("interests", t, 99)} />)}
             </Animated.View>
           </>
         );

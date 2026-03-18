@@ -23,11 +23,13 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { platformColor } from "@/src/lib/platform-color";
 import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
+import { candyColor } from "@/src/lib/accent-colors";
 import type { CardTag, CardVersion, ContactAction, LinkedInProfile } from "@/src/types";
 
 import { EditableTagList } from "./editable-tag-list";
@@ -213,7 +215,6 @@ export function ProfileCardEditor({
         ).map((link) => (
           <Pressable
             key={link.platform}
-            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
             onPress={() => {
               if (!link.url) return;
               haptic.light();
@@ -221,7 +222,16 @@ export function ProfileCardEditor({
               Linking.openURL(url);
             }}
           >
-            <SocialIcon platform={link.platform} size={18} color={colors.link} />
+            <AdaptiveGlass
+              style={styles.socialIcon}
+              glassEffectStyle="regular"
+              tintColor={`${candyColor(version.accentColor)}CC`}
+              intensity={50}
+              blurTint="default"
+              fallbackColor={candyColor(version.accentColor)}
+            >
+              <SocialIcon platform={link.platform} size={18} color="#FFFFFF" />
+            </AdaptiveGlass>
           </Pressable>
         ))}
       </View>
@@ -395,9 +405,9 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderCurve: "continuous" as any,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   publicationCard: {
     alignItems: "center",

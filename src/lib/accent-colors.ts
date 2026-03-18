@@ -23,3 +23,23 @@ export const accentColors = {
 } as const;
 
 export type AccentColorKey = keyof typeof accentColors;
+
+/* ── Candy variants — saturated, vibrant glass tint ────────── */
+
+export const candyColors: Record<string, string> = {
+  "#FFFFFF": "#E8E8ED",
+  "#1A1A1A": "#3A3A3C",
+  "#5856D6": "#7B6FF0",
+  "#AF52DE": "#C97AFF",
+  "#FF2D55": "#FF5C8A",
+  "#FF9500": "#FFB340",
+  "#FFCC00": "#FFD426",
+  "#34C759": "#5EE17A",
+  "#5AC8FA": "#7DD8FF",
+  "#007AFF": "#409CFF",
+  "#8E8E93": "#A8A8AE",
+};
+
+export function candyColor(accent: string): string {
+  return candyColors[accent] ?? accent;
+}
