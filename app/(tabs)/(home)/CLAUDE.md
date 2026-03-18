@@ -12,6 +12,7 @@ profile-header.tsx:       Native header — version switcher, edit entry, quick 
 profile-card-editor.tsx:  Editable card body — banner, avatar, name, headline, tags, social links, publications
 editable-text.tsx:        Inline text primitive — tap to edit, blur to save
 editable-tag-list.tsx:    Tag editor — long-press edit mode, rename, delete, add
+swipe-to-share.tsx:       Gesture-driven share — pan up card, blur condensation + Skia ripple, auto-triggers Share Sheet
 editor.tsx:               Card editor — Apple Settings-style, SegmentedControl, Switch field toggles, Slider
 social-links.ios.tsx:     Social links list — SwiftUI native list with swipe-to-delete
 social-links.tsx:         Social links list — web/Android fallback
