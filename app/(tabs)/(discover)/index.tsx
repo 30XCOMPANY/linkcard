@@ -236,10 +236,10 @@ export default function DiscoverScreen() {
           <Pressable onPress={handleNext} style={styles.glassChipWrap}>
             <AdaptiveGlass
               style={styles.glassChip}
-              glassEffectStyle="regular"
-              intensity={50}
-              blurTint="light"
-              fallbackColor="rgba(245,245,247,0.88)"
+              glassEffectStyle="clear"
+              intensity={30}
+              blurTint="default"
+              fallbackColor="rgba(120,120,128,0.16)"
             >
               <Text style={styles.glassChipLabel}>Next</Text>
             </AdaptiveGlass>
@@ -281,11 +281,6 @@ const styles = StyleSheet.create({
   },
   glassChipWrap: {
     flex: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
   },
   glassChip: {
     minHeight: 50,
@@ -303,11 +298,6 @@ const styles = StyleSheet.create({
   },
   glassChipWrapPrimary: {
     flex: 1,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
   },
   glassChipPrimary: {
     minHeight: 50,
