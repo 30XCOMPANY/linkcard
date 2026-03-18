@@ -43,24 +43,23 @@ const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
 
 export function useShareOverscroll() {
   const overscroll = useSharedValue(0);
-  const isOverscrolling = useSharedValue(false);
 
-  // Call this from ScrollView's onScroll
+  // Call from ScrollView onScroll — only BOTTOM overscroll counts
   const handleScroll = useCallback((contentOffset: number, contentSize: number, layoutHeight: number) => {
-    const maxScroll = contentSize - layoutHeight;
-    if (maxScroll <= 0) {
-      // Content fits in view — any upward scroll is overscroll
-      overscroll.value = Math.max(0, -contentOffset);
-      isOverscrolling.value = contentOffset < 0;
-    } else {
-      // Content scrollable — overscroll = how far past the bottom
-      const past = contentOffset - maxScroll;
-      overscroll.value = Math.max(0, past);
-      isOverscrolling.value = past > 0;
-    }
+    // How far the user has scrolled past the bottom edge
+    // maxScroll = the furthest contentOffset can go before overscrolling
+    // If content is shorter than viewport, maxScroll = 0 (no scrolling needed)
+    const maxScroll = Math.max(0, contentSize - layoutHeight);
+
+    // Bottom overscroll = contentOffset beyond maxScroll
+    // This is ONLY positive when the user drags up past the bottom
+    // Top bounce (pulling down) makes contentOffset negative — ignored by Math.max
+    const bottomOverscroll = Math.max(0, contentOffset - maxScroll);
+
+    overscroll.value = bottomOverscroll;
   }, []);
 
-  return { overscroll, isOverscrolling, handleScroll };
+  return { overscroll, handleScroll };
 }
 
 /* ------------------------------------------------------------------ */
