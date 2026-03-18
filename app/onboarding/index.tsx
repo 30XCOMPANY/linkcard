@@ -394,6 +394,7 @@ export default function OnboardingScreen() {
             key="next"
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(150)}
+            style={{ width: "100%" }}
           >
             <Pressable onPress={goNext}>
               <AdaptiveGlass
@@ -578,6 +579,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 20,
     paddingBottom: 50,
+    paddingHorizontal: 24,
     paddingTop: 16,
   },
   dotsRow: {
@@ -598,13 +600,12 @@ const styles = StyleSheet.create({
   nextBtn: {
     alignItems: "center" as const,
     borderCurve: "continuous" as any,
-    borderRadius: 25,
+    borderRadius: 16,
     justifyContent: "center" as const,
     minHeight: 50,
-    minWidth: 200,
     overflow: "hidden" as const,
-    paddingHorizontal: 48,
     paddingVertical: 14,
+    width: "100%" as any,
   },
   nextBtnText: {
     color: "#FFFFFF",
