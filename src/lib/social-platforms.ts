@@ -16,6 +16,8 @@ export interface SocialPlatformMeta {
   /** SF Symbol name — used for SettingsIconTile in editor context */
   sfIcon: string;
   color: string;
+  /** Brighter variant for glass tint — more vibrant on translucent surfaces */
+  glassColor: string;
   urlPrefix: string;
   placeholder: string;
 }
