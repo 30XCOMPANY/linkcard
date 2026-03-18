@@ -234,33 +234,24 @@ export default function DiscoverScreen() {
 
       {current ? (
         <View style={styles.floatingBar}>
-          <Pressable onPress={handleNext} style={styles.glassChipWrap}>
-            <AdaptiveGlass
-              style={styles.glassChip}
-              glassEffectStyle="clear"
-              tintColor="#FFFFFF08"
-              intensity={20}
-              blurTint="light"
-              fallbackColor="rgba(255,255,255,0.12)"
-            >
-              <Text style={styles.glassChipLabel}>Next</Text>
-            </AdaptiveGlass>
-          </Pressable>
-          <View style={styles.btnSpacer} />
-          <Pressable onPress={handleSayHi} style={styles.glassChipWrapPrimary}>
-            <AdaptiveGlass
-              style={styles.glassChipPrimary}
-              glassEffectStyle="regular"
-              tintColor="#007AFFCC"
-              intensity={30}
-              blurTint="default"
-              fallbackColor="rgba(0,122,255,0.80)"
-            >
-              <Text style={styles.glassChipPrimaryLabel}>
+          <AdaptiveGlass
+            style={styles.actionGroup}
+            glassEffectStyle="regular"
+            tintColor="#FFFFFF10"
+            intensity={40}
+            blurTint="light"
+            fallbackColor="rgba(255,255,255,0.72)"
+          >
+            <Pressable onPress={handleNext} style={styles.actionBtn}>
+              <Text style={styles.actionLabel}>Next</Text>
+            </Pressable>
+            <View style={styles.actionDivider} />
+            <Pressable onPress={handleSayHi} style={styles.actionBtn}>
+              <Text style={styles.actionLabelPrimary}>
                 {current.contactAction?.label ?? "Say Hi"}
               </Text>
-            </AdaptiveGlass>
-          </Pressable>
+            </Pressable>
+          </AdaptiveGlass>
         </View>
       ) : null}
     </>
@@ -281,43 +272,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  glassChipWrap: {
-    flex: 1,
-  },
-  glassChip: {
+  actionGroup: {
+    flexDirection: "row",
     minHeight: 50,
     borderRadius: 25,
     borderCurve: "continuous" as any,
     overflow: "hidden",
     alignItems: "center",
+  },
+  actionBtn: {
+    flex: 1,
+    minHeight: 50,
+    alignItems: "center",
     justifyContent: "center",
   },
-  glassChipLabel: {
+  actionDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 24,
+    backgroundColor: "rgba(120,120,128,0.3)",
+  },
+  actionLabel: {
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
     color: platformColor("label"),
   },
-  glassChipWrapPrimary: {
-    flex: 1,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-  },
-  glassChipPrimary: {
-    minHeight: 50,
-    borderRadius: 25,
-    borderCurve: "continuous" as any,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  glassChipPrimaryLabel: {
+  actionLabelPrimary: {
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: platformColor("systemBlue"),
   },
   toolbarBtn: {
     minHeight: 32,
@@ -343,7 +327,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  btnSpacer: { width: 12 },
   emptyState: {
     alignItems: "center",
     paddingTop: 80,
