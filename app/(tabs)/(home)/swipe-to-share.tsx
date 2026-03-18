@@ -46,11 +46,13 @@ interface SwipeToShareProps {
   children: React.ReactNode;
   onShare: () => void;
   accentColor: string;
+  isAtBottom: SharedValue<boolean>;
 }
 
-export function SwipeToShare({ children, onShare, accentColor }: SwipeToShareProps) {
+export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: SwipeToShareProps) {
   const translateY = useSharedValue(0);
   const wasCommitted = useSharedValue(0);
+  const gestureActive = useSharedValue(0); // 1 = share gesture activated this drag
   const reducedMotion = useReducedMotion();
 
   const progress = useDerivedValue(() =>
@@ -67,9 +69,16 @@ export function SwipeToShare({ children, onShare, accentColor }: SwipeToSharePro
     .onStart(() => {
       "worklet";
       wasCommitted.value = 0;
+      gestureActive.value = 0;
     })
     .onUpdate((e) => {
       "worklet";
+      // Only activate share gesture if scroll is at bottom
+      if (gestureActive.value === 0) {
+        if (!isAtBottom.value) return; // not at bottom — ignore
+        gestureActive.value = 1;
+      }
+
       translateY.value = Math.min(0, e.translationY);
       if (translateY.value < COMMIT_OFFSET && wasCommitted.value === 0) {
         wasCommitted.value = 1;
@@ -78,6 +87,8 @@ export function SwipeToShare({ children, onShare, accentColor }: SwipeToSharePro
     })
     .onEnd((e) => {
       "worklet";
+      if (gestureActive.value === 0) return; // was never activated
+
       const committed =
         translateY.value < COMMIT_OFFSET || e.velocityY < COMMIT_VELOCITY;
 

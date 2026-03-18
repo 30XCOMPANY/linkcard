@@ -9,8 +9,9 @@
  */
 
 import React, { useCallback, useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useSharedValue } from "react-native-reanimated";
 
 import { platformColor } from "@/src/lib/platform-color";
 import { useCardStore } from "@/src/stores/cardStore";
@@ -74,6 +75,14 @@ export default function HomeScreen() {
     setSelectedVersionId(nextVersion.id);
   }, [addVersion, card]);
 
+  const isAtBottom = useSharedValue(true); // true initially — short cards don't need scroll
+
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    isAtBottom.value = distanceFromBottom < 20;
+  }, []);
+
   const handleShare = useCallback(async () => {
     if (!card || !currentVersion) return;
     try {
@@ -120,10 +129,13 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scroll}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <SwipeToShare
           accentColor={currentVersion.accentColor}
           onShare={handleShare}
+          isAtBottom={isAtBottom}
         >
           <ProfileCard
             nameFont={nameFont}
