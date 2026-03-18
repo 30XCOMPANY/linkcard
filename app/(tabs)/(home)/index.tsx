@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react/react-native ScrollView/View/Text/Alert/StyleSheet/PlatformColor,
+ * [INPUT]: react/react-native ScrollView/View/Text/Image/Alert/StyleSheet/PlatformColor,
  *          expo-linear-gradient LinearGradient, expo-symbols SymbolView,
  *          react-native-reanimated Animated/FadeIn/FadeOut/interpolate/useAnimatedStyle,
  *          expo-router useRouter, @/src/stores/cardStore,
@@ -12,7 +12,7 @@
  */
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useRouter } from "expo-router";
@@ -35,6 +35,7 @@ import { HomeProfileHeader } from "./profile-header";
 import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 const SHARE_RITUAL_MS = 520;
+const SHARE_LOGO = require("../../../assets/logo.png");
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -234,6 +235,12 @@ export default function HomeScreen() {
           pointerEvents="none"
           style={styles.shareOverlay}
         >
+          <Image
+            source={SHARE_LOGO}
+            resizeMode="contain"
+            style={styles.shareLogo}
+          />
+
           <AdaptiveGlass
             style={styles.shareBadge}
             glassEffectStyle="clear"
@@ -271,6 +278,13 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingTop: 112,
     zIndex: 50,
+  },
+  shareLogo: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    top: "34%",
+    opacity: 0.12,
   },
   shareBadge: {
     flexDirection: "row",

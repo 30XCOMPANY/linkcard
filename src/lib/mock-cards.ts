@@ -30,6 +30,14 @@ export const MOCK_CARD: BusinessCard = {
         phone: '+1 (415) 555-0188',
         website: 'https://linkcard.app',
         character: 'Visionary Builder',
+        socialLinks: [
+            { platform: 'linkedin', url: 'https://linkedin.com/in/zihanhuang' },
+            { platform: 'x', url: 'https://x.com/zihanhuang' },
+            { platform: 'github', url: 'https://github.com/zihanhuang' },
+            { platform: 'instagram', url: 'https://instagram.com/zihanhuang' },
+            { platform: 'threads', url: 'https://threads.net/@zihanhuang' },
+            { platform: 'product-hunt', url: 'https://producthunt.com/@zihanhuang' },
+        ],
         publications: [
             {
                 title: 'Why Digital Business Cards Will Replace Paper',

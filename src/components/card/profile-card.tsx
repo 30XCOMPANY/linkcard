@@ -30,7 +30,7 @@ import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
-import { candyColor } from "@/src/lib/accent-colors";
+import { getSocialPlatform } from "@/src/lib/social-platforms";
 import type { ContactAction, LinkedInProfile, CardVersion } from "@/src/types";
 
 /* ------------------------------------------------------------------ */
@@ -247,10 +247,10 @@ export function ProfileCard({
             <AdaptiveGlass
               style={s.socialIcon}
               glassEffectStyle="regular"
-              tintColor={`${candyColor(accent)}CC`}
+              tintColor={getSocialPlatform(link.platform).color}
               intensity={50}
               blurTint="default"
-              fallbackColor={candyColor(accent)}
+              fallbackColor={getSocialPlatform(link.platform).color}
             >
               <SocialIcon platform={link.platform} size={18} color="#FFFFFF" />
             </AdaptiveGlass>
