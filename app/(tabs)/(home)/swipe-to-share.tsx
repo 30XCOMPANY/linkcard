@@ -152,23 +152,10 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
         { scale: cardScale.value },
       ],
       opacity: cardOpacity.value,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: interpolate(p, [0, 1], [4, 24], Extrapolation.CLAMP) },
-      shadowOpacity: interpolate(p, [0, 1], [0.08, 0.25], Extrapolation.CLAMP),
-      shadowRadius: interpolate(p, [0, 1], [12, 40], Extrapolation.CLAMP),
-    };
-  });
-
-  /* Edge glow */
-  const glowStyle = useAnimatedStyle(() => {
-    const p = progress.value;
-    if (p < 0.02 || flyState.value !== 0) return { opacity: 0 };
-    return {
-      opacity: 1,
-      shadowColor: accentColor,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: interpolate(p, [0, 1], [0, 0.4], Extrapolation.CLAMP),
-      shadowRadius: interpolate(p, [0, 1], [0, 30], Extrapolation.CLAMP),
+      shadowColor: p < 0.02 ? "#000" : accentColor,
+      shadowOffset: { width: 0, height: interpolate(p, [0, 1], [4, 0], Extrapolation.CLAMP) },
+      shadowOpacity: interpolate(p, [0, 1], [0.08, 0.45], Extrapolation.CLAMP),
+      shadowRadius: interpolate(p, [0, 1], [12, 35], Extrapolation.CLAMP),
     };
   });
 
@@ -227,9 +214,6 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
         <Text style={[st.shareText, { color: accentColor }]}>Swipe to Share</Text>
       </Animated.View>
 
-      {/* Edge glow */}
-      <Animated.View style={[st.glowLayer, glowStyle]} pointerEvents="none" />
-
       {/* Card */}
       <GestureDetector gesture={gesture}>
         <Animated.View
@@ -287,15 +271,6 @@ const st = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.5,
-  },
-  glowLayer: {
-    position: "absolute",
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    borderRadius: 28,
-    zIndex: 2,
   },
   cardWrap: {
     zIndex: 3,
