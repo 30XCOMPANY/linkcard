@@ -172,15 +172,10 @@ export default function DiscoverScreen() {
         scale: interpolate(
           Math.abs(translateX.value),
           [0, SCREEN_WIDTH],
-          [0.92, 1]
+          [0.95, 1]
         ),
       },
     ],
-    opacity: interpolate(
-      Math.abs(translateX.value),
-      [0, SCREEN_WIDTH * 0.5],
-      [0.6, 1]
-    ),
   }));
 
   // Reset translateX when index changes
