@@ -1,7 +1,8 @@
 /**
  * [INPUT]: react/react-native ScrollView/View/Text/Alert/StyleSheet/PlatformColor,
  *          expo-router useRouter, @/src/stores/cardStore,
- *          @/src/components/card/profile-card, @/src/types CardVersion, local profile-header
+ *          @/src/components/card/profile-card, @/src/services/share shareCard,
+ *          @/src/types CardVersion, local profile-header, local swipe-to-share
  * [OUTPUT]: HomeScreen — card preview with direct edit entry in the header and version switching
  * [POS]: (home) module entrypoint, displaying the card while delegating editing to the editor screen
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -16,7 +17,9 @@ import { useCardStore } from "@/src/stores/cardStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import type { CardVersion } from "@/src/types";
 
+import { shareCard } from "@/src/services/share";
 import { HomeProfileHeader } from "./profile-header";
+import { SwipeToShare } from "./swipe-to-share";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -71,6 +74,15 @@ export default function HomeScreen() {
     setSelectedVersionId(nextVersion.id);
   }, [addVersion, card]);
 
+  const handleShare = useCallback(async () => {
+    if (!card || !currentVersion) return;
+    try {
+      await shareCard(card, currentVersion, currentVersion.visibleFields as string[]);
+    } catch (error) {
+      Alert.alert("Share failed", "Please try again.");
+    }
+  }, [card, currentVersion]);
+
   if (!card || !currentVersion) {
     return (
       <View style={styles.empty}>
@@ -109,11 +121,16 @@ export default function HomeScreen() {
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
-        <ProfileCard
-          nameFont={nameFont}
-          profile={card.profile}
-          version={currentVersion}
-        />
+        <SwipeToShare
+          accentColor={currentVersion.accentColor}
+          onShare={handleShare}
+        >
+          <ProfileCard
+            nameFont={nameFont}
+            profile={card.profile}
+            version={currentVersion}
+          />
+        </SwipeToShare>
       </ScrollView>
     </>
   );
