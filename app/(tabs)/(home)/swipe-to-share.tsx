@@ -211,8 +211,8 @@ export function SwipeToShare({ children, onShare, accentColor, isAtBottom }: Swi
       {/* Accent gradient background — fills behind card */}
       <Animated.View style={[st.bgFill, bgStyle]} pointerEvents="none">
         <LinearGradient
-          colors={[accentColor + "30", accentColor + "15", accentColor + "00"]}
-          locations={[0, 0.4, 1]}
+          colors={[accentColor, accentColor + "80", accentColor + "30", accentColor + "00"]}
+          locations={[0, 0.3, 0.6, 1]}
           style={StyleSheet.absoluteFill}
         />
       </Animated.View>
@@ -264,11 +264,11 @@ const st = StyleSheet.create({
   },
   bgFill: {
     position: "absolute",
-    top: "50%",
-    left: -16,
-    right: -16,
-    bottom: -200,
-    zIndex: -1,
+    top: -500,
+    left: -32,
+    right: -32,
+    bottom: -500,
+    zIndex: 0,
   },
   shareTextWrap: {
     position: "absolute",
@@ -276,7 +276,7 @@ const st = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    zIndex: -1,
+    zIndex: 1,
   },
   shareText: {
     fontSize: 17,
@@ -290,10 +290,10 @@ const st = StyleSheet.create({
     right: -4,
     bottom: -4,
     borderRadius: 28,
-    zIndex: 0,
+    zIndex: 2,
   },
   cardWrap: {
-    zIndex: 1,
+    zIndex: 3,
     borderRadius: 24,
     borderCurve: "continuous" as any,
     borderWidth: 2,
