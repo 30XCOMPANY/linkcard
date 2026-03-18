@@ -87,6 +87,7 @@ function ChoiceCard({ label, selected, onPress }: { label: string; selected: boo
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
       <View style={[styles.choiceCard, selected && styles.choiceCardSelected]}>
         <Text style={[styles.choiceLabel, selected && styles.choiceLabelSelected]}>{label}</Text>
+        {selected && <Image source={"sf:checkmark" as any} style={styles.choiceCheck} tintColor="#FFFFFF" />}
       </View>
     </Pressable>
   );
@@ -95,7 +96,7 @@ function ChoiceCard({ label, selected, onPress }: { label: string; selected: boo
 function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
-      <View style={[styles.chip, selected && styles.chipSelected]}>
+      <View style={[styles.chip, { backgroundColor: selected ? "#007AFF" : "#FFFFFF" }]}>
         <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
       </View>
     </Pressable>
@@ -431,7 +432,7 @@ export default function OnboardingScreen() {
         const active = CONTACT_METHODS.find((m) => m.type === draft.primaryContactAction);
         return (
           <>
-            <BlurTitle text="Reach" />
+            <BlurTitle text="How to find you" />
             <View style={styles.choicesCol}>
               {CONTACT_METHODS.map((m) => (
                 <ChoiceCard key={m.type} label={m.label}
@@ -524,13 +525,6 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {/* ── Dots ──────────────────────────────────────────── */}
-      <View style={styles.dotsCenter}>
-        {BUILDER_STEPS.map((s, i) => (
-          <View key={s} style={[styles.dot, i === stepIndex ? styles.dotActive : styles.dotInactive]} />
-        ))}
-      </View>
-
       {/* ── Bottom: Step Content + CTA ────────────────────── */}
       <Animated.View
         exiting={FadeOut.duration(150)}
@@ -542,6 +536,11 @@ export default function OnboardingScreen() {
         </View>
 
         <View style={styles.ctaBlock}>
+          <View style={styles.dotsCenter}>
+            {BUILDER_STEPS.map((s, i) => (
+              <View key={s} style={[styles.dot, i === stepIndex ? styles.dotActive : styles.dotInactive]} />
+            ))}
+          </View>
           {step === "claim" ? (
             draft.photoUrl ? (
               <>
@@ -679,24 +678,25 @@ const styles = StyleSheet.create({
 
   choicesCol: { gap: 10 },
   choiceCard: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderColor: "transparent", borderCurve: "continuous" as any,
     borderRadius: 16, borderWidth: 1.5, padding: 16,
   },
-  choiceCardSelected: { borderColor: platformColor("systemBlue") },
+  choiceCardSelected: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
   choiceLabel: { color: platformColor("label"), fontSize: 17, fontWeight: "600" },
-  choiceLabelSelected: { color: platformColor("systemBlue") },
+  choiceLabelSelected: { color: "#FFFFFF" },
+  choiceCheck: { width: 18, height: 18 },
 
   chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   chip: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
-    borderColor: "transparent", borderCurve: "continuous" as any,
-    borderRadius: 999, borderWidth: 1.5, justifyContent: "center",
-    minHeight: 36, paddingHorizontal: 14,
+    borderCurve: "continuous" as any, borderRadius: 999,
+    justifyContent: "center", minHeight: 36, paddingHorizontal: 14,
+    overflow: "hidden" as any,
   },
-  chipSelected: { borderColor: platformColor("systemBlue"), backgroundColor: "rgba(0,122,255,0.08)" },
+  chipSelected: {},
   chipLabel: { color: platformColor("label"), fontSize: 14, fontWeight: "600" },
-  chipLabelSelected: { color: platformColor("systemBlue") },
+  chipLabelSelected: { color: "#FFFFFF" },
 
   inlineRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   inlineAction: {
