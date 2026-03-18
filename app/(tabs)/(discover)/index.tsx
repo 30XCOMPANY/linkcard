@@ -34,7 +34,7 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 import { Host, Button as SwiftButton } from "@expo/ui/swift-ui";
-import { frame, glassEffect } from "@expo/ui/swift-ui/modifiers";
+import { foregroundStyle, frame, glassEffect } from "@expo/ui/swift-ui/modifiers";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
@@ -244,6 +244,7 @@ export default function DiscoverScreen() {
               modifiers={[
                 frame({ maxWidth: 9999, minHeight: 50 }),
                 glassEffect({ glass: { variant: "regular" } }),
+                foregroundStyle({ type: "hierarchical", style: "primary" }),
               ]}
             />
           </Host>
@@ -255,6 +256,7 @@ export default function DiscoverScreen() {
               modifiers={[
                 frame({ maxWidth: 9999, minHeight: 50 }),
                 glassEffect({ glass: { variant: "regular", tint: "#007AFF" } }),
+                foregroundStyle("#FFFFFF"),
               ]}
             />
           </Host>
