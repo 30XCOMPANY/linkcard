@@ -1,21 +1,23 @@
 /**
- * [INPUT]: react-native-reanimated shared values/interpolate/withSequence/withSpring/withTiming/withDelay/runOnJS/useReducedMotion,
- *          expo-linear-gradient LinearGradient,
- *          react-native View/Text/StyleSheet,
+ * [INPUT]: react-native-reanimated shared values/interpolate/useAnimatedReaction/withSequence/withSpring/withTiming/withDelay/runOnJS/useReducedMotion,
+ *          react-native View/Text/StyleSheet, expo-symbols SymbolView,
+ *          @/src/components/shared/adaptive-glass,
  *          @/src/lib/springs, @/src/lib/haptics, @/src/lib/platform-color
- * [OUTPUT]: SwipeToShare — renders card with share-on-overscroll effects (shadow, border, bg gradient, fly-out)
- *           useShareOverscroll — hook that reads ScrollView overscroll and drives share progress
+ * [OUTPUT]: SwipeToShare — renders card with share-on-overscroll effects (shadow, border, fly-out, share-sheet interstitial)
+ *           useShareOverscroll — hook that reads ScrollView overscroll plus release/reset events and drives share progress
  * [POS]: (home) gesture layer — reads overscroll from parent ScrollView, no gesture conflict
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { SymbolView } from "expo-symbols";
 import Animated, {
   Extrapolation,
   type SharedValue,
   interpolate,
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useReducedMotion,
@@ -25,17 +27,17 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
 import { springs } from "@/src/lib/springs";
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
+export const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
 
 /* ------------------------------------------------------------------ */
 /*  useShareOverscroll — hook for parent ScrollView                    */
@@ -43,6 +45,7 @@ const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
 
 export function useShareOverscroll() {
   const overscroll = useSharedValue(0);
+  const releaseTick = useSharedValue(0);
 
   // Call from ScrollView onScroll — only BOTTOM overscroll counts
   const handleScroll = useCallback((contentOffset: number, contentSize: number, layoutHeight: number) => {
@@ -59,7 +62,15 @@ export function useShareOverscroll() {
     overscroll.value = bottomOverscroll;
   }, []);
 
-  return { overscroll, handleScroll };
+  const handleRelease = useCallback(() => {
+    releaseTick.value += 1;
+  }, []);
+
+  const handleReset = useCallback(() => {
+    overscroll.value = 0;
+  }, []);
+
+  return { overscroll, releaseTick, handleScroll, handleRelease, handleReset };
 }
 
 /* ------------------------------------------------------------------ */
@@ -71,14 +82,19 @@ interface SwipeToShareProps {
   onShare: () => void;
   accentColor: string;
   overscroll: SharedValue<number>;
+  releaseTick: SharedValue<number>;
 }
 
-export function SwipeToShare({ children, onShare, accentColor, overscroll }: SwipeToShareProps) {
+export function SwipeToShare({ children, onShare, accentColor, overscroll, releaseTick }: SwipeToShareProps) {
   const reducedMotion = useReducedMotion();
   const flyState = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
   const cardScale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
+  const sharePulse = useSharedValue(0);
+  const successOpacity = useSharedValue(0);
+  const successScale = useSharedValue(0.9);
+  const successTranslateY = useSharedValue(8);
 
   const progress = useDerivedValue(() =>
     flyState.value !== 0 ? 0 : Math.min(1, overscroll.value / COMMIT_THRESHOLD)
@@ -88,49 +104,76 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
   const fireSuccessHaptic = useCallback(() => haptic.success(), []);
   const fireShare = useCallback(() => onShare(), [onShare]);
 
-  // State machine: idle(0) → committed(1) → flying(2)
-  // Single useDerivedValue avoids race conditions between watchers
+  // State machine: idle(0) -> committed(1) -> flying(2)
   const shareState = useSharedValue(0); // 0=idle, 1=committed, 2=flying
 
-  useDerivedValue(() => {
-    const ov = overscroll.value;
-    const state = shareState.value;
+  useAnimatedReaction(
+    () => ({
+      overscroll: overscroll.value,
+      releaseTick: releaseTick.value,
+      state: shareState.value,
+    }),
+    ({ overscroll: ov, releaseTick: released, state }, previous) => {
+      if (state === 0 && ov >= COMMIT_THRESHOLD) {
+        // IDLE -> COMMITTED: user dragged past threshold
+        shareState.value = 1;
+        runOnJS(fireThresholdHaptic)();
+        return;
+      }
 
-    if (state === 0 && ov >= COMMIT_THRESHOLD) {
-      // IDLE → COMMITTED: user dragged past threshold
-      shareState.value = 1;
-      runOnJS(fireThresholdHaptic)();
-    } else if (state === 1 && ov < 5) {
-      // COMMITTED → FLYING: user released (overscroll bouncing back)
-      shareState.value = 2;
-      flyState.value = 1;
-      runOnJS(fireSuccessHaptic)();
+      if (state === 1 && ov < COMMIT_THRESHOLD * 0.3) {
+        // COMMITTED -> IDLE: user pulled back without releasing past threshold
+        shareState.value = 0;
+        return;
+      }
 
-      cardTranslateY.value = withSequence(
-        withTiming(-800, { duration: 350 }),
-        withDelay(150, withTiming(20, { duration: 0 })),
-        withSpring(0, springs.gentle, () => {
+      if (state === 1 && released !== previous?.releaseTick) {
+        // COMMITTED -> FLYING: user released after crossing threshold
+        shareState.value = 2;
+        flyState.value = 1;
+        runOnJS(fireSuccessHaptic)();
+
+        successOpacity.value = 0;
+        successScale.value = 0.9;
+        successTranslateY.value = 8;
+        sharePulse.value = 0;
+
+        cardTranslateY.value = withSequence(
+          withTiming(-800, { duration: 350 }),
+          withDelay(750, withTiming(0, { duration: 0 }))
+        );
+        cardScale.value = withSequence(
+          withTiming(0.92, { duration: 350 }),
+          withDelay(750, withTiming(1, { duration: 0 }))
+        );
+        cardOpacity.value = withSequence(
+          withTiming(0, { duration: 250 }),
+          withDelay(750, withTiming(1, { duration: 500 }, () => {
+            "worklet";
+            flyState.value = 0;
+            shareState.value = 0;
+          }))
+        );
+        successOpacity.value = withSequence(
+          withDelay(260, withTiming(1, { duration: 220 })),
+          withDelay(320, withTiming(0, { duration: 220 }))
+        );
+        successScale.value = withSequence(
+          withDelay(260, withSpring(1, springs.gentle)),
+          withDelay(320, withTiming(0.96, { duration: 220 }))
+        );
+        successTranslateY.value = withSequence(
+          withDelay(260, withTiming(0, { duration: 220 })),
+          withDelay(320, withTiming(-6, { duration: 220 }))
+        );
+        sharePulse.value = withDelay(760, withTiming(1, { duration: 0 }, () => {
           "worklet";
-          flyState.value = 0;
-          shareState.value = 0;
           runOnJS(fireShare)();
-        })
-      );
-      cardScale.value = withSequence(
-        withTiming(0.92, { duration: 350 }),
-        withDelay(150, withTiming(0.96, { duration: 0 })),
-        withSpring(1, springs.gentle)
-      );
-      cardOpacity.value = withSequence(
-        withTiming(0, { duration: 250 }),
-        withDelay(250, withTiming(0, { duration: 0 })),
-        withTiming(1, { duration: 600 })
-      );
-    } else if (state === 1 && ov < COMMIT_THRESHOLD * 0.3) {
-      // COMMITTED → IDLE: user pulled back without releasing past threshold
-      shareState.value = 0;
+        }));
+        return;
+      }
     }
-  });
+  );
 
   /* Card: tilt + shadow + scale + opacity */
   const cardStyle = useAnimatedStyle(() => {
@@ -152,13 +195,6 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
   });
 
 
-  /* Background gradient */
-  const bgStyle = useAnimatedStyle(() => {
-    if (flyState.value !== 0) return { opacity: 0 };
-    return {
-      opacity: interpolate(progress.value, [0, 0.1, 1], [0, 0, 0.6], Extrapolation.CLAMP),
-    };
-  });
 
   /* Drag indicator */
   const indicatorStyle = useAnimatedStyle(() => ({
@@ -177,6 +213,15 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
       ],
     };
   });
+
+  /* Success interstitial */
+  const successStyle = useAnimatedStyle(() => ({
+    opacity: successOpacity.value,
+    transform: [
+      { scale: successScale.value },
+      { translateY: successTranslateY.value },
+    ],
+  }));
 
   return (
     <View style={st.root}>
@@ -202,18 +247,31 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
         />
       </Animated.View>
 
-      {/* Accent gradient background — behind card */}
-      <Animated.View style={[st.bgFill, bgStyle]} pointerEvents="none">
-        <LinearGradient
-          colors={[accentColor + "00", accentColor + "00", accentColor + "40", accentColor]}
-          locations={[0, 0.35, 0.65, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </Animated.View>
-
       {/* "Swipe to Share" text — behind card */}
       <Animated.View style={[st.shareTextWrap, textStyle]} pointerEvents="none">
         <Text style={[st.shareText, { color: accentColor }]}>Swipe to Share</Text>
+      </Animated.View>
+
+      <Animated.View style={[st.successWrap, successStyle]} pointerEvents="none">
+        <AdaptiveGlass
+          style={st.successBadge}
+          glassEffectStyle="regular"
+          blurTint="default"
+          intensity={70}
+          tintColor={`${accentColor}D9`}
+          fallbackColor="rgba(255,255,255,0.82)"
+        >
+          <View style={[st.successIconWrap, { backgroundColor: `${accentColor}16` }]}>
+            <SymbolView
+              name="square.and.arrow.up.fill"
+              resizeMode="scaleAspectFit"
+              style={st.successIcon}
+              tintColor={accentColor}
+            />
+          </View>
+          <Text style={[st.successTitle, { color: accentColor }]}>Preparing Share</Text>
+          <Text style={st.successSubtitle}>Opening share sheet</Text>
+        </AdaptiveGlass>
       </Animated.View>
     </View>
   );
@@ -227,14 +285,6 @@ const st = StyleSheet.create({
   root: {
     position: "relative",
   },
-  bgFill: {
-    position: "absolute",
-    top: 0,
-    left: -32,
-    right: -32,
-    bottom: -500,
-    zIndex: 0,
-  },
   shareTextWrap: {
     position: "absolute",
     bottom: -50,
@@ -247,6 +297,43 @@ const st = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  successWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+  },
+  successBadge: {
+    minWidth: 180,
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 22,
+    paddingVertical: 20,
+    borderRadius: 28,
+    borderCurve: "continuous" as any,
+    overflow: "hidden",
+  },
+  successIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successIcon: {
+    width: 28,
+    height: 28,
+  },
+  successTitle: {
+    fontSize: 19,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  successSubtitle: {
+    color: platformColor("secondaryLabel"),
+    fontSize: 14,
+    fontWeight: "500",
   },
   cardWrap: {
     zIndex: 10,
