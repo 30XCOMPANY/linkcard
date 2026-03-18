@@ -33,6 +33,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
+import { Host, HStack, Button as SwiftButton, Spacer } from "@expo/ui/swift-ui";
+import { glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
+
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
@@ -234,33 +237,29 @@ export default function DiscoverScreen() {
 
       {current ? (
         <View style={styles.floatingBar}>
-          <Pressable onPress={handleNext} style={styles.glassChipWrap}>
-            <AdaptiveGlass
-              style={styles.glassChip}
-              glassEffectStyle="clear"
-              tintColor="#FFFFFF08"
-              intensity={20}
-              blurTint="light"
-              fallbackColor="rgba(255,255,255,0.12)"
-            >
-              <Text style={styles.glassChipLabel}>Next</Text>
-            </AdaptiveGlass>
-          </Pressable>
-          <View style={styles.btnSpacer} />
-          <Pressable onPress={handleSayHi} style={styles.glassChipWrapPrimary}>
-            <AdaptiveGlass
-              style={styles.glassChipPrimary}
-              glassEffectStyle="regular"
-              tintColor="#007AFFCC"
-              intensity={30}
-              blurTint="default"
-              fallbackColor="rgba(0,122,255,0.80)"
-            >
-              <Text style={styles.glassChipPrimaryLabel}>
+          <Host style={styles.glassHost}>
+            <HStack modifiers={[padding({ horizontal: 8 })]}>
+              <SwiftButton
+                onPress={handleNext}
+                modifiers={[
+                  glassEffect({ glass: { variant: "regular" } }),
+                  padding({ horizontal: 24, vertical: 14 }),
+                ]}
+              >
+                Next
+              </SwiftButton>
+              <Spacer />
+              <SwiftButton
+                onPress={handleSayHi}
+                modifiers={[
+                  glassEffect({ glass: { variant: "regular", tint: "#007AFF" } }),
+                  padding({ horizontal: 24, vertical: 14 }),
+                ]}
+              >
                 {current.contactAction?.label ?? "Say Hi"}
-              </Text>
-            </AdaptiveGlass>
-          </Pressable>
+              </SwiftButton>
+            </HStack>
+          </Host>
         </View>
       ) : null}
     </>
@@ -281,43 +280,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  glassChipWrap: {
+  glassHost: {
     flex: 1,
-  },
-  glassChip: {
-    minHeight: 50,
-    borderRadius: 25,
-    borderCurve: "continuous" as any,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  glassChipLabel: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "600",
-    color: platformColor("label"),
-  },
-  glassChipWrapPrimary: {
-    flex: 1,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-  },
-  glassChipPrimary: {
-    minHeight: 50,
-    borderRadius: 25,
-    borderCurve: "continuous" as any,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  glassChipPrimaryLabel: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    height: 56,
   },
   toolbarBtn: {
     minHeight: 32,
