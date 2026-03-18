@@ -64,6 +64,10 @@ export default function VersionsNativeScreen() {
   }
 
   const versionCount = card.versions.length;
+  // Default version always at top
+  const sortedVersions = [...card.versions].sort((a, b) =>
+    a.isDefault ? -1 : b.isDefault ? 1 : 0
+  );
 
   return (
     <>
@@ -83,7 +87,7 @@ export default function VersionsNativeScreen() {
             }
           >
             <List.ForEach onDelete={handleDelete} onMove={handleMove}>
-              {card.versions.map((version) => (
+              {sortedVersions.map((version) => (
                 <LabeledContent
                   key={version.id}
                   label={version.name}

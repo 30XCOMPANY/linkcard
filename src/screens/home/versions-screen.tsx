@@ -51,7 +51,7 @@ export default function VersionsScreen() {
       >
         <SettingsSectionHeader title="CARD VERSION" />
         <SettingsGroup>
-          {card.versions.map((version, index) => (
+          {[...card.versions].sort((a, b) => a.isDefault ? -1 : b.isDefault ? 1 : 0).map((version, index) => (
             <React.Fragment key={version.id}>
               {index > 0 ? <SettingsSeparator /> : null}
               <SettingsRow
