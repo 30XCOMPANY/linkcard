@@ -25,7 +25,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "LinkCard uses the camera to take a profile photo for your business card.",
         "NSPhotoLibraryUsageDescription": "LinkCard accesses your photo library to choose a profile photo or banner image.",
-        "NSContactsUsageDescription": "LinkCard can save contacts from business cards you collect."
+        "NSContactsUsageDescription": "LinkCard can save contacts from business cards you collect.",
+        "NSLocationWhenInUseUsageDescription": "LinkCard uses your location to display your city on your business card."
       }
     },
     "android": {
@@ -58,7 +59,13 @@
         }
       ],
       "expo-background-fetch",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LinkCard uses your location to display your city on your business card."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

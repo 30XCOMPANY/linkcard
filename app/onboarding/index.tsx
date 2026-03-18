@@ -9,7 +9,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -30,11 +30,13 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import { Stack } from "expo-router/stack";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { GlassButton, SecondaryButton } from "@/src/components/shared/glass-button";
-import { createCardFromOnboardingDraft, useCardStore } from "@/src/stores/cardStore";
+import { useCardStore } from "@/src/stores/cardStore";
+import { createCardFromOnboardingDraft } from "@/src/lib/onboarding-card";
 import { fetchLinkedInProfile } from "@/src/services/linkedin";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
@@ -144,6 +146,7 @@ function CardPreview({ draft }: { draft: OnboardingDraft }) {
   const hasPhoto = Boolean(draft.photoUrl);
   const hasTitle = draft.jobTitle.trim().length > 0;
   const hasHeadline = draft.headline.trim().length > 0;
+  const hasLocation = draft.location.trim().length > 0;
 
   if (!hasName && !hasPhoto) {
     return (
@@ -166,6 +169,9 @@ function CardPreview({ draft }: { draft: OnboardingDraft }) {
           {draft.company ? `${draft.jobTitle} · ${draft.company}` : draft.jobTitle}
         </Text>
       )}
+      {hasLocation && (
+        <Text style={styles.previewLocation} numberOfLines={1}>📍 {draft.location}</Text>
+      )}
       {hasHeadline && (
         <Text style={styles.previewHeadline} numberOfLines={2}>{draft.headline}</Text>
       )}
@@ -186,6 +192,33 @@ export default function OnboardingScreen() {
   const [importedProfile, setImportedProfile] = useState<LinkedInProfile | null>(null);
 
   const stepIndex = BUILDER_STEPS.indexOf(step);
+  const locationFetched = useRef(false);
+
+  // Auto-detect location when entering "role" step (runs in background)
+  useEffect(() => {
+    if (step !== "role" || locationFetched.current || draft.location) return;
+    locationFetched.current = true;
+
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+        const [geo] = await Location.reverseGeocodeAsync(pos.coords);
+        if (!geo) return;
+
+        const city = geo.city || geo.district || "";
+        const region = geo.region || "";
+        const location = [city, region].filter(Boolean).join(", ");
+        if (location) {
+          setDraft((c) => ({ ...c, location }));
+        }
+      } catch {
+        // Permission denied or geocode failed — skip silently
+      }
+    })();
+  }, [step]);
 
   const canContinue = useMemo(() => {
     switch (step) {
@@ -629,6 +662,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   previewRole: { color: platformColor("secondaryLabel"), fontSize: 15 },
+  previewLocation: { color: platformColor("secondaryLabel"), fontSize: 14 },
   previewHeadline: {
     color: platformColor("secondaryLabel"), fontSize: 14,
     textAlign: "center", lineHeight: 20, maxWidth: 280,
