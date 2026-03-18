@@ -1,19 +1,21 @@
 /**
- * [INPUT]: react-native Image/PlatformColor/ScrollView/StyleSheet/Text/View,
+ * [INPUT]: react-native Image/PlatformColor/Pressable/ScrollView/StyleSheet/Text/View,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
- *          @/assets/default-banner.jpg
- * [OUTPUT]: EventsScreen — events page with SF hero banner dissolving into page background
- * [POS]: Events tab main screen — hero image with progressive blur + background-matched fade
+ *          expo-router useRouter, @/assets/default-banner.jpg
+ * [OUTPUT]: EventsScreen — events placeholder with minimal empty-state guidance
+ * [POS]: Events tab main screen — lightweight placeholder that points to the next best action
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { platformColor } from "@/src/lib/platform-color";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function EventsScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const pageBg = scheme === "dark" ? "#000000" : "#F2F2F7";
 
@@ -54,10 +56,18 @@ export default function EventsScreen() {
 
       <View style={[styles.content, { backgroundColor: pageBg }]}>
         <Text style={styles.heading}>San Francisco</Text>
-        <Text style={styles.subtitle}>No upcoming events</Text>
+        <Text style={styles.subtitle}>No upcoming events yet</Text>
         <Text style={styles.body}>
-          Events from your network will appear here. Stay tuned.
+          Nothing is scheduled yet. Save people in Discover or review your card before the next room you walk into.
         </Text>
+        <View style={styles.actionStack}>
+          <Pressable style={styles.primaryAction} onPress={() => router.push("/(discover)" as any)}>
+            <Text style={styles.primaryActionLabel}>Open Discover</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryAction} onPress={() => router.push("/(home)" as any)}>
+            <Text style={styles.secondaryActionLabel}>Review My Card</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -107,5 +117,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: platformColor("tertiaryLabel"),
+  },
+  actionStack: {
+    gap: 12,
+    marginTop: 24,
+  },
+  primaryAction: {
+    minHeight: 48,
+    borderRadius: 24,
+    borderCurve: "continuous" as any,
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryActionLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  secondaryAction: {
+    minHeight: 48,
+    borderRadius: 24,
+    borderCurve: "continuous" as any,
+    backgroundColor: "rgba(0,122,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryActionLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: "#007AFF",
   },
 });

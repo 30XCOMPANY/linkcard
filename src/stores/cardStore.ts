@@ -1,6 +1,6 @@
 /**
  * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types (incl. ContactAction), @/src/lib/card-presets
- * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions, updateContactAction
+ * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions, updateContactAction, resetAllData
  * [POS]: Main app state — single Zustand store with AsyncStorage persistence, version ordering, and debounced Supabase sync
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -98,6 +98,7 @@ interface CardState {
     setError: (error: string | null) => void;
     updateContactAction: (action: ContactAction | undefined) => void;
     clearCard: () => void;
+    resetAllData: () => void;
 }
 
 // ── Mock card for frontend development ──────────────────────────
@@ -145,7 +146,7 @@ export const MOCK_CARD: BusinessCard = {
 export const useCardStore = create<CardState>()(
     persist(
         (set, get) => ({
-            card: MOCK_CARD,  // TODO: revert to null when onboarding is ready
+            card: null,
             isLoading: false,
             error: null,
             themeMode: 'system',
@@ -380,6 +381,19 @@ export const useCardStore = create<CardState>()(
             },
 
             clearCard: () => set({ card: null, error: null }),
+            resetAllData: () =>
+                set({
+                    card: null,
+                    isLoading: false,
+                    error: null,
+                    themeMode: 'system',
+                    nameFont: 'classic' as NameFontKey,
+                    autoSync: true,
+                    includeQRCode: true,
+                    notifProfileUpdates: true,
+                    notifShareActivity: true,
+                    notifSyncReminders: false,
+                }),
         }),
         {
             name: 'linkcard-storage',

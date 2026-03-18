@@ -6,8 +6,8 @@
  *          @/src/components/shared/adaptive-glass AdaptiveGlass,
  *          @/src/lib/haptics, @/src/lib/icons Icon,
  *          @/src/lib/contact-actions, @/src/types CardVersion
- * [OUTPUT]: DiscoverScreen — discover feed with swipe gestures and card browsing
- * [POS]: Discover tab main screen — Tinder-style swipe + Next/Say Hi buttons
+ * [OUTPUT]: DiscoverScreen — discover feed with swipe gestures and saved-card entry
+ * [POS]: Discover tab main screen — lightweight browsing loop with clear next actions
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -70,7 +70,6 @@ export default function DiscoverScreen() {
   const saveContact = useContactsStore((s) => s.saveContact);
   const resetDaily = useContactsStore((s) => s.resetDailyIfNeeded);
   const removeContact = useContactsStore((s) => s.removeContact);
-
   const current = index < batch.length ? batch[index] : null;
 
   const saved = useContactsStore((s) =>
@@ -190,9 +189,10 @@ export default function DiscoverScreen() {
               haptic.light();
               router.push("/(discover)/collection" as any);
             }}
+            accessibilityLabel="Open saved cards"
             style={styles.toolbarBtn}
           >
-            <Icon web="wallet" size={20} color={platformColor("label")} />
+            <Icon web="bookmark-outline" size={20} color={platformColor("label")} />
           </Pressable>
         </Stack.Toolbar.View>
       </Stack.Toolbar>

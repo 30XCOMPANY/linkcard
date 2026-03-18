@@ -2,12 +2,12 @@
  * [INPUT]: react-native ScrollView/Switch/StyleSheet,
  *          @/src/design-system/settings primitives, @/src/lib/haptics,
  *          @/src/stores/cardStore (notif toggles + setters)
- * [OUTPUT]: NotificationsScreen — master permission toggle + persisted notification type toggles
- * [POS]: Settings sub-page — notification preferences backed by cardStore
+ * [OUTPUT]: NotificationsScreen — persisted alert preference toggles
+ * [POS]: Settings sub-page — notification preferences backed by a single persistent state model
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { ScrollView, StyleSheet, Switch } from "react-native";
 
 import { haptic } from "@/src/lib/haptics";
@@ -22,10 +22,6 @@ import {
 import { useCardStore } from "@/src/stores/cardStore";
 
 export default function NotificationsScreen() {
-  // System permission state — defaults true until real expo-notifications integration
-  const [allowNotifications, setAllowNotifications] = useState(true);
-
-  // Persisted notification type prefs from store
   const profileUpdates = useCardStore((s) => s.notifProfileUpdates);
   const shareActivity = useCardStore((s) => s.notifShareActivity);
   const syncReminders = useCardStore((s) => s.notifSyncReminders);
@@ -38,31 +34,7 @@ export default function NotificationsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
-      {/* ------------------------------------------------------------------ */}
-      {/* PERMISSIONS                                                          */}
-      {/* ------------------------------------------------------------------ */}
-      <SettingsSectionHeader title="PERMISSIONS" />
-      <SettingsGroup>
-        <SettingsRow
-          title="Allow Notifications"
-          leading={<SettingsIconTile web="notifications" color="#FF3B30" />}
-          trailing={
-            <Switch
-              value={allowNotifications}
-              onValueChange={(val) => {
-                haptic.selection();
-                setAllowNotifications(val);
-              }}
-            />
-          }
-        />
-      </SettingsGroup>
-      <SettingsGroupFooter text="LinkCard needs notification permission to alert you about profile changes and sharing activity." />
-
-      {/* ------------------------------------------------------------------ */}
-      {/* NOTIFICATION TYPES                                                   */}
-      {/* ------------------------------------------------------------------ */}
-      <SettingsSectionHeader title="NOTIFICATION TYPES" />
+      <SettingsSectionHeader title="ALERT TYPES" />
       <SettingsGroup>
         <SettingsRow
           title="Profile Updates"
@@ -70,7 +42,6 @@ export default function NotificationsScreen() {
           leading={<SettingsIconTile web="person" color="#34C759" />}
           trailing={
             <Switch
-              disabled={!allowNotifications}
               value={profileUpdates}
               onValueChange={(val) => {
                 haptic.selection();
@@ -86,7 +57,6 @@ export default function NotificationsScreen() {
           leading={<SettingsIconTile web="share" color="#007AFF" />}
           trailing={
             <Switch
-              disabled={!allowNotifications}
               value={shareActivity}
               onValueChange={(val) => {
                 haptic.selection();
@@ -102,7 +72,6 @@ export default function NotificationsScreen() {
           leading={<SettingsIconTile web="reload" color="#FF9500" />}
           trailing={
             <Switch
-              disabled={!allowNotifications}
               value={syncReminders}
               onValueChange={(val) => {
                 haptic.selection();
@@ -112,7 +81,7 @@ export default function NotificationsScreen() {
           }
         />
       </SettingsGroup>
-      <SettingsGroupFooter text="Profile Updates notify you when your LinkedIn data changes. Share Activity alerts you when someone views your shared card." />
+      <SettingsGroupFooter text="These preferences are stored locally. System notification permission will be wired up when expo-notifications is integrated." />
     </ScrollView>
   );
 }

@@ -183,7 +183,7 @@ export function SettingsAccountCard({
               </Text>
             ) : null}
           </View>
-          <SettingsChevron />
+          {onPress ? <SettingsChevron /> : null}
         </View>
       </Pressable>
 
@@ -204,7 +204,7 @@ export function SettingsAccountCard({
           <Text className="text-sf-text" style={styles.accountFooterLabel}>
             {footerLabel}
           </Text>
-          <SettingsChevron />
+          {onFooterPress ? <SettingsChevron /> : null}
         </View>
       </Pressable>
     </SettingsGroup>

@@ -2,8 +2,8 @@
  * [INPUT]: react-native ScrollView/Text/View/Alert/Linking/PlatformColor/StyleSheet,
  *          @/src/stores/cardStore, @/src/components/shared/avatar Avatar,
  *          @/src/design-system/settings primitives, @/src/lib/haptics, @/src/lib/icons Icon
- * [OUTPUT]: AccountScreen — profile summary, linked accounts, re-sync, sign out, delete account
- * [POS]: Settings sub-page — account management and linked service overview
+ * [OUTPUT]: AccountScreen — profile summary, linked accounts, import status, clear-card, and delete-data actions
+ * [POS]: Settings sub-page — account management with actions named after their real effects
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -27,27 +27,27 @@ import {
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
-  SettingsChevron,
   SettingsIconTile,
 } from "@/src/design-system/settings";
 
 export default function AccountScreen() {
   const card = useCardStore((s) => s.card);
   const clearCard = useCardStore((s) => s.clearCard);
+  const resetAllData = useCardStore((s) => s.resetAllData);
   const profile = card?.profile;
 
   // Derive accent color from the default version
   const defaultVersion = card?.versions.find((v) => v.isDefault) ?? card?.versions[0];
   const accentColor = defaultVersion?.accentColor ?? "#007AFF";
 
-  const handleSignOut = () => {
+  const handleRemoveCard = () => {
     Alert.alert(
-      "Sign Out",
-      "Your card data will remain on this device.",
+      "Remove Imported Card",
+      "This clears your current card and sends you back through onboarding. Your app preferences stay intact.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Sign Out",
+          text: "Remove Card",
           style: "destructive",
           onPress: () => {
             haptic.warning();
@@ -60,8 +60,8 @@ export default function AccountScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete Account",
-      "This will permanently delete your account and all card data. This cannot be undone.",
+      "Delete All LinkCard Data",
+      "This permanently deletes the imported card and resets your local app preferences. This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -78,7 +78,7 @@ export default function AccountScreen() {
                   style: "destructive",
                   onPress: () => {
                     haptic.error();
-                    clearCard();
+                    resetAllData();
                   },
                 },
               ]
@@ -132,7 +132,6 @@ export default function AccountScreen() {
           title="LinkedIn"
           subtitle={profile.username}
           leading={<SettingsIconTile web="link" color="#0A66C2" />}
-          trailing={<SettingsChevron />}
           onPress={() => {
             haptic.light();
             Linking.openURL(profile.url);
@@ -140,35 +139,31 @@ export default function AccountScreen() {
         />
         <SettingsSeparator />
         <SettingsRow
-          title="Re-sync Profile"
-          subtitle="Refresh from LinkedIn"
+          title="Last Imported"
+          subtitle={new Date(profile.lastSynced).toLocaleDateString()}
           leading={<SettingsIconTile web="refresh" color="#34C759" />}
-          trailing={<SettingsChevron />}
-          onPress={() => {
-            haptic.light();
-            Alert.alert("Syncing...", "Refreshing your LinkedIn data.");
-          }}
+          trailing={<Text style={styles.statusText}>Auto-sync</Text>}
         />
       </SettingsGroup>
-      <SettingsGroupFooter text="Your LinkedIn data is imported locally. LinkCard does not store your LinkedIn credentials." />
+      <SettingsGroupFooter text="Your LinkedIn data is imported locally. LinkCard does not store your LinkedIn credentials, and manual refresh is not yet exposed as a separate flow." />
 
       {/* ── DANGER ZONE ── */}
       <SettingsSectionHeader title="" />
       <SettingsGroup>
         <SettingsRow
-          title="Sign Out"
+          title="Remove Imported Card"
           leading={<SettingsIconTile web="arrow-right" color="#FF3B30" />}
-          onPress={handleSignOut}
+          onPress={handleRemoveCard}
         />
         <SettingsSeparator />
         <SettingsRow
-          title="Delete Account"
+          title="Delete All LinkCard Data"
           destructive
           leading={<SettingsIconTile web="trash" color="#FF3B30" />}
           onPress={handleDeleteAccount}
         />
       </SettingsGroup>
-      <SettingsGroupFooter text="Signing out keeps your card data on this device. Deleting your account removes all data permanently." />
+      <SettingsGroupFooter text="Removing the imported card preserves app preferences. Deleting all LinkCard data clears the card and resets app-level settings." />
     </ScrollView>
   );
 }
@@ -206,6 +201,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 15,
     lineHeight: 20,
+    color: platformColor("secondaryLabel"),
+  },
+  statusText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
     color: platformColor("secondaryLabel"),
   },
 });

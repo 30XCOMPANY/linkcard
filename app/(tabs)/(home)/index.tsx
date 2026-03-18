@@ -2,7 +2,7 @@
  * [INPUT]: react/react-native ScrollView/View/Text/Alert/StyleSheet/PlatformColor,
  *          expo-router useRouter, @/src/stores/cardStore,
  *          @/src/components/card/profile-card, @/src/types CardVersion, local profile-header
- * [OUTPUT]: HomeScreen — read-only profile card display with version switching
+ * [OUTPUT]: HomeScreen — card preview with direct edit entry in the header and version switching
  * [POS]: (home) module entrypoint, displaying the card while delegating editing to the editor screen
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -86,10 +86,20 @@ export default function HomeScreen() {
       <HomeProfileHeader
         currentVersion={currentVersion}
         onCreateVersion={handleCreateVersion}
-        onEdit={() => router.push({ pathname: "/editor" as any, params: { versionId: selectedVersionId } })}
+        onEdit={() =>
+          router.push({
+            pathname: "/(tabs)/(home)/editor" as any,
+            params: { versionId: selectedVersionId },
+          })
+        }
         onFontCycle={handleFontCycle}
         onSelectVersion={setSelectedVersionId}
-        onSync={() => Alert.alert("Syncing", "Refreshing your LinkedIn data...")}
+        onSync={() =>
+          Alert.alert(
+            "LinkedIn refresh is coming soon",
+            "Auto-sync preferences are ready. Manual refresh will land in a later build."
+          )
+        }
         profile={card.profile}
         versions={card.versions}
       />

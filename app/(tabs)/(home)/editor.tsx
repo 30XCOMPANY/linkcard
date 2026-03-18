@@ -4,8 +4,8 @@
  *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
  *          @/src/lib/card-presets, @/src/lib/profile-tags, @/src/lib/social-platforms,
  *          @/src/lib/social-icon, expo-image-picker
- * [OUTPUT]: EditorScreen — card editor aligned to the shared settings design system
- * [POS]: Push screen from home — editing controls expressed as grouped settings rows and inline controls
+ * [OUTPUT]: EditorScreen — edit hub aligned to the shared settings design system
+ * [POS]: Push screen from home — root of the structured card-editing subtree
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -203,6 +203,8 @@ export default function EditorScreen() {
     <>
       <Stack.Screen
         options={{
+          title: "Edit Card",
+          headerBackTitle: "Card",
           headerRight: () => (
             <RNPressable
               onPress={() => router.back()}
@@ -241,7 +243,8 @@ export default function EditorScreen() {
         <SettingsGroup>
           <SettingsRow
             title="Version"
-            onPress={() => router.push("/versions" as any)}
+            subtitle="Manage the versions attached to this card"
+            onPress={() => router.push("/(tabs)/(home)/versions" as any)}
             trailing={
               <View style={styles.rowValue}>
                 <Text className="text-sf-text-2" style={styles.rowValueText}>
@@ -357,7 +360,7 @@ export default function EditorScreen() {
                   leading={<SettingsIconTile web={meta.sfIcon ?? "link"} color={meta.color} />}
                   onPress={() =>
                     router.push({
-                      pathname: "/social-link-detail" as any,
+                      pathname: "/(tabs)/(home)/social-link-detail" as any,
                       params: { index: String(i) },
                     })
                   }
@@ -370,7 +373,7 @@ export default function EditorScreen() {
           <SettingsRow
             title="Add Social Link"
             leading={<SettingsIconTile web="plus" color="#34C759" />}
-            onPress={() => router.push("/social-link-picker" as any)}
+            onPress={() => router.push("/(tabs)/(home)/social-link-picker" as any)}
             trailing={<SettingsChevron />}
           />
         </SettingsGroup>
@@ -380,7 +383,8 @@ export default function EditorScreen() {
           <SettingsRow
             title="Publications"
             leading={<SettingsIconTile web="document" color="#FF9500" />}
-            onPress={() => router.push("/publications" as any)}
+            subtitle="Edit the stories and links that travel with this version"
+            onPress={() => router.push("/(tabs)/(home)/publications" as any)}
             trailing={
               <View style={styles.rowValue}>
                 <RNText style={styles.rowValueText}>

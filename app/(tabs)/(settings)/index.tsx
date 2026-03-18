@@ -3,8 +3,8 @@
  *          expo-router useRouter, expo-constants Constants,
  *          @/src/stores/cardStore, @/src/tw View/Text,
  *          @/src/design-system/settings primitives, @/src/lib/icons Icon, @/src/lib/haptics
- * [OUTPUT]: SettingsScreen — navigation hub pushing to account, appearance, privacy, notifications, about
- * [POS]: Settings tab — Apple-style grouped list hub with inline sync controls and sub-page navigation
+ * [OUTPUT]: SettingsScreen — navigation hub for account, appearance, privacy, notifications, and app info
+ * [POS]: Settings tab — Apple-style grouped list hub without cross-tab deep links or fake system affordances
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -29,6 +29,7 @@ import {
   SettingsAccountCard,
   SettingsChevron,
   SettingsGroup,
+  SettingsGroupFooter,
   SettingsIconTile,
   SettingsRow,
   SettingsSectionHeader,
@@ -60,11 +61,6 @@ export default function SettingsScreen() {
     nameFont === "modern" ? "Modern" :
     nameFont === "mono" ? "Mono" : "System";
   const notifCount = [notifProfileUpdates, notifShareActivity, notifSyncReminders].filter(Boolean).length;
-
-  const handleSyncNow = () => {
-    haptic.light();
-    Alert.alert("Syncing...", "Refreshing your LinkedIn data.");
-  };
 
   const handleResetCard = () => {
     Alert.alert(
@@ -117,11 +113,10 @@ export default function SettingsScreen() {
             haptic.light();
             router.push("/(settings)/account" as any);
           }}
-          onFooterPress={() => {
-            haptic.light();
-            router.push("/(home)/versions" as any);
-          }}
         />
+      ) : null}
+      {profile ? (
+        <SettingsGroupFooter text="Version count lives here for context only. Edit and reorder versions from the Card tab." />
       ) : null}
 
       {/* ── Sync (inline — simple toggles stay here) ──────── */}
@@ -143,13 +138,13 @@ export default function SettingsScreen() {
         />
         <SettingsSeparator />
         <SettingsRow
-          title="Sync Now"
-          subtitle="Refresh data manually"
-          onPress={handleSyncNow}
+          title="Manual Refresh"
+          subtitle="Coming soon. Auto-sync will handle updates for now."
           leading={<SettingsIconTile web="refresh" color="#0A84FF" />}
-          trailing={<SettingsChevron />}
+          trailing={<Text style={styles.statusText}>Soon</Text>}
         />
       </SettingsGroup>
+      <SettingsGroupFooter text="LinkedIn refresh is still an app-level capability, not a separate settings destination." />
 
       {/* ── Sub-page navigation rows ─────────────────────── */}
       <SettingsSectionHeader title="PREFERENCES" />
@@ -308,5 +303,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 16,
     fontWeight: "700",
+  },
+  statusText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: platformColor("secondaryLabel"),
   },
 });

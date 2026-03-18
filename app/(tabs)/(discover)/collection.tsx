@@ -4,8 +4,8 @@
  *          @/src/components/card/profile-card ProfileCard,
  *          @/src/design-system/settings primitives,
  *          @/src/lib/haptics, @/src/lib/contact-actions, @/src/types
- * [OUTPUT]: CollectionScreen — saved contacts card holder list with expandable detail
- * [POS]: Card holder — push from discover header, list of saved contacts with actions
+ * [OUTPUT]: CollectionScreen — saved cards list with expandable detail and discover return path
+ * [POS]: Discover sub-screen — saved contact library for the swipe flow
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -17,6 +17,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 
 import { useContactsStore } from "@/src/stores/contactsStore";
@@ -31,7 +32,6 @@ import {
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
-  SettingsChevron,
 } from "@/src/design-system/settings";
 import type { CardVersion, SavedContact } from "@/src/types";
 
@@ -73,7 +73,11 @@ function ContactRow({
             size={36}
           />
         }
-        trailing={<SettingsChevron />}
+        trailing={
+          <Text style={styles.rowActionLabel}>
+            {expanded ? "Hide" : "Show"}
+          </Text>
+        }
         onPress={onPress}
       />
       {expanded ? (
@@ -106,6 +110,7 @@ function ContactRow({
 }
 
 export default function CollectionScreen() {
+  const router = useRouter();
   const savedContacts = useContactsStore((s) => s.savedContacts);
   const removeContact = useContactsStore((s) => s.removeContact);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -139,6 +144,9 @@ export default function CollectionScreen() {
         <Text style={styles.emptySubtitle}>
           Browse Discover to find and save interesting people
         </Text>
+        <Pressable style={styles.emptyButton} onPress={() => router.back()}>
+          <Text style={styles.emptyButtonLabel}>Back to Discover</Text>
+        </Pressable>
       </View>
     );
   }
@@ -148,7 +156,7 @@ export default function CollectionScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
-      <SettingsSectionHeader title={`${savedContacts.length} SAVED`} />
+      <SettingsSectionHeader title={`${savedContacts.length} SAVED CARDS`} />
       <SettingsGroup>
         {savedContacts.map((contact, i) => (
           <ContactRow
@@ -188,6 +196,28 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: platformColor("secondaryLabel"),
     textAlign: "center",
+  },
+  emptyButton: {
+    marginTop: 20,
+    minHeight: 44,
+    paddingHorizontal: 18,
+    borderRadius: 22,
+    borderCurve: "continuous" as any,
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyButtonLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  rowActionLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: "#007AFF",
   },
   detail: {
     padding: 16,

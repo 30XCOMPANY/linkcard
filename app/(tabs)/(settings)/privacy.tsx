@@ -189,15 +189,12 @@ export default function PrivacyScreen() {
       <SettingsGroup>
         <SettingsRow
           title="Share History"
-          subtitle="0 cards shared"
+          subtitle="History will appear here after sharing ships"
           leading={<SettingsIconTile web="clock" color="#8E8E93" />}
-          trailing={<SettingsChevron />}
-          onPress={() => {
-            haptic.light();
-            Alert.alert("Share History", "No shares yet.");
-          }}
+          trailing={<Text style={styles.detailText}>Soon</Text>}
         />
       </SettingsGroup>
+      <SettingsGroupFooter text="Share history is informational only for now. It will become a real destination once card sharing analytics exist." />
     </ScrollView>
   );
 }

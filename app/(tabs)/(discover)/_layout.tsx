@@ -31,7 +31,7 @@ export default function DiscoverLayout() {
       <Stack.Screen
         name="collection"
         options={{
-          title: "Card Holder",
+          title: "Saved Cards",
           headerLargeTitle: false,
           headerTransparent: false,
           headerBlurEffect: "systemMaterial",
