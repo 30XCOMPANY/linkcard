@@ -25,11 +25,12 @@ import {
 import { Stack } from "expo-router/stack";
 import { useRouter } from "expo-router";
 import Animated, {
+  Easing,
   interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
@@ -43,7 +44,9 @@ import type { CardVersion, DiscoverProfile } from "@/src/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SPRING_CONFIG = { damping: 20, stiffness: 200 };
+const SWIPE_OUT_DURATION = 200;
+const SWIPE_OUT_CONFIG = { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.cubic) };
+const SNAP_BACK_CONFIG = { duration: 150, easing: Easing.out(Easing.cubic) };
 
 // ── Synthesize CardVersion from DiscoverProfile fields ───────────
 function toCardVersion(p: DiscoverProfile): CardVersion {
@@ -118,25 +121,25 @@ export default function DiscoverScreen() {
     .onEnd((e) => {
       if (e.translationX < -SWIPE_THRESHOLD) {
         // Swipe left → next card
-        translateX.value = withSpring(
+        translateX.value = withTiming(
           -SCREEN_WIDTH,
-          SPRING_CONFIG,
+          SWIPE_OUT_CONFIG,
           () => {
             runOnJS(onSwipeComplete)("left");
           }
         );
       } else if (e.translationX > SWIPE_THRESHOLD) {
         // Swipe right → prev card (wraps around)
-        translateX.value = withSpring(
+        translateX.value = withTiming(
           SCREEN_WIDTH,
-          SPRING_CONFIG,
+          SWIPE_OUT_CONFIG,
           () => {
             runOnJS(onSwipeComplete)("right");
           }
         );
       } else {
         // Snap back
-        translateX.value = withSpring(0, SPRING_CONFIG);
+        translateX.value = withTiming(0, SNAP_BACK_CONFIG);
       }
     });
 
