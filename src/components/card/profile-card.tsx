@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
@@ -62,6 +63,7 @@ interface ProfileCardProps {
   nameFont?: NameFontKey;
   contactAction?: ContactAction;
   onBannerPress?: () => void;
+  onEmailPress?: (email: string) => void;
 }
 
 export function ProfileCard({
@@ -69,16 +71,13 @@ export function ProfileCard({
   version,
   nameFont = "classic",
   onBannerPress,
+  onEmailPress,
 }: ProfileCardProps) {
   const accent = version.accentColor;
   const vis = new Set(version.visibleFields as string[]);
   const tags = deriveProfileTags(profile);
   const background = resolveCardBackground(version.background);
   const dark = background.isDark;
-  const bannerFadeColors = dark
-    ? ["transparent", "rgba(17,24,39,0.3)", "rgba(17,24,39,0.8)", background.surface] as const
-    : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
-
   /* Dark/light adaptive palette */
   const colors = {
     label: dark ? "#F9FAFB" : (platformColor("label")),
@@ -109,18 +108,18 @@ export function ProfileCard({
           style={s.bannerImage}
           resizeMode="cover"
         />
-        {/* Progressive blur — 8 layers */}
-        <BlurView intensity={15}  tint="default" style={[s.bannerBlur, { top: "30%", opacity: 0.15 }]} />
-        <BlurView intensity={30}  tint="default" style={[s.bannerBlur, { top: "38%", opacity: 0.25 }]} />
-        <BlurView intensity={50}  tint="default" style={[s.bannerBlur, { top: "46%", opacity: 0.35 }]} />
-        <BlurView intensity={70}  tint="default" style={[s.bannerBlur, { top: "54%", opacity: 0.50 }]} />
-        <BlurView intensity={85}  tint="default" style={[s.bannerBlur, { top: "62%", opacity: 0.65 }]} />
-        <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "70%", opacity: 0.80 }]} />
-        <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "78%", opacity: 0.90 }]} />
-        <BlurView intensity={100} tint="default" style={[s.bannerBlur, { top: "86%", opacity: 1.0  }]} />
+        {/* Blur sits under gradient — hard edge hidden by opacity */}
+        <BlurView intensity={100} tint="default" style={s.bannerBlurBottom} />
         <LinearGradient
-          colors={bannerFadeColors}
-          locations={[0, 0.4, 0.7, 1]}
+          colors={[
+            "transparent",
+            background.surface + "10",
+            background.surface + "50",
+            background.surface + "A0",
+            background.surface + "E0",
+            background.surface,
+          ]}
+          locations={[0, 0.25, 0.42, 0.58, 0.75, 1]}
           style={s.bannerFade}
         />
       </Pressable>
@@ -211,12 +210,22 @@ export function ProfileCard({
       {/* Contact + Stats */}
       {vis.has("email") && (
         <View style={s.contactRow}>
-          <View style={[s.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
-            <Text style={s.contactPillIcon}>✉</Text>
-            <Text style={[s.contactPillText, { color: colors.secondaryLabel }]}>
-              {profile.email ?? "No contact set"}
-            </Text>
-          </View>
+          <Pressable
+            onPress={() => {
+              if (profile.email && onEmailPress) {
+                haptic.light();
+                onEmailPress(profile.email);
+              }
+            }}
+            disabled={!profile.email || !onEmailPress}
+          >
+            <View style={[s.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
+              <Text style={s.contactPillIcon}>✉</Text>
+              <Text style={[s.contactPillText, { color: colors.secondaryLabel }]}>
+                {profile.email ?? "No contact set"}
+              </Text>
+            </View>
+          </Pressable>
           <View style={s.statsRow}>
             <Text style={[s.statNum, { color: colors.link }]}>0</Text>
             <Text style={[s.statLabel, { color: colors.secondaryLabel }]}> connects </Text>
@@ -247,10 +256,10 @@ export function ProfileCard({
             <AdaptiveGlass
               style={s.socialIcon}
               glassEffectStyle="regular"
-              tintColor={getSocialPlatform(link.platform).color}
+              tintColor={getSocialPlatform(link.platform).glassColor}
               intensity={50}
               blurTint="default"
-              fallbackColor={getSocialPlatform(link.platform).color}
+              fallbackColor={getSocialPlatform(link.platform).glassColor}
             >
               <SocialIcon platform={link.platform} size={18} color="#FFFFFF" />
             </AdaptiveGlass>
@@ -325,8 +334,9 @@ const s = StyleSheet.create({
     zIndex: 0,
   },
   bannerImage: { width: "100%", height: "100%" },
-  bannerBlur: {
+  bannerBlurBottom: {
     position: "absolute",
+    top: "65%",
     left: 0,
     right: 0,
     bottom: 0,

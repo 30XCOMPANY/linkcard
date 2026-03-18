@@ -39,7 +39,9 @@ import { foregroundStyle, frame, glassEffect } from "@expo/ui/swift-ui/modifiers
 import { useContactsStore } from "@/src/stores/contactsStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
+import { Clipboard } from "react-native";
 import { executeContactAction } from "@/src/lib/contact-actions";
+import { PillToast } from "@/src/components/shared/pill-toast";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
@@ -75,6 +77,7 @@ export default function DiscoverScreen() {
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
   );
+  const [toast, setToast] = useState<{ icon: string; message: string; color: string } | null>(null);
 
   useEffect(() => {
     resetDaily();
@@ -165,7 +168,15 @@ export default function DiscoverScreen() {
   const handleSayHi = useCallback(() => {
     if (!current) return;
     haptic.medium();
-    executeContactAction(current.contactAction, current.profile.url);
+
+    const action = current.contactAction;
+    if (action?.type === "email") {
+      Clipboard.setString(action.value);
+      setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: "#007AFF" });
+      return;
+    }
+
+    executeContactAction(action, current.profile.url);
   }, [current]);
 
   const handleSave = useCallback(() => {
@@ -181,6 +192,14 @@ export default function DiscoverScreen() {
 
   return (
     <>
+      {toast && (
+        <PillToast
+          icon={toast.icon}
+          message={toast.message}
+          color={toast.color}
+          onDismiss={() => setToast(null)}
+        />
+      )}
       <Stack.Screen options={{ title: "Discover", headerLargeTitle: true }} />
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
@@ -209,6 +228,10 @@ export default function DiscoverScreen() {
                 profile={current.profile}
                 version={toCardVersion(current)}
                 contactAction={current.contactAction}
+                onEmailPress={(email) => {
+                  Clipboard.setString(email);
+                  setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: "#007AFF" });
+                }}
               />
               <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
                 <AdaptiveGlass

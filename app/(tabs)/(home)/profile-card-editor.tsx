@@ -225,10 +225,10 @@ export function ProfileCardEditor({
             <AdaptiveGlass
               style={styles.socialIcon}
               glassEffectStyle="regular"
-              tintColor={getSocialPlatform(link.platform).color}
+              tintColor={getSocialPlatform(link.platform).glassColor}
               intensity={50}
               blurTint="default"
-              fallbackColor={getSocialPlatform(link.platform).color}
+              fallbackColor={getSocialPlatform(link.platform).glassColor}
             >
               <SocialIcon platform={link.platform} size={18} color="#FFFFFF" />
             </AdaptiveGlass>

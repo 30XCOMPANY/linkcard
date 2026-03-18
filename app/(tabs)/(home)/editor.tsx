@@ -27,6 +27,7 @@ import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import { nameFonts, NAME_FONT_KEYS } from "@/src/lib/name-fonts";
 import type { LinkedInProfile, SocialLink } from "@/src/types";
 import { getSocialPlatform } from "@/src/lib/social-platforms";
+import { SocialIcon } from "@/src/lib/social-icon";
 
 import { ProfileCardEditor } from "./profile-card-editor";
 import {
@@ -357,7 +358,11 @@ export default function EditorScreen() {
                 <SettingsRow
                   title={meta.label}
                   subtitle={link.url || "Not set"}
-                  leading={<SettingsIconTile web={meta.sfIcon ?? "link"} color={meta.color} />}
+                  leading={
+                    <View style={{ width: 30, height: 30, borderRadius: 7, borderCurve: "continuous" as any, backgroundColor: meta.glassColor, alignItems: "center", justifyContent: "center" }}>
+                      <SocialIcon platform={link.platform} size={16} color="#FFFFFF" />
+                    </View>
+                  }
                   onPress={() =>
                     router.push({
                       pathname: "/(tabs)/(home)/social-link-detail" as any,
