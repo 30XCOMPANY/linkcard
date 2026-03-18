@@ -7,8 +7,9 @@
  */
 
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Stack } from "expo-router/stack";
+import { useRouter } from "expo-router";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
@@ -35,6 +36,8 @@ export function HomeProfileHeader({
   profile,
   versions,
 }: HomeProfileHeaderProps) {
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen.Title large>{currentVersion.name}</Stack.Screen.Title>
@@ -111,9 +114,16 @@ export function HomeProfileHeader({
           </Stack.Toolbar.Menu>
         </Stack.Toolbar.Menu>
         <Stack.Toolbar.View>
-          <View style={{ height: 32, width: 32 }}>
-            <Avatar name={profile.name} size={32} source={profile.photoUrl} />
-          </View>
+          <Pressable
+            onPress={() => {
+              haptic.light();
+              router.push("/(settings)/account" as any);
+            }}
+          >
+            <View style={{ height: 32, width: 32 }}>
+              <Avatar name={profile.name} size={32} source={profile.photoUrl} />
+            </View>
+          </Pressable>
         </Stack.Toolbar.View>
       </Stack.Toolbar>
     </>
