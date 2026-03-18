@@ -82,7 +82,6 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
   }, [accentColor]);
 
   const reducedMotion = useReducedMotion();
-  const wasCommitted = useSharedValue(false);
   const flyState = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
   const cardScale = useSharedValue(1);
@@ -96,21 +95,21 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
   const fireSuccessHaptic = useCallback(() => haptic.success(), []);
   const fireShare = useCallback(() => onShare(), [onShare]);
 
-  // Watch for threshold crossing — fire haptic once
-  useDerivedValue(() => {
-    if (progress.value >= 1 && !wasCommitted.value) {
-      wasCommitted.value = true;
-      runOnJS(fireThresholdHaptic)();
-    } else if (progress.value < 0.5) {
-      wasCommitted.value = false;
-    }
-  });
+  // State machine: idle(0) → committed(1) → flying(2)
+  // Single useDerivedValue avoids race conditions between watchers
+  const shareState = useSharedValue(0); // 0=idle, 1=committed, 2=flying
 
-  // Watch for release after commit — when overscroll snaps back near 0
   useDerivedValue(() => {
-    if (wasCommitted.value && overscroll.value < 2 && flyState.value === 0) {
-      // User released after passing threshold — trigger fly-out
-      wasCommitted.value = false;
+    const ov = overscroll.value;
+    const state = shareState.value;
+
+    if (state === 0 && ov >= COMMIT_THRESHOLD) {
+      // IDLE → COMMITTED: user dragged past threshold
+      shareState.value = 1;
+      runOnJS(fireThresholdHaptic)();
+    } else if (state === 1 && ov < 5) {
+      // COMMITTED → FLYING: user released (overscroll bouncing back)
+      shareState.value = 2;
       flyState.value = 1;
       runOnJS(fireSuccessHaptic)();
 
@@ -120,6 +119,7 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
         withSpring(0, springs.gentle, () => {
           "worklet";
           flyState.value = 0;
+          shareState.value = 0;
           runOnJS(fireShare)();
         })
       );
@@ -133,6 +133,9 @@ export function SwipeToShare({ children, onShare, accentColor, overscroll }: Swi
         withDelay(250, withTiming(0, { duration: 0 })),
         withTiming(1, { duration: 600 })
       );
+    } else if (state === 1 && ov < COMMIT_THRESHOLD * 0.3) {
+      // COMMITTED → IDLE: user pulled back without releasing past threshold
+      shareState.value = 0;
     }
   });
 
