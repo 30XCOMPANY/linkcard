@@ -21,7 +21,6 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useCardStore } from "@/src/stores/cardStore";
 import { parseCustomTagInput, resolveProfileTags } from "@/src/lib/profile-tags";
-import { Icon } from "@/src/lib/icons";
 import { accentColors } from "@/src/lib/accent-colors";
 import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import type { LinkedInProfile } from "@/src/types";
@@ -60,7 +59,7 @@ const ACCENT_OPTIONS = [
   accentColors.teal,
   accentColors.slate,
 ] as const;
-const BACKGROUND_LABELS = CARD_BACKGROUND_OPTIONS.map((option) => option.label);
+const CARD_COLOR_OPTIONS = CARD_BACKGROUND_OPTIONS.map((option) => option.gradient[0]);
 
 function FieldToggleRow({
   label,
@@ -245,9 +244,30 @@ export default function EditorScreen() {
           ))}
         </SettingsGroup>
 
-        <SettingsSectionHeader title="NAME STYLE" />
+        <SettingsSectionHeader title="STYLE" />
         <SettingsGroup>
-          <LabeledBody label="Weight">
+          <LabeledBody label="Card Color">
+            <SettingsColorGrid
+              colors={CARD_COLOR_OPTIONS}
+              selectedColor={CARD_BACKGROUND_OPTIONS[backgroundIdx]?.gradient[0] ?? CARD_COLOR_OPTIONS[0]}
+              onSelect={(color) => {
+                const match = CARD_BACKGROUND_OPTIONS.find((opt) => opt.gradient[0] === color);
+                if (match) {
+                  updateVersion(version.id, { background: match.id });
+                }
+              }}
+            />
+          </LabeledBody>
+          <SettingsSeparator />
+          <LabeledBody label="Accent Color">
+            <SettingsColorGrid
+              colors={ACCENT_OPTIONS}
+              selectedColor={version.accentColor}
+              onSelect={(color) => updateVersion(version.id, { accentColor: color })}
+            />
+          </LabeledBody>
+          <SettingsSeparator />
+          <LabeledBody label="Name Weight">
             <SettingsSegmented
               values={WEIGHTS}
               selectedIndex={weightIdx}
@@ -262,38 +282,6 @@ export default function EditorScreen() {
               }}
             />
           </LabeledBody>
-        </SettingsGroup>
-
-        <SettingsSectionHeader title="ACCENT" />
-        <SettingsGroup>
-          <LabeledBody label="Color">
-            <SettingsColorGrid
-              colors={ACCENT_OPTIONS}
-              selectedColor={version.accentColor}
-              onSelect={(color) => updateVersion(version.id, { accentColor: color })}
-            />
-          </LabeledBody>
-        </SettingsGroup>
-
-        <SettingsSectionHeader title="BACKGROUND" />
-        <SettingsGroup>
-          <LabeledBody label="Style">
-            <SettingsSegmented
-              values={BACKGROUND_LABELS}
-              selectedIndex={backgroundIdx}
-              onChange={(index) =>
-                updateVersion(version.id, {
-                  background: CARD_BACKGROUND_OPTIONS[index]?.id ?? CARD_BACKGROUND_OPTIONS[0].id,
-                })
-              }
-            />
-          </LabeledBody>
-          <SettingsSeparator />
-          <SettingsRow
-            title={CARD_BACKGROUND_OPTIONS[backgroundIdx]?.label ?? "Glass"}
-            subtitle={CARD_BACKGROUND_OPTIONS[backgroundIdx]?.description}
-            trailing={<Icon web="color-palette-outline" size={16} />}
-          />
         </SettingsGroup>
       </RNScrollView>
     </>

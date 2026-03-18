@@ -33,11 +33,17 @@ import type { LinkedInProfile, CardVersion } from "@/src/types";
 /*  Tag Pill                                                           */
 /* ------------------------------------------------------------------ */
 
-function TagPill({ emoji, label }: { emoji: string; label: string }) {
+interface TagPillColors {
+  bg: string;
+  border: string;
+  label: string;
+}
+
+function TagPill({ emoji, label, colors }: { emoji: string; label: string; colors: TagPillColors }) {
   return (
-    <View style={s.tag}>
+    <View style={[s.tag, { backgroundColor: colors.bg, borderColor: colors.border }]}>
       <Text style={s.tagEmoji}>{emoji}</Text>
-      <Text style={s.tagLabel}>{label}</Text>
+      <Text style={[s.tagLabel, { color: colors.label }]}>{label}</Text>
     </View>
   );
 }
@@ -63,7 +69,21 @@ export function ProfileCard({
   const vis = new Set(version.visibleFields as string[]);
   const tags = deriveProfileTags(profile);
   const background = resolveCardBackground(version.background);
-  const bannerFadeColors = ["transparent", "rgba(255,255,255,0.3)", background.surface, background.surface] as const;
+  const dark = background.isDark;
+  const bannerFadeColors = dark
+    ? ["transparent", "rgba(17,24,39,0.3)", "rgba(17,24,39,0.8)", background.surface] as const
+    : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
+
+  /* Dark/light adaptive palette */
+  const colors = {
+    label: dark ? "#F9FAFB" : (PlatformColor("label") as unknown as string),
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string),
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
+    pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
+    link: dark ? "#60A5FA" : (PlatformColor("systemBlue") as unknown as string),
+    separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
+  };
 
   const showWebsite = vis.has("website") && profile.website;
   const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
@@ -112,6 +132,7 @@ export function ProfileCard({
         <Text
           style={[
             s.profileName,
+            { color: colors.label },
             nameFonts[nameFont].fontFamily
               ? { fontFamily: nameFonts[nameFont].fontFamily }
               : undefined,
@@ -136,16 +157,16 @@ export function ProfileCard({
               style={s.identityLink}
             >
               <Text style={s.identityEmoji}>🗺</Text>
-              <Text style={s.identityLinkText}>
+              <Text style={[s.identityLinkText, { color: colors.link }]}>
                 {profile.website!.replace(/^https?:\/\//, "")}
               </Text>
             </Pressable>
           )}
           {showWebsite && showJobTitle && (
-            <Text style={s.identitySep}> | </Text>
+            <Text style={[s.identitySep, { color: colors.secondaryLabel }]}> | </Text>
           )}
           {showJobTitle && (
-            <Text style={s.identityRole}>{profile.jobTitle}</Text>
+            <Text style={[s.identityRole, { color: colors.label }]}>{profile.jobTitle}</Text>
           )}
         </View>
       )}
@@ -153,14 +174,14 @@ export function ProfileCard({
       {/* Headline */}
       {vis.has("headline") && (
         profile.headline ? (
-          <View style={s.statusBox}>
-            <Text style={s.statusText} numberOfLines={2}>
+          <View style={[s.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
+            <Text style={[s.statusText, { color: colors.label }]} numberOfLines={2}>
               {profile.headline}
             </Text>
           </View>
         ) : (
-          <View style={s.statusBox}>
-            <Text style={s.statusPlaceholder}>Set a status...</Text>
+          <View style={[s.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
+            <Text style={[s.statusPlaceholder, { color: colors.tertiaryLabel }]}>Set a status...</Text>
           </View>
         )
       )}
@@ -169,7 +190,12 @@ export function ProfileCard({
       {tags.length > 0 && (
         <View style={s.tagsWrap}>
           {tags.map((t, i) => (
-            <TagPill key={`${t.label}-${i}`} emoji={t.emoji} label={t.label} />
+            <TagPill
+              key={`${t.label}-${i}`}
+              emoji={t.emoji}
+              label={t.label}
+              colors={{ bg: colors.pillBg, border: colors.pillBorder, label: colors.label }}
+            />
           ))}
         </View>
       )}
@@ -177,34 +203,34 @@ export function ProfileCard({
       {/* Contact + Stats */}
       {vis.has("email") && (
         <View style={s.contactRow}>
-          <View style={s.contactPill}>
+          <View style={[s.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
             <Text style={s.contactPillIcon}>✉</Text>
-            <Text style={s.contactPillText}>
+            <Text style={[s.contactPillText, { color: colors.secondaryLabel }]}>
               {profile.email ?? "No contact set"}
             </Text>
           </View>
           <View style={s.statsRow}>
-            <Text style={s.statNum}>0</Text>
-            <Text style={s.statLabel}> connects </Text>
-            <Text style={s.statNum}>0</Text>
-            <Text style={s.statLabel}> shares</Text>
+            <Text style={[s.statNum, { color: colors.link }]}>0</Text>
+            <Text style={[s.statLabel, { color: colors.secondaryLabel }]}> connects </Text>
+            <Text style={[s.statNum, { color: colors.link }]}>0</Text>
+            <Text style={[s.statLabel, { color: colors.secondaryLabel }]}> shares</Text>
           </View>
-          <View style={s.statsSeparator} />
+          <View style={[s.statsSeparator, { backgroundColor: colors.separator }]} />
         </View>
       )}
 
       {/* LinkedIn Link */}
       <Pressable
-        style={s.activityCard}
+        style={[s.activityCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
         onPress={() => {
           haptic.light();
           if (profile.url) Linking.openURL(profile.url);
         }}
       >
-        <Text style={s.activityTitle}>LinkedIn Profile</Text>
+        <Text style={[s.activityTitle, { color: colors.label }]}>LinkedIn Profile</Text>
         <View style={s.activityRight}>
-          <Text style={s.activityLink}>View</Text>
-          <Text style={s.activityChevron}>›</Text>
+          <Text style={[s.activityLink, { color: colors.link }]}>View</Text>
+          <Text style={[s.activityChevron, { color: colors.tertiaryLabel }]}>›</Text>
         </View>
       </Pressable>
 
@@ -220,7 +246,7 @@ export function ProfileCard({
             ) => (
               <Pressable
                 key={`pub-${i}`}
-                style={s.pubCard}
+                style={[s.pubCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
                 onPress={() => {
                   if (pub.url) {
                     haptic.light();
@@ -229,16 +255,16 @@ export function ProfileCard({
                 }}
               >
                 <View style={s.pubContent}>
-                  <Text style={s.pubTitle} numberOfLines={1}>
+                  <Text style={[s.pubTitle, { color: colors.label }]} numberOfLines={1}>
                     {pub.title}
                   </Text>
                   {pub.publisher && (
-                    <Text style={s.pubMeta}>{pub.publisher}</Text>
+                    <Text style={[s.pubMeta, { color: colors.secondaryLabel }]}>{pub.publisher}</Text>
                   )}
                 </View>
                 {pub.url && (
-                  <View style={s.pubVisit}>
-                    <Text style={s.pubVisitText}>Visit</Text>
+                  <View style={[s.pubVisit, { backgroundColor: dark ? "rgba(255,255,255,0.15)" : undefined }]}>
+                    <Text style={[s.pubVisitText, { color: dark ? "#F9FAFB" : "#FFFFFF" }]}>Visit</Text>
                   </View>
                 )}
               </Pressable>

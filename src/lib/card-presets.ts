@@ -15,6 +15,7 @@ export interface CardBackgroundOption {
   gradient: [string, string];
   surface: string;
   border: string;
+  isDark: boolean;
 }
 
 export const CARD_BACKGROUND_OPTIONS: readonly CardBackgroundOption[] = [
@@ -23,40 +24,45 @@ export const CARD_BACKGROUND_OPTIONS: readonly CardBackgroundOption[] = [
     label: "Glass",
     description: "Clean default with a soft white lift",
     gradient: ["#FFFFFF", "#EEF3FF"],
-    surface: "rgba(255,255,255,0.92)",
+    surface: "#FFFFFF",
     border: "rgba(15,23,42,0.08)",
+    isDark: false,
   },
   {
     id: "freshBlue",
     label: "Blue",
     description: "Cool sky gradient for builder and tech profiles",
     gradient: ["#DFF3FF", "#A9D8FF"],
-    surface: "rgba(248,252,255,0.88)",
+    surface: "#F6FBFF",
     border: "rgba(20,84,140,0.18)",
+    isDark: false,
   },
   {
     id: "midnightInk",
     label: "Ink",
     description: "Dark editorial slab with restrained contrast",
     gradient: ["#1F2937", "#111827"],
-    surface: "rgba(17,24,39,0.90)",
+    surface: "#111827",
     border: "rgba(255,255,255,0.10)",
+    isDark: true,
   },
   {
     id: "sunsetGlow",
     label: "Glow",
     description: "Warm social backdrop with pink-orange energy",
     gradient: ["#FFE4D6", "#FFC7DC"],
-    surface: "rgba(255,250,247,0.88)",
+    surface: "#FFF8F5",
     border: "rgba(190,24,93,0.14)",
+    isDark: false,
   },
   {
     id: "paper",
     label: "Paper",
     description: "Neutral editorial stock without tint drama",
     gradient: ["#F8F5EE", "#F2EEE6"],
-    surface: "rgba(255,252,246,0.92)",
+    surface: "#FDFAF3",
     border: "rgba(120,113,108,0.14)",
+    isDark: false,
   },
 ] as const;
 

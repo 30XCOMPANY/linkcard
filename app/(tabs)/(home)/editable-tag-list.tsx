@@ -23,12 +23,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { SymbolView } from "expo-symbols";
 
+import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { haptic } from "@/src/lib/haptics";
 import type { CardTag } from "@/src/types";
 
 interface EditableTagItemProps {
   tag: CardTag;
   editing: boolean;
+  isDark?: boolean;
   onDelete: (id: string) => void;
   onEditingChange: (editing: boolean) => void;
   onRename: (id: string, label: string) => void;
@@ -37,10 +39,13 @@ interface EditableTagItemProps {
 function EditableTagItem({
   tag,
   editing,
+  isDark,
   onDelete,
   onEditingChange,
   onRename,
 }: EditableTagItemProps) {
+  const darkTag = isDark ? { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" } : undefined;
+  const darkLabel = isDark ? { color: "#F9FAFB" } : undefined;
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(tag.label);
 
@@ -70,7 +75,7 @@ function EditableTagItem({
           setRenaming(true);
         }}
       >
-        <View style={styles.tag}>
+        <View style={[styles.tag, darkTag]}>
           <Text style={styles.tagEmoji}>{tag.emoji}</Text>
           {renaming ? (
             <TextInput
@@ -85,11 +90,11 @@ function EditableTagItem({
               }}
               onChangeText={setDraft}
               returnKeyType="done"
-              style={[styles.tagLabel, styles.tagInput]}
+              style={[styles.tagLabel, styles.tagInput, darkLabel]}
               value={draft}
             />
           ) : (
-            <Text style={styles.tagLabel}>{tag.label}</Text>
+            <Text style={[styles.tagLabel, darkLabel]}>{tag.label}</Text>
           )}
           {editing && !renaming ? (
             <Animated.View
@@ -114,6 +119,7 @@ function EditableTagItem({
 
 interface EditableTagListProps {
   editing: boolean;
+  isDark?: boolean;
   tags: CardTag[];
   onAdd: (input: string) => void;
   onDelete: (id: string) => void;
@@ -123,6 +129,7 @@ interface EditableTagListProps {
 
 export function EditableTagList({
   editing,
+  isDark,
   tags,
   onAdd,
   onDelete,
@@ -136,6 +143,7 @@ export function EditableTagList({
           <EditableTagItem
             key={tag.id}
             editing={editing}
+            isDark={isDark}
             onDelete={onDelete}
             onEditingChange={onEditingChange}
             onRename={onRename}
@@ -159,12 +167,12 @@ export function EditableTagList({
               );
             }}
           >
-            <View style={styles.addTagPill}>
+            <View style={[styles.addTagPill, isDark && { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" }]}>
               <SymbolView
                 name="plus"
                 resizeMode="scaleAspectFit"
                 style={styles.addTagIcon}
-                tintColor={PlatformColor("secondaryLabel") as unknown as string}
+                tintColor={isDark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string)}
               />
             </View>
           </Pressable>
@@ -185,11 +193,19 @@ export function EditableTagList({
               onEditingChange(false);
             }}
             style={({ pressed }) => [
-              styles.doneButton,
-              pressed ? styles.doneButtonPressed : null,
+              pressed ? { transform: [{ scale: 0.96 }] } : null,
             ]}
           >
-            <Text style={styles.doneButtonText}>Done</Text>
+            <AdaptiveGlass
+              style={styles.doneButton}
+              glassEffectStyle="regular"
+              tintColor="#007AFFCC"
+              intensity={60}
+              blurTint="default"
+              fallbackColor="#007AFF"
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </AdaptiveGlass>
           </Pressable>
         </Animated.View>
       ) : null}
@@ -249,30 +265,21 @@ const styles = StyleSheet.create({
     width: 14,
   },
   doneButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: PlatformColor("systemBlue") as unknown as string,
+    alignItems: "center" as const,
+    alignSelf: "flex-start" as const,
     borderCurve: "continuous" as any,
     borderRadius: 999,
-    justifyContent: "center",
+    justifyContent: "center" as const,
     minHeight: 38,
     minWidth: 74,
     overflow: "hidden" as any,
     paddingHorizontal: 22,
     paddingVertical: 10,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-  },
-  doneButtonPressed: {
-    backgroundColor: "#006AE6",
-    transform: [{ scale: 0.98 }],
   },
   doneButtonText: {
     color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "700" as const,
     letterSpacing: 0.2,
   },
 });

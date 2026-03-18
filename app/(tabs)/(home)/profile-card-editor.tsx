@@ -61,8 +61,21 @@ export function ProfileCardEditor({
   version,
 }: ProfileCardEditorProps) {
   const background = resolveCardBackground(version.background);
+  const dark = background.isDark;
   const vis = new Set(version.visibleFields as string[]);
-  const bannerFadeColors = ["transparent", "rgba(255,255,255,0.3)", background.surface, background.surface] as const;
+  const bannerFadeColors = dark
+    ? ["transparent", "rgba(17,24,39,0.3)", "rgba(17,24,39,0.8)", background.surface] as const
+    : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
+
+  const colors = {
+    label: dark ? "#F9FAFB" : (PlatformColor("label") as unknown as string),
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (PlatformColor("secondaryLabel") as unknown as string),
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (PlatformColor("tertiaryLabel") as unknown as string),
+    pillBg: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("systemBackground") as unknown as string),
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : (PlatformColor("separator") as unknown as string),
+    link: dark ? "#60A5FA" : (PlatformColor("systemBlue") as unknown as string),
+    separator: dark ? "rgba(255,255,255,0.10)" : (PlatformColor("separator") as unknown as string),
+  };
 
   const showWebsite = vis.has("website") && profile.website;
   const showJobTitle = vis.has("jobTitle") && profile.jobTitle;
@@ -109,6 +122,7 @@ export function ProfileCardEditor({
           placeholder="Your Name"
           style={[
             styles.profileName,
+            { color: colors.label },
             nameFonts[nameFont].fontFamily
               ? { fontFamily: nameFonts[nameFont].fontFamily }
               : undefined,
@@ -131,16 +145,16 @@ export function ProfileCardEditor({
               style={styles.identityLink}
             >
               <Text style={styles.identityEmoji}>🗺</Text>
-              <Text style={styles.identityLinkText}>
+              <Text style={[styles.identityLinkText, { color: colors.link }]}>
                 {profile.website!.replace(/^https?:\/\//, "")}
               </Text>
             </Pressable>
           ) : null}
           {showWebsite && showJobTitle ? (
-            <Text style={styles.identitySeparator}> | </Text>
+            <Text style={[styles.identitySeparator, { color: colors.secondaryLabel }]}> | </Text>
           ) : null}
           {showJobTitle ? (
-            <Text style={styles.identityRole}>{profile.jobTitle}</Text>
+            <Text style={[styles.identityRole, { color: colors.label }]}>{profile.jobTitle}</Text>
           ) : null}
         </View>
       ) : null}
@@ -150,14 +164,15 @@ export function ProfileCardEditor({
           multiline
           onSave={onHeadlineSave}
           placeholder="Set a status..."
-          style={styles.statusText}
+          style={[styles.statusText, { color: colors.label }]}
           value={profile.headline}
-          wrapperStyle={styles.statusBox}
+          wrapperStyle={[styles.statusBox, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
         />
       )}
 
       <EditableTagList
         editing={tagsEditing}
+        isDark={dark}
         onAdd={onTagAdd}
         onDelete={onTagDelete}
         onEditingChange={onTagsEditingChange}
@@ -167,19 +182,19 @@ export function ProfileCardEditor({
 
       {vis.has("email") && (
         <View style={styles.contactRow}>
-          <View style={styles.contactPill}>
+          <View style={[styles.contactPill, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}>
             <Text style={styles.contactPillIcon}>✉</Text>
-            <Text style={styles.contactPillText}>
+            <Text style={[styles.contactPillText, { color: colors.secondaryLabel }]}>
               {profile.email ?? "No contact set"}
             </Text>
           </View>
           <View style={styles.statsRow}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}> connects </Text>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}> shares</Text>
+            <Text style={[styles.statNumber, { color: colors.link }]}>0</Text>
+            <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}> connects </Text>
+            <Text style={[styles.statNumber, { color: colors.link }]}>0</Text>
+            <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}> shares</Text>
           </View>
-          <View style={styles.statsSeparator} />
+          <View style={[styles.statsSeparator, { backgroundColor: colors.separator }]} />
         </View>
       )}
 
@@ -190,12 +205,12 @@ export function ProfileCardEditor({
             Linking.openURL(profile.url);
           }
         }}
-        style={styles.activityCard}
+        style={[styles.activityCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
       >
-        <Text style={styles.activityTitle}>LinkedIn Profile</Text>
+        <Text style={[styles.activityTitle, { color: colors.label }]}>LinkedIn Profile</Text>
         <View style={styles.activityRight}>
-          <Text style={styles.activityLink}>View</Text>
-          <Text style={styles.activityChevron}>›</Text>
+          <Text style={[styles.activityLink, { color: colors.link }]}>View</Text>
+          <Text style={[styles.activityChevron, { color: colors.tertiaryLabel }]}>›</Text>
         </View>
       </Pressable>
 
@@ -210,19 +225,19 @@ export function ProfileCardEditor({
             haptic.light();
             Linking.openURL(publication.url);
           }}
-          style={styles.publicationCard}
+          style={[styles.publicationCard, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
         >
           <View style={styles.publicationContent}>
-            <Text numberOfLines={1} style={styles.publicationTitle}>
+            <Text numberOfLines={1} style={[styles.publicationTitle, { color: colors.label }]}>
               {publication.title}
             </Text>
             {publication.publisher ? (
-              <Text style={styles.publicationMeta}>{publication.publisher}</Text>
+              <Text style={[styles.publicationMeta, { color: colors.secondaryLabel }]}>{publication.publisher}</Text>
             ) : null}
           </View>
           {publication.url ? (
-            <View style={styles.publicationVisit}>
-              <Text style={styles.publicationVisitText}>Visit</Text>
+            <View style={[styles.publicationVisit, dark && { backgroundColor: "rgba(255,255,255,0.15)" }]}>
+              <Text style={[styles.publicationVisitText, { color: dark ? "#F9FAFB" : colors.link }]}>Visit</Text>
             </View>
           ) : null}
         </Pressable>

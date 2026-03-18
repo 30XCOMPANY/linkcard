@@ -7,9 +7,9 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useState } from "react";
-import { Switch, Alert, StyleSheet, ScrollView as RNScrollView, Platform, PlatformColor } from "react-native";
-import type { ContactAction, ContactActionType } from "@/src/types";
+import React, { useRef, useState } from "react";
+import { Pressable, Switch, Alert, StyleSheet, ScrollView as RNScrollView, Platform, PlatformColor } from "react-native";
+import type { ContactActionType } from "@/src/types";
 import { View, Text } from "@/src/tw";
 
 import { useCardStore } from "@/src/stores/cardStore";
@@ -31,6 +31,9 @@ export default function SettingsScreen() {
   const updateContactAction = useCardStore((s) => s.updateContactAction);
   const contactAction = card?.contactAction;
   const [autoSync, setAutoSync] = useState(true);
+  const [devMode, setDevMode] = useState(false);
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profile = card?.profile;
   const versionCount = card?.versions.length ?? 0;
 
@@ -203,9 +206,52 @@ export default function SettingsScreen() {
         />
       </SettingsGroup>
 
-      <View style={styles.footer}>
-        <Text className="text-sf-text-3" style={styles.footerText}>LinkCard v1.0.0</Text>
-      </View>
+      {devMode ? (
+        <>
+          <SettingsSectionHeader title="DEVELOPER" />
+          <SettingsGroup>
+            <SettingsRow
+              title="Restart Onboarding"
+              subtitle="Clear card and re-enter setup flow"
+              onPress={() => {
+                Alert.alert(
+                  "Restart Onboarding",
+                  "This will clear your card and return to the onboarding flow.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Restart",
+                      style: "destructive",
+                      onPress: () => clearCard(),
+                    },
+                  ]
+                );
+              }}
+              leading={<SettingsIconTile web="arrow-forward" color="#FF9500" />}
+              trailing={<SettingsChevron />}
+            />
+          </SettingsGroup>
+        </>
+      ) : null}
+
+      <Pressable
+        onPress={() => {
+          tapCountRef.current += 1;
+          if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+          if (tapCountRef.current >= 3) {
+            tapCountRef.current = 0;
+            setDevMode((prev) => !prev);
+          } else {
+            tapTimerRef.current = setTimeout(() => {
+              tapCountRef.current = 0;
+            }, 600);
+          }
+        }}
+      >
+        <View style={styles.footer}>
+          <Text className="text-sf-text-3" style={styles.footerText}>LinkCard v1.0.0</Text>
+        </View>
+      </Pressable>
     </RNScrollView>
   );
 }
