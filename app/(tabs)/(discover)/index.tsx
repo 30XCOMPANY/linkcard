@@ -237,6 +237,7 @@ export default function DiscoverScreen() {
             <AdaptiveGlass
               style={styles.glassChip}
               glassEffectStyle="clear"
+              tintColor="#00000000"
               intensity={30}
               blurTint="default"
               fallbackColor="rgba(120,120,128,0.16)"
