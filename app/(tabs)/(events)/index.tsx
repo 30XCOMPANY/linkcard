@@ -2,50 +2,56 @@
  * [INPUT]: react-native Image/PlatformColor/ScrollView/StyleSheet/Text/View,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
  *          @/assets/default-banner.jpg
- * [OUTPUT]: EventsScreen — events page with SF hero banner, blur + fade-to-background mask
- * [POS]: Events tab main screen — hero image fades out into page background via blur + gradient mask
+ * [OUTPUT]: EventsScreen — events page with SF hero banner dissolving into page background
+ * [POS]: Events tab main screen — hero image with progressive blur + background-matched fade
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { Image, Platform, PlatformColor, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, PlatformColor, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-const PAGE_BG = Platform.OS === "ios"
-  ? (PlatformColor("systemGroupedBackground") as unknown as string)
-  : "#F2F2F7";
-
 export default function EventsScreen() {
+  const scheme = useColorScheme();
+  const pageBg = scheme === "dark" ? "#000000" : "#F2F2F7";
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
+      style={{ backgroundColor: pageBg }}
     >
-      {/* Hero banner — blur layers + transparent-to-background fade mask */}
-      <View style={styles.heroWrap}>
+      {/* Hero banner — progressive blur + fade into page background */}
+      <View style={[styles.heroWrap, { backgroundColor: pageBg }]}>
         <Image
           source={require("@/assets/default-banner.jpg")}
           style={styles.heroImage}
           resizeMode="cover"
         />
-        {/* Progressive blur */}
-        <BlurView intensity={8}   tint="default" style={[styles.heroBlur, { top: "45%", opacity: 0.2  }]} />
-        <BlurView intensity={20}  tint="default" style={[styles.heroBlur, { top: "52%", opacity: 0.35 }]} />
-        <BlurView intensity={40}  tint="default" style={[styles.heroBlur, { top: "59%", opacity: 0.5  }]} />
-        <BlurView intensity={60}  tint="default" style={[styles.heroBlur, { top: "66%", opacity: 0.65 }]} />
-        <BlurView intensity={80}  tint="default" style={[styles.heroBlur, { top: "73%", opacity: 0.8  }]} />
+        {/* Progressive blur layers */}
+        <BlurView intensity={8}   tint="default" style={[styles.heroBlur, { top: "40%", opacity: 0.15 }]} />
+        <BlurView intensity={20}  tint="default" style={[styles.heroBlur, { top: "48%", opacity: 0.3  }]} />
+        <BlurView intensity={40}  tint="default" style={[styles.heroBlur, { top: "56%", opacity: 0.45 }]} />
+        <BlurView intensity={60}  tint="default" style={[styles.heroBlur, { top: "64%", opacity: 0.6  }]} />
+        <BlurView intensity={80}  tint="default" style={[styles.heroBlur, { top: "72%", opacity: 0.75 }]} />
         <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "80%", opacity: 0.9  }]} />
-        <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "87%", opacity: 1.0  }]} />
-        {/* Fade mask — image dissolves into page background */}
+        <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "88%", opacity: 1.0  }]} />
+        {/* Fade — blurred image dissolves into page background */}
         <LinearGradient
-          colors={["transparent", "transparent", PAGE_BG]}
-          locations={[0, 0.55, 1]}
+          colors={[
+            pageBg + "00",
+            pageBg + "30",
+            pageBg + "80",
+            pageBg + "CC",
+            pageBg,
+          ]}
+          locations={[0, 0.25, 0.55, 0.8, 1]}
           style={styles.fadeMask}
         />
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, { backgroundColor: pageBg }]}>
         <Text style={styles.heading}>San Francisco</Text>
         <Text style={styles.subtitle}>No upcoming events</Text>
         <Text style={styles.body}>
@@ -59,7 +65,7 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   heroWrap: {
     marginTop: -200,
-    height: 400,
+    height: 420,
     overflow: "hidden",
   },
   heroImage: {
@@ -77,7 +83,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: "60%",
+    height: "70%",
   },
   content: {
     paddingHorizontal: 20,
