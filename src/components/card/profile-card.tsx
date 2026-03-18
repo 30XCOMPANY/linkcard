@@ -3,6 +3,7 @@
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
  *          @/src/components/shared/avatar Avatar, @/src/lib/haptics,
  *          @/src/lib/profile-tags, @/src/lib/name-fonts, @/src/lib/card-presets,
+ *          @/src/lib/social-icon SocialIcon,
  *          @/src/types LinkedInProfile/CardVersion
  * [OUTPUT]: ProfileCard — full profile card with banner, glass-framed avatar, tags, contacts
  * [POS]: Shared card component — used on home/editor flows for the high-emphasis profile hero
@@ -23,7 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { platformColor } from "@/src/lib/platform-color";
-import { Icon } from "@/src/lib/icons";
+import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
@@ -65,7 +66,6 @@ export function ProfileCard({
   profile,
   version,
   nameFont = "classic",
-  contactAction,
   onBannerPress,
 }: ProfileCardProps) {
   const accent = version.accentColor;
@@ -225,52 +225,27 @@ export function ProfileCard({
         </View>
       )}
 
-      {/* Social icons — LinkedIn always shown + contactAction if set */}
+      {/* Social icons — render from socialLinks, fallback to legacy profile.url */}
       <View style={s.socialRow}>
-        {/* LinkedIn — always available */}
-        <Pressable
-          style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-          onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
-        >
-          <Icon web="link" size={18} color={colors.link} />
-        </Pressable>
-
-        {/* Contact action — driven by user settings */}
-        {contactAction && contactAction.type !== "linkedin" ? (
+        {(profile.socialLinks && profile.socialLinks.length > 0
+          ? profile.socialLinks
+          : profile.url
+            ? [{ platform: "linkedin" as const, url: profile.url }]
+            : []
+        ).map((link) => (
           <Pressable
+            key={link.platform}
             style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
             onPress={() => {
+              if (!link.url) return;
               haptic.light();
-              if (contactAction.type === "email") Linking.openURL(`mailto:${contactAction.value}`);
-              else if (contactAction.type === "url" || contactAction.type === "github") Linking.openURL(contactAction.value);
-            }}
-          >
-            <Icon
-              web={
-                contactAction.type === "email" ? "mail"
-                : contactAction.type === "wechat" ? "chat-bubble"
-                : contactAction.type === "github" ? "code"
-                : "globe"
-              }
-              size={18}
-              color={colors.link}
-            />
-          </Pressable>
-        ) : null}
-
-        {/* Website — if set and not already the contactAction URL */}
-        {profile.website && contactAction?.value !== profile.website ? (
-          <Pressable
-            style={[s.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-            onPress={() => {
-              haptic.light();
-              const url = profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`;
+              const url = link.url.startsWith("http") ? link.url : `https://${link.url}`;
               Linking.openURL(url);
             }}
           >
-            <Icon web="globe" size={18} color={colors.link} />
+            <SocialIcon platform={link.platform} size={18} color={colors.link} />
           </Pressable>
-        ) : null}
+        ))}
       </View>
 
       {/* Publications */}

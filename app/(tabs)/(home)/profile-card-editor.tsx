@@ -2,6 +2,7 @@
  * [INPUT]: react-native Image/Linking/Pressable/StyleSheet/Text/View/PlatformColor,
  *          expo-linear-gradient, expo-blur, @/src/components/shared/avatar Avatar,
  *          @/src/lib/haptics, @/src/lib/name-fonts, @/src/lib/card-presets,
+ *          @/src/lib/social-icon SocialIcon,
  *          @/src/types LinkedInProfile/CardTag/CardVersion,
  *          local editable-text/editable-tag-list
  * [OUTPUT]: ProfileCardEditor — editable home hero card body with banner, inline text, tags, and links
@@ -23,7 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { platformColor } from "@/src/lib/platform-color";
-import { Icon } from "@/src/lib/icons";
+import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { resolveCardBackground } from "@/src/lib/card-presets";
@@ -49,7 +50,6 @@ interface ProfileCardEditorProps {
 }
 
 export function ProfileCardEditor({
-  contactAction,
   nameFont,
   onAvatarPress,
   onBannerPress,
@@ -203,49 +203,27 @@ export function ProfileCardEditor({
         </View>
       )}
 
-      {/* Social icons — LinkedIn always shown + contactAction if set */}
+      {/* Social icons — render from socialLinks, fallback to legacy profile.url */}
       <View style={styles.socialRow}>
-        <Pressable
-          style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-          onPress={() => { haptic.light(); Linking.openURL(profile.url); }}
-        >
-          <Icon web="link" size={18} color={colors.link} />
-        </Pressable>
-
-        {contactAction && contactAction.type !== "linkedin" ? (
+        {(profile.socialLinks && profile.socialLinks.length > 0
+          ? profile.socialLinks
+          : profile.url
+            ? [{ platform: "linkedin" as const, url: profile.url }]
+            : []
+        ).map((link) => (
           <Pressable
+            key={link.platform}
             style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
             onPress={() => {
+              if (!link.url) return;
               haptic.light();
-              if (contactAction.type === "email") Linking.openURL(`mailto:${contactAction.value}`);
-              else if (contactAction.type === "url" || contactAction.type === "github") Linking.openURL(contactAction.value);
-            }}
-          >
-            <Icon
-              web={
-                contactAction.type === "email" ? "mail"
-                : contactAction.type === "wechat" ? "chat-bubble"
-                : contactAction.type === "github" ? "code"
-                : "globe"
-              }
-              size={18}
-              color={colors.link}
-            />
-          </Pressable>
-        ) : null}
-
-        {profile.website && contactAction?.value !== profile.website ? (
-          <Pressable
-            style={[styles.socialIcon, { backgroundColor: colors.pillBg, borderColor: colors.pillBorder }]}
-            onPress={() => {
-              haptic.light();
-              const url = profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`;
+              const url = link.url.startsWith("http") ? link.url : `https://${link.url}`;
               Linking.openURL(url);
             }}
           >
-            <Icon web="globe" size={18} color={colors.link} />
+            <SocialIcon platform={link.platform} size={18} color={colors.link} />
           </Pressable>
-        ) : null}
+        ))}
       </View>
 
       {profile.publications?.slice(0, 3).map((publication, index) => (

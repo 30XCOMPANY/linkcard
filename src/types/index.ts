@@ -1,11 +1,24 @@
 /**
  * [INPUT]: none (pure type definitions)
- * [OUTPUT]: LinkedInProfile, CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag,
- *           CardTagState, BusinessCard, ContactActionType, ContactAction, SavedContact,
- *           DiscoverProfile, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
+ * [OUTPUT]: SocialPlatform, SocialLink, LinkedInProfile, CardTemplate, CardBackground, FieldStyle,
+ *           CardVersion, CardTag, CardTagState, BusinessCard, ContactActionType, ContactAction,
+ *           SavedContact, DiscoverProfile, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, and components across the app
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
+
+// ── Social Links ─────────────────────────────────────────────────
+export type SocialPlatform =
+  | 'linkedin' | 'x' | 'github' | 'instagram' | 'youtube'
+  | 'threads' | 'bluesky' | 'mastodon' | 'reddit' | 'discord'
+  | 'telegram' | 'tiktok' | 'facebook' | 'medium' | 'substack'
+  | 'google-scholar' | 'hugging-face' | 'kaggle' | 'stack-overflow'
+  | 'dribbble' | 'behance' | 'figma' | 'product-hunt' | 'website';
+
+export interface SocialLink {
+  platform: SocialPlatform;
+  url: string;
+}
 
 // LinkedIn Profile data structure
 export interface LinkedInProfile {
@@ -23,6 +36,7 @@ export interface LinkedInProfile {
   phone?: string;
   website?: string;
   character?: string;
+  socialLinks?: SocialLink[];
   publications?: Array<{
     title: string;
     publisher?: string;

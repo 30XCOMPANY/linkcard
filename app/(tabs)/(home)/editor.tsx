@@ -2,7 +2,8 @@
  * [INPUT]: expo-router Stack/useRouter, react-native ScrollView/Pressable/Text/Switch/StyleSheet,
  *          @/src/tw View/Text, @/src/stores/cardStore, local profile-card-editor,
  *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
- *          @/src/lib/card-presets, @/src/lib/profile-tags, expo-image-picker
+ *          @/src/lib/card-presets, @/src/lib/profile-tags, @/src/lib/social-platforms,
+ *          @/src/lib/social-icon, expo-image-picker
  * [OUTPUT]: EditorScreen — card editor aligned to the shared settings design system
  * [POS]: Push screen from home — editing controls expressed as grouped settings rows and inline controls
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -10,7 +11,6 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  Alert,
   Switch,
   StyleSheet,
   ScrollView as RNScrollView,
@@ -25,7 +25,8 @@ import { parseCustomTagInput, resolveProfileTags } from "@/src/lib/profile-tags"
 import { accentColors } from "@/src/lib/accent-colors";
 import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import { nameFonts, NAME_FONT_KEYS } from "@/src/lib/name-fonts";
-import type { LinkedInProfile } from "@/src/types";
+import type { LinkedInProfile, SocialLink } from "@/src/types";
+import { getSocialPlatform } from "@/src/lib/social-platforms";
 
 import { ProfileCardEditor } from "./profile-card-editor";
 import {
@@ -343,25 +344,33 @@ export default function EditorScreen() {
           </LabeledBody>
         </SettingsGroup>
 
-        <SettingsSectionHeader title="LINKS" />
+        <SettingsSectionHeader title="SOCIAL LINKS" />
         <SettingsGroup>
-          <SettingsRow
-            title="LinkedIn URL"
-            subtitle={card.profile.url || "Not set"}
-            leading={<SettingsIconTile web="link" color="#0A66C2" />}
-            onPress={() => {
-              Alert.prompt(
-                "LinkedIn URL",
-                "Enter your LinkedIn profile URL",
-                (text?: string) => {
-                  if (text?.trim()) {
-                    updateProfile({ url: text.trim() });
+          {(card.profile.socialLinks ?? []).map((link: SocialLink, i: number) => {
+            const meta = getSocialPlatform(link.platform);
+            return (
+              <React.Fragment key={`${link.platform}-${i}`}>
+                {i > 0 ? <SettingsSeparator inset={60} /> : null}
+                <SettingsRow
+                  title={meta.label}
+                  subtitle={link.url || "Not set"}
+                  leading={<SettingsIconTile web={meta.sfIcon ?? "link"} color={meta.color} />}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/social-link-detail" as any,
+                      params: { index: String(i) },
+                    })
                   }
-                },
-                "plain-text",
-                card.profile.url
-              );
-            }}
+                  trailing={<SettingsChevron />}
+                />
+              </React.Fragment>
+            );
+          })}
+          {(card.profile.socialLinks ?? []).length > 0 ? <SettingsSeparator inset={60} /> : null}
+          <SettingsRow
+            title="Add Social Link"
+            leading={<SettingsIconTile web="plus" color="#34C759" />}
+            onPress={() => router.push("/social-link-picker" as any)}
             trailing={<SettingsChevron />}
           />
         </SettingsGroup>
