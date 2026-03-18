@@ -1,10 +1,11 @@
 /**
  * [INPUT]: none (pure type definitions)
- * [OUTPUT]: SocialPlatform, SocialLink, LinkedInProfile, CardTemplate, CardBackground, FieldStyle,
- *           CardVersion, CardTag, CardTagState, BusinessCard, ContactActionType, ContactAction,
- *           SavedContact, DiscoverProfile, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
- * [POS]: Core domain types — consumed by stores, services, and components across the app
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [OUTPUT]: SocialPlatform, SocialLink, LinkedInProfile, OnboardingPersonalityAxes, OnboardingDraft,
+ *           CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag, CardTagState, BusinessCard,
+ *           ContactActionType, ContactAction, SavedContact, DiscoverProfile, ShareSession, WalletPassData,
+ *           RootStackParamList, ThemeMode, Theme
+ * [POS]: Core domain types — consumed by stores, services, components, and onboarding state builders
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 // ── Social Links ─────────────────────────────────────────────────
@@ -46,6 +47,27 @@ export interface LinkedInProfile {
   }>;
   lastSynced: Date;
   checksum: string; // For change detection
+}
+
+export interface OnboardingPersonalityAxes {
+  energy: "people" | "solo";
+  focus: "facts" | "possibilities";
+  decision: "logic" | "people";
+  rhythm: "plan" | "adapt";
+}
+
+export interface OnboardingDraft {
+  name: string;
+  photoUrl: string | null;
+  jobTitle: string;
+  company: string;
+  headline: string;
+  location: string;
+  personalityAxes: Partial<OnboardingPersonalityAxes>;
+  traits: string[];
+  interests: string[];
+  primaryContactAction?: ContactActionType;
+  contactValue: string;
 }
 
 // Card template types

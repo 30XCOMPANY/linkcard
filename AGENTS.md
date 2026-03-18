@@ -27,3 +27,4 @@ vercel.json - Vercel routing for api/
 - Settings-like screens must consume `src/design-system/settings.tsx`; page files must not invent their own grouped-list radius/material rules.
 - `src/css/sf.css` owns token bridging only; spacing reference vars stay out of `@theme`.
 - Core hero components may use explicit RN layout when className layout utilities are unstable.
+- Onboarding must create a real first card through identity capture, personality tuning, and reachability before offering LinkedIn enrichment.

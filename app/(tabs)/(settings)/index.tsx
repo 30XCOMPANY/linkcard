@@ -22,7 +22,7 @@ import { useRouter } from "expo-router";
 import { View } from "@/src/tw";
 
 import { platformColor } from "@/src/lib/platform-color";
-import { useCardStore, MOCK_CARD } from "@/src/stores/cardStore";
+import { useCardStore, MOCK_CARD, MOCK_CARD_ESHAW } from "@/src/stores/cardStore";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
 import {
@@ -235,13 +235,24 @@ export default function SettingsScreen() {
             />
             <SettingsSeparator />
             <SettingsRow
-              title="Reset as Default User"
-              subtitle="Restore Zihan Huang demo card"
+              title="Load Zihan (Full)"
+              subtitle="Rich profile — all fields populated"
               onPress={() => {
                 haptic.success();
                 setCard(MOCK_CARD);
               }}
               leading={<SettingsIconTile web="person" color="#007AFF" />}
+              trailing={<SettingsChevron />}
+            />
+            <SettingsSeparator />
+            <SettingsRow
+              title="Load Eshaw (Sparse)"
+              subtitle="Minimal profile — name only, no details"
+              onPress={() => {
+                haptic.success();
+                setCard(MOCK_CARD_ESHAW);
+              }}
+              leading={<SettingsIconTile web="person" color="#FF9500" />}
               trailing={<SettingsChevron />}
             />
           </SettingsGroup>

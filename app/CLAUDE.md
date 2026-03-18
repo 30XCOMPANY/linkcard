@@ -12,7 +12,7 @@ _layout.tsx:       Root layout — gates onboarding/ (no card) vs (tabs)/ (card 
   (discover)/      Discover tab — random profile feed, card holder collection
   (events)/        Events tab — event listing and management
   (settings)/      Settings tab — grouped preferences
-onboarding/        unified 4-step onboarding that imports LinkedIn and creates the first card in-place
+onboarding/        single-path identity builder that creates the first card first, then offers LinkedIn enrich
 ```
 
 [PROTOCOL]: Update this on any file add/remove/rename, then check /CLAUDE.md

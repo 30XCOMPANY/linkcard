@@ -1,14 +1,15 @@
 /**
- * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types (incl. ContactAction), @/src/lib/card-presets
- * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions, updateContactAction, resetAllData
- * [POS]: Main app state — single Zustand store with AsyncStorage persistence, version ordering, and debounced Supabase sync
+ * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types (incl. ContactAction/OnboardingDraft), @/src/lib/card-presets
+ * [OUTPUT]: useCardStore — card data, theme mode, name font, CRUD actions, tag editing actions, updateContactAction,
+ *           resetAllData, buildCharacterFromOnboardingDraft, createProfileFromOnboardingDraft, createCardFromOnboardingDraft
+ * [POS]: Main app state — single Zustand store with AsyncStorage persistence, version ordering, onboarding card creation, and debounced Supabase sync
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BusinessCard, CardBackground, CardTag, CardVersion, ContactAction, LinkedInProfile, ThemeMode } from '@/src/types';
+import { BusinessCard, CardBackground, CardTag, CardVersion, ContactAction, LinkedInProfile, OnboardingDraft, OnboardingPersonalityAxes, ThemeMode } from '@/src/types';
 import { createDefaultCardVersions, normalizeCardVersion } from '@/src/lib/card-presets';
 import type { NameFontKey } from '@/src/lib/name-fonts';
 import { cardService } from '@/src/services/supabase';
@@ -33,6 +34,66 @@ const normalizeCard = (card: BusinessCard): BusinessCard => ({
     tagState: card.tagState ?? createEmptyTagState(),
     versions: card.versions.map(normalizeCardVersion),
 });
+
+const slugify = (value: string): string =>
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+const normalizeWebsite = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const normalizeLinkedInUrl = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    const username = trimmed
+        .replace(/^@/, "")
+        .replace(/^linkedin\.com\/in\//i, "")
+        .replace(/^in\//i, "")
+        .replace(/^\/+|\/+$/g, "");
+    return username ? `https://www.linkedin.com/in/${username}` : "";
+};
+
+const extractLinkedInUsername = (value: string): string => {
+    const normalized = normalizeLinkedInUrl(value);
+    const match = normalized.match(/linkedin\.com\/in\/([^/?#]+)/i);
+    return match?.[1] ?? "";
+};
+
+const firstFilled = (...values: Array<string | undefined | null>): string =>
+    values.find((value) => typeof value === "string" && value.trim().length > 0)?.trim() ?? "";
+
+const AXIS_FALLBACKS: OnboardingPersonalityAxes = {
+    energy: "solo",
+    focus: "possibilities",
+    decision: "logic",
+    rhythm: "adapt",
+};
+
+const AXIS_LABELS = {
+    energy: {
+        people: "Connector",
+        solo: "Independent",
+    },
+    focus: {
+        facts: "Grounded",
+        possibilities: "Visionary",
+    },
+    decision: {
+        logic: "Systems Thinker",
+        people: "Collaborative",
+    },
+    rhythm: {
+        plan: "Structured",
+        adapt: "Adaptive",
+    },
+} as const;
 
 const moveItems = <T,>(items: T[], sourceIndices: number[], destination: number): T[] => {
     if (sourceIndices.length === 0) return items;
@@ -101,7 +162,14 @@ interface CardState {
     resetAllData: () => void;
 }
 
-// ── Mock card for frontend development ──────────────────────────
+// ── Mock cards for frontend development ─────────────────────────
+
+export const MOCK_PROFILES = {
+    zihan: 'zihan',
+    eshaw: 'eshaw',
+} as const;
+export type MockProfileKey = keyof typeof MOCK_PROFILES;
+
 export const MOCK_CARD: BusinessCard = {
     id: 'mock-card-001',
     profile: {
@@ -141,6 +209,134 @@ export const MOCK_CARD: BusinessCard = {
     qrCodeData: 'https://linkcard.app/c/zihanhuang',
     createdAt: new Date(),
     updatedAt: new Date(),
+};
+
+// Sparse profile — tests card rendering with minimal data
+export const MOCK_CARD_ESHAW: BusinessCard = {
+    id: 'mock-card-eshaw',
+    profile: {
+        url: '',
+        username: '',
+        name: 'Eshaw',
+        headline: '',
+        company: '',
+        location: '',
+        photoUrl: null,
+        lastSynced: new Date(),
+        checksum: 'mock-checksum-eshaw',
+    },
+    versions: createDefaultCardVersions(),
+    tagState: createEmptyTagState(),
+    qrCodeData: 'https://linkcard.app/c/eshaw',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+};
+
+export const MOCK_CARDS: Record<MockProfileKey, BusinessCard> = {
+    zihan: MOCK_CARD,
+    eshaw: MOCK_CARD_ESHAW,
+};
+
+export const buildCharacterFromOnboardingDraft = (draft: OnboardingDraft): string => {
+    const axes: OnboardingPersonalityAxes = {
+        ...AXIS_FALLBACKS,
+        ...draft.personalityAxes,
+    };
+    const picks = [
+        draft.traits[0],
+        draft.interests[0],
+        draft.traits[1],
+        AXIS_LABELS.energy[axes.energy],
+        AXIS_LABELS.focus[axes.focus],
+        AXIS_LABELS.decision[axes.decision],
+        AXIS_LABELS.rhythm[axes.rhythm],
+    ]
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value));
+
+    return Array.from(new Set(picks)).slice(0, 3).join(", ");
+};
+
+export const createProfileFromOnboardingDraft = (
+    draft: OnboardingDraft,
+    importedProfile?: Partial<LinkedInProfile>
+): LinkedInProfile => {
+    const linkedInUrl = draft.primaryContactAction === "linkedin"
+        ? normalizeLinkedInUrl(draft.contactValue)
+        : normalizeLinkedInUrl(importedProfile?.url ?? "");
+    const website = draft.primaryContactAction === "url"
+        ? normalizeWebsite(draft.contactValue)
+        : normalizeWebsite(importedProfile?.website ?? "");
+    const email = draft.primaryContactAction === "email"
+        ? draft.contactValue.trim()
+        : firstFilled(importedProfile?.email);
+    const username = firstFilled(importedProfile?.username, extractLinkedInUsername(linkedInUrl));
+
+    return {
+        url: linkedInUrl,
+        username,
+        name: firstFilled(draft.name, importedProfile?.name, "Your Name"),
+        headline: firstFilled(draft.headline, importedProfile?.headline),
+        jobTitle: firstFilled(draft.jobTitle, importedProfile?.jobTitle) || undefined,
+        company: firstFilled(draft.company, importedProfile?.company),
+        location: firstFilled(draft.location, importedProfile?.location),
+        city: firstFilled(importedProfile?.city),
+        bannerUrl: importedProfile?.bannerUrl ?? null,
+        photoUrl: draft.photoUrl ?? importedProfile?.photoUrl ?? null,
+        email: email || undefined,
+        phone: firstFilled(importedProfile?.phone) || undefined,
+        website: website || undefined,
+        character: buildCharacterFromOnboardingDraft(draft),
+        socialLinks:
+            importedProfile?.socialLinks ??
+            (linkedInUrl ? [{ platform: "linkedin", url: linkedInUrl }] : undefined),
+        publications: importedProfile?.publications,
+        lastSynced: importedProfile?.lastSynced ?? new Date(),
+        checksum: importedProfile?.checksum ?? `manual-${Date.now()}`,
+    };
+};
+
+const createContactActionFromDraft = (
+    draft: OnboardingDraft,
+    profile: LinkedInProfile
+): ContactAction | undefined => {
+    if (!draft.primaryContactAction) {
+        return undefined;
+    }
+
+    switch (draft.primaryContactAction) {
+        case "email":
+            return profile.email
+                ? { type: "email", label: "Email Me", value: profile.email }
+                : undefined;
+        case "linkedin":
+            return profile.url
+                ? { type: "linkedin", label: "Connect on LinkedIn", value: profile.url }
+                : undefined;
+        case "url":
+            return profile.website
+                ? { type: "url", label: "Visit Website", value: profile.website }
+                : undefined;
+        case "wechat":
+            return draft.contactValue.trim()
+                ? { type: "wechat", label: "Add on WeChat", value: draft.contactValue.trim() }
+                : undefined;
+        case "github":
+            return draft.contactValue.trim()
+                ? { type: "github", label: "View GitHub", value: normalizeWebsite(draft.contactValue) }
+                : undefined;
+        default:
+            return undefined;
+    }
+};
+
+const buildQrCodeData = (profile: LinkedInProfile, cardId: string): string => {
+    if (profile.website) return profile.website;
+    if (profile.url) return profile.url;
+    if (profile.email) return `mailto:${profile.email}`;
+
+    const slug = slugify(profile.name) || cardId;
+    return `https://linkcard.app/c/${slug}`;
 };
 
 export const useCardStore = create<CardState>()(
@@ -415,13 +611,30 @@ export const useCardStore = create<CardState>()(
 // Helper to create a new business card
 export const createNewCard = (
     profile: LinkedInProfile,
-    options?: { primaryBackground?: CardBackground }
-): BusinessCard => ({
-    id: `card-${Date.now()}`,
+    options?: { primaryBackground?: CardBackground; contactAction?: ContactAction }
+): BusinessCard => {
+    const cardId = `card-${Date.now()}`;
+
+    return {
+    id: cardId,
     profile,
     versions: createDefaultCardVersions(options?.primaryBackground),
     tagState: createEmptyTagState(),
-    qrCodeData: `https://www.linkedin.com/in/${profile.username}`,
+    contactAction: options?.contactAction,
+    qrCodeData: buildQrCodeData(profile, cardId),
     createdAt: new Date(),
     updatedAt: new Date(),
-});
+    };
+};
+
+export const createCardFromOnboardingDraft = (
+    draft: OnboardingDraft,
+    options?: { importedProfile?: Partial<LinkedInProfile>; primaryBackground?: CardBackground }
+): BusinessCard => {
+    const profile = createProfileFromOnboardingDraft(draft, options?.importedProfile);
+
+    return createNewCard(profile, {
+        primaryBackground: options?.primaryBackground,
+        contactAction: createContactActionFromDraft(draft, profile),
+    });
+};
