@@ -35,8 +35,13 @@ export default function HomeStackLayout() {
         options={{
           title: "Card Versions",
           headerLargeTitle: false,
-          headerTransparent: false,
-          headerBlurEffect: "systemMaterial",
+        }}
+      />
+      <Stack.Screen
+        name="publications"
+        options={{
+          title: "Publications",
+          headerLargeTitle: false,
         }}
       />
     </Stack>
