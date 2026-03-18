@@ -9,7 +9,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,7 +23,7 @@ import {
 import Animated, {
   FadeIn, FadeInUp, FadeOut,
   runOnJS,
-  useAnimatedStyle, useSharedValue, withDelay, withTiming,
+  useAnimatedStyle, useSharedValue, withDelay, withTiming, withRepeat, withSequence, Easing,
 } from "react-native-reanimated";
 import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
@@ -44,10 +44,10 @@ import type { ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPer
 
 /* ── Constants ─────────────────────────────────────────────── */
 
-type StepKey = "welcome" | "claim" | "role" | "signature" | "vibe" | "reach" | "review";
+type StepKey = "welcome" | "claim" | "location" | "role" | "signature" | "vibe" | "reach" | "review";
 type PersonalityAxisKey = keyof OnboardingPersonalityAxes;
 
-const BUILDER_STEPS: StepKey[] = ["claim", "role", "signature", "vibe", "reach", "review"];
+const BUILDER_STEPS: StepKey[] = ["claim", "location", "role", "signature", "vibe", "reach", "review"];
 
 const PERSONALITY_QUESTIONS: Array<{
   key: PersonalityAxisKey;
@@ -139,6 +139,33 @@ function BlurTitle({ text, key: k }: { text: string; key?: string }) {
   );
 }
 
+/* ── Allow Button Pulse ────────────────────────────────────── */
+
+function AllowPulse({ label = "Allow" }: { label?: string }) {
+  const opacity = useSharedValue(1);
+
+  React.useEffect(() => {
+    opacity.value = withDelay(
+      1200,
+      withRepeat(
+        withSequence(
+          withTiming(0.5, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1
+      )
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.Text style={[styles.permBtnLabel, style]}>
+      {label}
+    </Animated.Text>
+  );
+}
+
 /* ── Progressive Preview ───────────────────────────────────── */
 
 function CardPreview({ draft }: { draft: OnboardingDraft }) {
@@ -192,37 +219,11 @@ export default function OnboardingScreen() {
   const [importedProfile, setImportedProfile] = useState<LinkedInProfile | null>(null);
 
   const stepIndex = BUILDER_STEPS.indexOf(step);
-  const locationFetched = useRef(false);
-
-  // Auto-detect location when entering "role" step (runs in background)
-  useEffect(() => {
-    if (step !== "role" || locationFetched.current || draft.location) return;
-    locationFetched.current = true;
-
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") return;
-
-        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-        const [geo] = await Location.reverseGeocodeAsync(pos.coords);
-        if (!geo) return;
-
-        const city = geo.city || geo.district || "";
-        const region = geo.region || "";
-        const location = [city, region].filter(Boolean).join(", ");
-        if (location) {
-          setDraft((c) => ({ ...c, location }));
-        }
-      } catch {
-        // Permission denied or geocode failed — skip silently
-      }
-    })();
-  }, [step]);
 
   const canContinue = useMemo(() => {
     switch (step) {
       case "claim": return draft.name.trim().length > 0;
+      case "location": return true;
       case "role": return draft.jobTitle.trim().length > 0;
       case "signature": return draft.headline.trim().length > 0;
       case "vibe":
@@ -257,8 +258,32 @@ export default function OnboardingScreen() {
   }, [step, vibeStage]);
 
   const skipVibe = useCallback(() => {
-    haptic.light();    setStep("reach");
+    haptic.light();
+    setStep("reach");
   }, []);
+
+  const handleLocationRequest = useCallback(async () => {
+    haptic.light();
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") { goNext(); return; }
+
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      const [geo] = await Location.reverseGeocodeAsync(pos.coords);
+      if (!geo) { goNext(); return; }
+
+      const city = geo.city || geo.district || "";
+      const region = geo.region || "";
+      const location = [city, region].filter(Boolean).join(", ");
+      if (location) {
+        setDraft((c) => ({ ...c, location }));
+        haptic.success();
+      }
+      goNext();
+    } catch {
+      goNext();
+    }
+  }, [goNext]);
 
   const handlePhotoPick = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -368,6 +393,43 @@ export default function OnboardingScreen() {
                   onChangeText={(v) => setField("name", v)} placeholder="Full name"
                   placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.name}
                 />
+              </View>
+            </Animated.View>
+          </>
+        );
+
+      case "location":
+        return (
+          <>
+            <BlurTitle text="Your city" />
+            <Text style={styles.permExplain}>
+              We only detect your city — never precise location. This helps people at events know you're nearby.
+            </Text>
+            <Animated.View entering={FadeIn.delay(300).duration(200)} style={styles.stepContent}>
+              {/* Simulated iOS 26 permission sheet (display only) */}
+              <View style={styles.permSheet}>
+                {/* Placeholder title bars */}
+                <View style={styles.permPlaceholders}>
+                  <View style={[styles.permBar, { width: "80%", height: 14 }]} />
+                  <View style={[styles.permBar, { width: "55%", height: 14 }]} />
+                </View>
+                {/* Placeholder description bars */}
+                <View style={styles.permPlaceholders}>
+                  <View style={[styles.permBar, { width: "90%", height: 10 }]} />
+                  <View style={[styles.permBar, { width: "65%", height: 10 }]} />
+                </View>
+
+                <View style={styles.permBtns}>
+                  <View style={styles.permBtn}>
+                    <Text style={styles.permBtnLabel}>Allow Once</Text>
+                  </View>
+                  <View style={[styles.permBtn, styles.permBtnHighlight]}>
+                    <Text style={[styles.permBtnLabel, { color: platformColor("systemBlue") }]}>Allow While Using App</Text>
+                  </View>
+                  <View style={styles.permBtn}>
+                    <Text style={[styles.permBtnLabel, { fontWeight: "400" }]}>Don't Allow</Text>
+                  </View>
+                </View>
               </View>
             </Animated.View>
           </>
@@ -552,7 +614,7 @@ export default function OnboardingScreen() {
       </View>
 
       {/* ── Preview overlay on banner (hidden during vibe) ── */}
-      {step !== "vibe" && (
+      {step !== "vibe" && step !== "location" && (
         <View style={styles.previewZone}>
           <CardPreview draft={draft} />
         </View>
@@ -562,9 +624,9 @@ export default function OnboardingScreen() {
       <Animated.View
         exiting={FadeOut.duration(150)}
         key={`${step}-${vibeStage}`}
-        style={[styles.stepZone, step === "vibe" && styles.stepZoneExpanded]}
+        style={[styles.stepZone, (step === "vibe" || step === "location") && styles.stepZoneExpanded]}
       >
-        <View style={[styles.stepContent, step === "vibe" && { flex: 1, justifyContent: "center" }]}>
+        <View style={[styles.stepContent, (step === "vibe" || step === "location") && { flex: 1, justifyContent: "center" }]}>
           {renderStepContent()}
         </View>
 
@@ -586,6 +648,11 @@ export default function OnboardingScreen() {
                 {canContinue && <SecondaryButton label="Skip for now" onPress={goNext} />}
               </>
             )
+          ) : step === "location" ? (
+            <>
+              <GlassButton label="Enable location" onPress={handleLocationRequest} />
+              <SecondaryButton label="Skip" onPress={goNext} />
+            </>
           ) : (
             <>
               <GlassButton
@@ -663,6 +730,26 @@ const styles = StyleSheet.create({
   },
   previewRole: { color: platformColor("secondaryLabel"), fontSize: 15 },
   previewLocation: { color: platformColor("secondaryLabel"), fontSize: 14 },
+
+  permSheet: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24, borderCurve: "continuous" as any,
+    padding: 20, gap: 16,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+  },
+  permPlaceholders: { gap: 6 },
+  permBar: { borderRadius: 99, backgroundColor: "rgba(60,60,67,0.12)" },
+  permBtns: { gap: 8, paddingTop: 4 },
+  permBtn: {
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(120,120,128,0.16)",
+    borderRadius: 999, borderCurve: "continuous" as any, minHeight: 46,
+  },
+  permBtnHighlight: { backgroundColor: "rgba(0,122,255,0.15)" },
+  permBtnLabel: { color: platformColor("label"), fontSize: 17, fontWeight: "600" },
+  permExplain: {
+    color: platformColor("secondaryLabel"), fontSize: 14, lineHeight: 20,
+  },
   previewHeadline: {
     color: platformColor("secondaryLabel"), fontSize: 14,
     textAlign: "center", lineHeight: 20, maxWidth: 280,
