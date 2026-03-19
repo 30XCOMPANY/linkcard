@@ -1,6 +1,6 @@
 /**
  * [INPUT]: react-native View/Text/StyleSheet, expo-linear-gradient, @/src/types LinkedInProfile/CardVersion,
- *          Avatar, QRCode, react-native-reanimated, @/src/lib/card-presets
+ *          Avatar, QRCode, react-native-reanimated, @/src/lib/card-presets, @/src/lib/semantic-colors
  * [OUTPUT]: CardDisplay — stable business card renderer with explicit RN layout
  * [POS]: Card core — hero component, isolated from flaky className layout utilities
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
@@ -15,6 +15,7 @@ import { resolveCardBackground } from "@/src/lib/card-presets";
 import { Avatar } from "@/src/components/shared/avatar";
 import { QRCode } from "@/src/components/shared/qr-code";
 import type { CardVersion, LinkedInProfile } from "@/src/types";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 
 interface CardDisplayProps {
   profile: LinkedInProfile;
@@ -31,6 +32,7 @@ export function CardDisplay({
   showQR = false,
   compact = false,
 }: CardDisplayProps) {
+  const sc = useSemanticColors();
   const { visibleFields, accentColor } = version;
   const background = resolveCardBackground(version.background);
   const isDark = version.background === "midnightInk";
@@ -52,10 +54,10 @@ export function CardDisplay({
         <Animated.View
           entering={ZoomIn.springify()}
           exiting={ZoomOut.duration(200)}
-          style={styles.overlay}
+          style={[styles.overlay, { backgroundColor: sc.overlayBg }]}
         >
           <QRCode value={qrCodeData} size={compact ? 140 : 180} />
-          <Text style={styles.overlayText} selectable>
+          <Text style={[styles.overlayText, { color: sc.overlayText }]} selectable>
             {qrCodeData}
           </Text>
         </Animated.View>
@@ -149,13 +151,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.97)",
   },
   overlayText: {
     marginTop: 16,
     fontSize: 12,
     lineHeight: 16,
-    color: "#6B7280",
   },
   surface: {
     position: "relative",
