@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 
 // ── Illustration fallbacks ──────────────────────────────────────
 
@@ -78,6 +79,7 @@ export function Avatar({
   showBorder = false,
   style,
 }: AvatarProps) {
+  const sc = useSemanticColors();
   const dim = typeof size === "number" ? size : sizeMap[size] ?? 48;
   const inset = Math.max(0, glassPadding);
   const innerDim = inset > 0 ? Math.max(0, dim - inset * 2) : dim;
@@ -86,7 +88,7 @@ export function Avatar({
     height: innerDim,
     borderRadius: innerDim / 2,
     overflow: "hidden",
-    backgroundColor: "#F2F2F7",
+    backgroundColor: sc.avatarFallbackBg,
     ...(showBorder && accentColor && { borderWidth: 3, borderColor: accentColor }),
   };
   const index = stableHash(name) % ILLUSTRATIONS.length;
