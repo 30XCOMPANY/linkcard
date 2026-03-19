@@ -44,6 +44,9 @@ api/               — Express + Vercel serverless API
 - **withCard pattern**: All card mutations in cardStore use `withCard(get, set, mutate)` — eliminates the repeated null-check/normalize/set/sync dance.
 - **Onboarding builders extracted**: `src/lib/onboarding-card.ts` owns the OnboardingDraft → BusinessCard transformation. Mock data lives in `src/lib/mock-cards.ts`.
 - **v2 routing**: Root layout gates `onboarding/` vs `(tabs)/` based on `cardStore.card`. Tabs use `NativeTabs` (iOS Liquid Glass) with `_layout.web.tsx` fallback. Each tab is a separate Stack group with native large title collapse.
+- **Header rule**: All tab stack layouts use `headerTransparent: true` + `headerBlurEffect: "none"` as base. Pushed screens inherit this — NEVER set `headerTransparent: false` or `headerBlurEffect` on pushed screens. This breaks dark mode (white opaque header on black page). Follow the Edit Card pattern: pushed screens only override `headerLargeTitle: false`.
+- **Color system**: Two tiers. (1) System colors via `platformColor()` — auto-reactive on iOS via `PlatformColor()`, web has light/dark fallbacks. (2) Custom semantic colors via `useSemanticColors()` hook — reactive, use in inline styles only, NEVER in `StyleSheet.create()`. Card-internal colors (profile-card.tsx) are a third tier — driven by `background.isDark`, independent of system theme.
+- **Theme resolution**: `useResolvedTheme()` from `src/lib/theme.ts` resolves the user's theme preference (light/dark/system) into a concrete "light" | "dark". Use this in layouts and components that need to know the effective theme. `Appearance.setColorScheme()` syncs the native system.
 
 ## Dev
 
