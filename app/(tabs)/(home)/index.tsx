@@ -35,7 +35,7 @@ import { HomeProfileHeader } from "./profile-header";
 import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 const SHARE_RITUAL_MS = 520;
-const SHARE_LOGO = require("../../../assets/logo.png");
+const SHARE_LOGO = require("../../../assets/icon.png");
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -192,6 +192,7 @@ export default function HomeScreen() {
 
       <ScrollView
         ref={scrollRef}
+        style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -246,8 +247,8 @@ export default function HomeScreen() {
             glassEffectStyle="clear"
             blurTint="default"
             intensity={58}
-            tintColor={`${currentVersion.accentColor}C7`}
-            fallbackColor="rgba(255,255,255,0.72)"
+            tintColor="#FFFFFFCC"
+            fallbackColor="rgba(255,255,255,0.78)"
           >
             <View style={[styles.shareIconWrap, { backgroundColor: `${currentVersion.accentColor}14` }]}>
               <SymbolView
@@ -281,10 +282,10 @@ const styles = StyleSheet.create({
   },
   shareLogo: {
     position: "absolute",
-    width: 240,
-    height: 240,
-    top: "34%",
-    opacity: 0.12,
+    width: 220,
+    height: 220,
+    top: "36%",
+    opacity: 0.08,
   },
   shareBadge: {
     flexDirection: "row",
@@ -312,6 +313,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.1,
   },
+  scrollView: {
+    backgroundColor: platformColor("systemGroupedBackground"),
+  },
   scroll: {
     paddingBottom: 120,
     paddingHorizontal: 16,
@@ -320,6 +324,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
+    backgroundColor: platformColor("systemGroupedBackground"),
   },
   emptyText: {
     color: platformColor("secondaryLabel"),
