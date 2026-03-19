@@ -6,7 +6,7 @@
  */
 
 import { Stack } from "expo-router/stack";
-import { PlatformColor } from "react-native";
+import { platformColor } from "@/src/lib/platform-color";
 
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
@@ -19,9 +19,9 @@ export default function DiscoverLayout() {
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
         headerTitleStyle: {
-          color: PlatformColor("label") as unknown as string,
+          color: platformColor("label") as unknown as string,
         },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: PlatformColor("label") as unknown as string },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: platformColor("label") as unknown as string },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
@@ -33,7 +33,6 @@ export default function DiscoverLayout() {
         options={{
           title: "Saved Cards",
           headerLargeTitle: false,
-          headerTransparent: false,
           headerBlurEffect: "systemMaterial",
         }}
       />

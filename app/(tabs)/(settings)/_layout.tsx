@@ -1,18 +1,17 @@
 /**
- * [INPUT]: expo-router Stack, react-native PlatformColor
+ * [INPUT]: expo-router Stack, @/src/lib/platform-color
  * [OUTPUT]: Settings tab stack — index + account, appearance, notifications, privacy, about sub-pages
  * [POS]: Settings Stack — native iOS large title on index, material blur on pushed sub-pages
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
 
 import { Stack } from "expo-router/stack";
-import { PlatformColor } from "react-native";
+import { platformColor } from "@/src/lib/platform-color";
 
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
 const pushed = {
   headerLargeTitle: false,
-  headerTransparent: false,
   headerBlurEffect: "systemMaterial" as const,
 };
 
@@ -24,8 +23,8 @@ export default function SettingsLayout() {
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: PlatformColor("label") as unknown as string },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: PlatformColor("label") as unknown as string },
+        headerTitleStyle: { color: platformColor("label") as unknown as string },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: platformColor("label") as unknown as string },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
