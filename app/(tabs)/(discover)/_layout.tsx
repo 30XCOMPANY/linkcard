@@ -34,7 +34,6 @@ export default function DiscoverLayout() {
         options={{
           title: "Saved Cards",
           headerLargeTitle: false,
-          headerBlurEffect: "systemMaterial",
         }}
       />
     </Stack>

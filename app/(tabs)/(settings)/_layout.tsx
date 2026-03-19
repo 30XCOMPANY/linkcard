@@ -12,7 +12,6 @@ const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
 const pushed = {
   headerLargeTitle: false,
-  headerBlurEffect: "systemMaterial" as const,
 };
 
 export default function SettingsLayout() {
