@@ -29,7 +29,6 @@ import type { LinkedInProfile, SocialLink } from "@/src/types";
 import { platformColor } from "@/src/lib/platform-color";
 import { getSocialPlatform } from "@/src/lib/social-platforms";
 import { SocialIcon } from "@/src/lib/social-icon";
-import { useResolvedTheme } from "@/src/lib/theme";
 
 import { ProfileCardEditor } from "./profile-card-editor";
 import {
@@ -107,7 +106,7 @@ function LabeledBody({
 
 export default function EditorScreen() {
   const router = useRouter();
-  const resolvedTheme = useResolvedTheme();
+
   const { versionId } = useLocalSearchParams<{ versionId?: string }>();
   const card = useCardStore((s) => s.card);
   const nameFont = useCardStore((s) => s.nameFont) ?? "classic";
@@ -203,8 +202,6 @@ export default function EditorScreen() {
 
   const vis = new Set(version.visibleFields as string[]);
   const tags = resolveProfileTags(card.profile, card.tagState);
-  const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
-
   return (
     <>
       <Stack.Screen
@@ -222,7 +219,7 @@ export default function EditorScreen() {
       />
       <Stack.Screen.Title
         large={false}
-        style={{ color: titleColor, fontWeight: "700" }}
+        style={{ color: platformColor("label"), fontWeight: "700" }}
       >
         Edit Card
       </Stack.Screen.Title>

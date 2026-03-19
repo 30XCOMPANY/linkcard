@@ -1,6 +1,6 @@
 /**
  * [INPUT]: react-native View, expo-router Stack, @/src/components/shared/avatar Avatar,
- *          @/src/lib/haptics, @/src/lib/theme, @/src/types CardVersion/LinkedInProfile
+ *          @/src/lib/haptics, @/src/lib/platform-color, @/src/types CardVersion/LinkedInProfile
  * [OUTPUT]: HomeProfileHeader — native navigation header for version switching and lightweight utilities
  * [POS]: (home) 模块导航壳，隔离 toolbar 菜单与路由页面
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -13,7 +13,8 @@ import { useRouter } from "expo-router";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
-import { useResolvedTheme } from "@/src/lib/theme";
+import { platformColor } from "@/src/lib/platform-color";
+
 import type { CardVersion, LinkedInProfile } from "@/src/types";
 
 interface HomeProfileHeaderProps {
@@ -38,14 +39,12 @@ export function HomeProfileHeader({
   versions,
 }: HomeProfileHeaderProps) {
   const router = useRouter();
-  const resolvedTheme = useResolvedTheme();
-  const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
 
   return (
     <>
       <Stack.Screen.Title
         large
-        largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular", color: titleColor }}
+        largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular", color: platformColor("label") }}
       >
         My Card
       </Stack.Screen.Title>

@@ -1,7 +1,8 @@
 /**
  * [INPUT]: react useEffect/useMemo, react-native Appearance/useColorScheme, @/src/stores/cardStore, @/src/types
- * [OUTPUT]: resolveThemeMode(), useResolvedTheme(), syncThemeDom(), syncNativeTheme()
- * [POS]: Core utility — single source of truth for theme resolution and platform theme syncing
+ * [OUTPUT]: resolveThemeMode(), useResolvedTheme(), useThemeSync(), syncNativeTheme(), syncThemeDom()
+ * [POS]: Core utility — single source of truth for theme resolution and platform theme syncing.
+ *        syncNativeTheme is called both from onRehydrateStorage (pre-render) and useThemeSync (reactive).
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
@@ -34,9 +35,15 @@ export function getResolvedTheme(): ResolvedTheme {
   return currentResolvedTheme;
 }
 
+/**
+ * Imperative native appearance setter.
+ * Called from two sites:
+ *   1. onRehydrateStorage — synchronous, before any React render
+ *   2. useThemeSync effect — reactive, on every themeMode change
+ */
 export function syncNativeTheme(themeMode: ThemeMode) {
   if (Platform.OS === "web") return;
-  Appearance.setColorScheme(themeMode === "system" ? null : themeMode);
+  Appearance.setColorScheme(themeMode === "system" ? "unspecified" : themeMode);
 }
 
 export function syncThemeDom(resolvedTheme: ResolvedTheme) {

@@ -76,8 +76,6 @@ export default function DiscoverScreen() {
   const resetDaily = useContactsStore((s) => s.resetDailyIfNeeded);
   const removeContact = useContactsStore((s) => s.removeContact);
   const current = index < batch.length ? batch[index] : null;
-  const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
-  const pageBg = isDark ? "#000000" : "#F7F7F5";
 
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
@@ -206,12 +204,6 @@ export default function DiscoverScreen() {
         />
       )}
       <Stack.Screen options={{ headerLargeTitle: true }} />
-      <Stack.Screen.Title
-        large
-        largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular", color: titleColor }}
-      >
-        Discover
-      </Stack.Screen.Title>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
           <Pressable
@@ -228,7 +220,7 @@ export default function DiscoverScreen() {
       </Stack.Toolbar>
 
       <ScrollView
-        style={{ backgroundColor: pageBg }}
+        style={{ backgroundColor: platformColor("systemGroupedBackground") }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}

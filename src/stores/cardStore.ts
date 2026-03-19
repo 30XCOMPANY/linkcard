@@ -1,7 +1,8 @@
 /**
- * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, @/src/types, @/src/lib/card-presets, @/src/services/supabase
+ * [INPUT]: zustand, zustand/middleware (persist), AsyncStorage, react-native Appearance, @/src/types, @/src/lib/card-presets, @/src/services/supabase
  * [OUTPUT]: useCardStore — card CRUD, hydration state, theme/preferences, debounced Supabase sync
- * [POS]: Main app state — single Zustand store with AsyncStorage persistence and cloud preference sync
+ * [POS]: Main app state — single Zustand store with AsyncStorage persistence and cloud preference sync.
+ *        onRehydrateStorage calls applyNativeTheme before React re-renders to eliminate theme flash.
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -19,9 +20,16 @@ import type {
 } from '@/src/types';
 import { normalizeCardVersion } from '@/src/lib/card-presets';
 import type { NameFontKey } from '@/src/lib/name-fonts';
+import { Appearance, Platform } from 'react-native';
 import { cardService, userPreferencesService } from '@/src/services/supabase';
 
 // ── Internals ───────────────────────────────────────────────────
+
+/** Sync native Appearance immediately — no useEffect delay. */
+const applyNativeTheme = (mode: ThemeMode) => {
+    if (Platform.OS === 'web') return;
+    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+};
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let preferencesSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -277,12 +285,14 @@ export const useCardStore = create<CardState>()(
             updateContactAction: (action) =>
                 withCard(get, set, (card) => ({ ...card, contactAction: action })),
 
-            setThemeMode: (mode) =>
+            setThemeMode: (mode) => {
+                applyNativeTheme(mode);
                 set((state) => {
                     const next = { ...state, themeMode: mode };
                     debouncedSyncPreferences(getPreferenceSnapshot(next));
                     return { themeMode: mode };
-                }),
+                });
+            },
             setNameFont: (font) =>
                 set((state) => {
                     const next = { ...state, nameFont: font };
@@ -344,6 +354,9 @@ export const useCardStore = create<CardState>()(
 
                 if (Object.keys(patch).length > 0) {
                     set(patch);
+                    // If cloud overrides themeMode, sync native appearance immediately
+                    // so PlatformColor values are correct before next frame.
+                    if (patch.themeMode) applyNativeTheme(patch.themeMode);
                 }
 
                 if (shouldSeedPreferences) {
@@ -382,7 +395,13 @@ export const useCardStore = create<CardState>()(
             name: 'linkcard-storage',
             storage: createJSONStorage(() => AsyncStorage),
             onRehydrateStorage: () => (state) => {
-                state?.setHasHydrated(true);
+                if (state) {
+                    // Sync native appearance BEFORE React re-renders.
+                    // This eliminates the theme flash on real devices where
+                    // useEffect fires one frame after mount.
+                    applyNativeTheme(state.themeMode);
+                    state.setHasHydrated(true);
+                }
             },
             partialize: (state) => ({
                 card: state.card,

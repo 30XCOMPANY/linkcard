@@ -1,12 +1,12 @@
 /**
- * [INPUT]: expo-router Stack, @/src/lib/theme useResolvedTheme
+ * [INPUT]: expo-router Stack, @/src/lib/platform-color
  * [OUTPUT]: Settings tab stack — index + account, appearance, notifications, privacy, about sub-pages
- * [POS]: Settings Stack — native iOS large title on index, material blur on pushed sub-pages
+ * [POS]: Settings Stack — native iOS large title on index, pushed sub-pages
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { Stack } from "expo-router/stack";
-import { useResolvedTheme } from "@/src/lib/theme";
+import { platformColor } from "@/src/lib/platform-color";
 
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
@@ -15,18 +15,16 @@ const pushed = {
 };
 
 export default function SettingsLayout() {
-  const theme = useResolvedTheme();
-  const labelColor = theme === "dark" ? "#FFFFFF" : "#000000";
-
   return (
     <Stack
       screenOptions={{
+        contentStyle: { backgroundColor: platformColor("systemGroupedBackground") },
         headerTransparent: true,
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: labelColor },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: labelColor },
+        headerTitleStyle: { color: platformColor("label") },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: platformColor("label") },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
