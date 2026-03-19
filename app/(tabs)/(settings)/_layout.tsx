@@ -25,7 +25,7 @@ export default function SettingsLayout() {
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
         headerTitleStyle: { color: PlatformColor("label") as unknown as string },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: PlatformColor("label") as unknown as string },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
