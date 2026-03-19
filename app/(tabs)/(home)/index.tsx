@@ -13,7 +13,7 @@
  */
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Alert, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, InteractionManager, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useRouter } from "expo-router";
@@ -42,6 +42,12 @@ const SHARE_TRIGGER_RUNWAY = COMMIT_THRESHOLD + 56;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function waitForInteractions() {
+  return new Promise<void>((resolve) => {
+    InteractionManager.runAfterInteractions(() => resolve());
+  });
 }
 
 export default function HomeScreen() {
@@ -163,10 +169,16 @@ export default function HomeScreen() {
       Alert.alert("Share failed", "Please try again.");
     } finally {
       setShareOverlayVisible(false);
+      await waitForInteractions();
+      await wait(120);
       await resetShareViewport();
       setRestoreTick((value) => value + 1);
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+        resetShareOverscroll();
+      }, 180);
     }
-  }, [card, currentVersion, resetShareViewport]);
+  }, [card, currentVersion, resetShareOverscroll, resetShareViewport]);
 
   if (!card || !currentVersion) {
     return (
