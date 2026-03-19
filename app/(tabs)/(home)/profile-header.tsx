@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { PlatformColor, StyleSheet, View } from "react-native";
 import { Stack } from "expo-router/stack";
 
 import { Avatar } from "@/src/components/shared/avatar";
@@ -37,7 +37,7 @@ export function HomeProfileHeader({
 }: HomeProfileHeaderProps) {
   return (
     <>
-      <Stack.Screen.Title large largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular" }}>My Card</Stack.Screen.Title>
+      <Stack.Screen.Title large largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular", color: PlatformColor("label") as unknown as string }}>My Card</Stack.Screen.Title>
 
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Menu icon="chevron.up.chevron.down" elementSize="small">
