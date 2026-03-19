@@ -1,17 +1,19 @@
 /**
- * [INPUT]: expo-router useRouter, react-native KeyboardAvoidingView/Pressable/Text/TextInput/View/Alert/Image,
+ * [INPUT]: expo-router Stack, react-native KeyboardAvoidingView/Pressable/Text/TextInput/View/Alert/Image/Keyboard,
  *          react-native-reanimated FadeIn, expo-image-picker, expo-image Image,
  *          @/src/stores/cardStore, @/src/services/linkedin, @/src/components/shared/avatar,
  *          @/src/components/shared/adaptive-glass, @/src/lib/card-presets, @/src/lib/haptics,
  *          @/src/lib/platform-color, @/src/lib/semantic-colors, @/src/lib/name-fonts, @/src/types
- * [OUTPUT]: OnboardingScreen — immersive single-screen identity builder with progressive card preview
- * [POS]: Onboarding entry — welcome splash → 6 steps → card creation, no scrolling
+ * [OUTPUT]: OnboardingScreen — immersive single-screen identity builder with progressive card preview and focused-field reveal
+ * [POS]: Onboarding entry — welcome splash → 6 steps → card creation, owns half-sheet keyboard avoidance and step-local scrolling
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  findNodeHandle,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -51,6 +53,9 @@ type StepKey = "welcome" | "claim" | "location" | "role" | "signature" | "vibe" 
 type PersonalityAxisKey = keyof OnboardingPersonalityAxes;
 
 const BUILDER_STEPS: StepKey[] = ["claim", "role", "signature", "location", "vibe", "reach", "review"];
+const STEP_KEYBOARD_OFFSET = 130;
+const FOCUS_SCROLL_MARGIN = 24;
+const ROLE_SCROLL_FALLBACK_Y = 220;
 
 const PERSONALITY_QUESTIONS: Array<{
   key: PersonalityAxisKey;
@@ -197,7 +202,10 @@ export default function OnboardingScreen() {
   const [importedProfile, setImportedProfile] = useState<LinkedInProfile | null>(null);
 
   const stepIndex = BUILDER_STEPS.indexOf(step);
+  const jobTitleRef = useRef<TextInput>(null);
   const companyRef = useRef<TextInput>(null);
+  const roleScrollRef = useRef<ScrollView>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const canContinue = useMemo(() => {
     switch (step) {
@@ -218,6 +226,52 @@ export default function OnboardingScreen() {
   const setField = useCallback(<K extends keyof OnboardingDraft>(field: K, value: OnboardingDraft[K]) => {
     setDraft((c) => ({ ...c, [field]: value }));
   }, []);
+
+  React.useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollRoleInputIntoView = useCallback((input: TextInput | null, fallbackY?: number) => {
+    const scrollResponder = roleScrollRef.current?.getScrollResponder?.();
+    const inputHandle = input ? findNodeHandle(input) : null;
+    const runFallback = () => {
+      if (typeof fallbackY !== "number") return;
+      roleScrollRef.current?.scrollTo({ y: fallbackY, animated: true });
+    };
+
+    if (!scrollResponder || !inputHandle) {
+      runFallback();
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+          inputHandle,
+          FOCUS_SCROLL_MARGIN,
+          true
+        );
+        runFallback();
+      }, 80);
+    });
+  }, []);
+
+  const roleKeyboardPadding = keyboardHeight > 0
+    ? Math.max(16, keyboardHeight - STEP_KEYBOARD_OFFSET + FOCUS_SCROLL_MARGIN * 2)
+    : 16;
 
   const goNext = useCallback(() => {
     if (!canContinue) { haptic.warning(); return; }
@@ -417,14 +471,22 @@ export default function OnboardingScreen() {
 
       case "role":
         return (
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            ref={roleScrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 16, paddingBottom: roleKeyboardPadding }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+          >
             <BlurTitle text="What you do" />
             <Animated.View entering={FadeIn.delay(320).duration(200)} style={styles.stepContent}>
               <View style={styles.inputCard}>
                 <Text style={styles.fieldLabel}>Title</Text>
-                <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
+                <TextInput ref={jobTitleRef} autoCapitalize="words" autoCorrect={false} autoFocus
                   onChangeText={(v) => setField("jobTitle", v)} placeholder="Founder, Designer..."
                   placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.jobTitle}
+                  onFocus={() => scrollRoleInputIntoView(jobTitleRef.current, 0)}
                   returnKeyType="next" onSubmitEditing={() => companyRef.current?.focus()}
                 />
               </View>
@@ -433,6 +495,7 @@ export default function OnboardingScreen() {
                 <TextInput ref={companyRef} autoCapitalize="words" autoCorrect={false}
                   onChangeText={(v) => setField("company", v)} placeholder="Optional"
                   placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.company}
+                  onFocus={() => scrollRoleInputIntoView(companyRef.current, ROLE_SCROLL_FALLBACK_Y)}
                   returnKeyType="next" onSubmitEditing={() => { if (draft.jobTitle.trim()) goNext(); }}
                 />
               </View>
@@ -609,9 +672,9 @@ export default function OnboardingScreen() {
         style={[styles.stepZone, (step === "vibe" || step === "location") && styles.stepZoneExpanded]}
       >
         <KeyboardAvoidingView
-          style={[styles.stepContent, (step === "vibe" || step === "location") && { flex: 1, justifyContent: "center" }]}
+          style={[{ flex: 1 }, (step === "vibe" || step === "location") && { justifyContent: "center" }]}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={0}
+          keyboardVerticalOffset={STEP_KEYBOARD_OFFSET}
         >
           {renderStepContent()}
         </KeyboardAvoidingView>
@@ -719,7 +782,7 @@ const styles = StyleSheet.create({
 
   permSheet: {
     borderRadius: 24, borderCurve: "continuous" as any,
-    padding: 20, gap: 16,
+    padding: 16, gap: 12, marginTop: 32,
   },
   permPlaceholders: { gap: 6 },
   permBar: { borderRadius: 99 },
@@ -744,7 +807,7 @@ const styles = StyleSheet.create({
 
   stepZone: { paddingHorizontal: 24, paddingBottom: 40, gap: 16, flex: 618 },
   stepZoneExpanded: { flex: 1 },
-  stepContent: { gap: 16, flex: 1 },
+  stepContent: { gap: 16 },
   blurTitleRow: { flexDirection: "row", flexWrap: "wrap" },
 
   stepEyebrow: {
