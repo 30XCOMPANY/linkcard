@@ -34,11 +34,11 @@ import type { CardVersion } from "@/src/types";
 
 import { shareCard } from "@/src/services/share";
 import { HomeProfileHeader } from "./profile-header";
-import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
+import { COMMIT_THRESHOLD, SHARE_PREVIEW_ZONE, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 const SHARE_RITUAL_MS = 520;
 const SHARE_LOGO = require("../../../assets/icon.png");
-const SHARE_RUNWAY_HEIGHT = 220;
+const SHARE_TRIGGER_RUNWAY = COMMIT_THRESHOLD + 56;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -126,7 +126,12 @@ export default function HomeScreen() {
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-    handleShareScroll(contentOffset.y, contentSize.height, layoutMeasurement.height);
+    handleShareScroll(
+      contentOffset.y,
+      contentSize.height,
+      layoutMeasurement.height,
+      SHARE_PREVIEW_ZONE
+    );
   }, [handleShareScroll]);
 
   const waitForViewportReset = useCallback(async () => {
@@ -201,7 +206,7 @@ export default function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scroll,
-          viewportHeight > 0 ? { minHeight: viewportHeight + SHARE_RUNWAY_HEIGHT } : null,
+          viewportHeight > 0 ? { minHeight: viewportHeight + SHARE_TRIGGER_RUNWAY } : null,
         ]}
         alwaysBounceVertical
         bounces
@@ -226,8 +231,6 @@ export default function HomeScreen() {
             version={currentVersion}
           />
         </SwipeToShare>
-
-        <View pointerEvents="none" style={styles.shareRunway} />
       </ScrollView>
 
       <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none">
@@ -333,9 +336,6 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: 120,
     paddingHorizontal: 16,
-  },
-  shareRunway: {
-    height: SHARE_RUNWAY_HEIGHT,
   },
   empty: {
     alignItems: "center",

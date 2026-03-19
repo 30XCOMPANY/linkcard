@@ -7,8 +7,9 @@
  */
 
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Stack } from "expo-router/stack";
+import { useRouter } from "expo-router";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { haptic } from "@/src/lib/haptics";
@@ -36,6 +37,7 @@ export function HomeProfileHeader({
   profile,
   versions,
 }: HomeProfileHeaderProps) {
+  const router = useRouter();
   const resolvedTheme = useResolvedTheme();
   const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
 

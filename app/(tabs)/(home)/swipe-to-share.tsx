@@ -31,6 +31,7 @@ import { platformColor } from "@/src/lib/platform-color";
 /* ------------------------------------------------------------------ */
 
 export const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
+export const SHARE_PREVIEW_ZONE = 140;  // px before bottom to start revealing share affordance
 const RESTORE_FADE_IN_MS = 720;
 const RESTORE_START_SCALE = 0.965;
 
@@ -42,9 +43,15 @@ export function useShareOverscroll() {
   const overscroll = useSharedValue(0);
   const releaseTick = useSharedValue(0);
 
-  const handleScroll = useCallback((contentOffset: number, contentSize: number, layoutHeight: number) => {
+  const handleScroll = useCallback((
+    contentOffset: number,
+    contentSize: number,
+    layoutHeight: number,
+    previewZone: number = 0
+  ) => {
     const maxScroll = Math.max(0, contentSize - layoutHeight);
-    overscroll.value = Math.max(0, contentOffset - maxScroll);
+    const activationStart = Math.max(0, maxScroll - previewZone);
+    overscroll.value = Math.max(0, contentOffset - activationStart);
   }, []);
 
   const handleRelease = useCallback(() => {

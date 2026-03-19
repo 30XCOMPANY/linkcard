@@ -8,6 +8,7 @@
 `haptics.ts`: 触感反馈边界，统一轻触/成功等手势回声。
 `icons.tsx`: 跨平台图标适配层，封装 SF Symbols 与 Ionicons 差异。
 `name-fonts.ts`: 名称排版字族映射，控制卡片标题气质。
+`public-url.ts`: 公共链接单一真相源，固定 `linkcard.ai/u/{slug}` 命名空间。
 `profile-tags.ts`: 从资料推导标签并解析用户自定义标签输入。
 `springs.ts`: 命名动画弹簧参数，避免随手硬编码物理值。
 `theme.ts`: 主题单一真相源，负责 light/dark/system 解析与 native/web 同步。

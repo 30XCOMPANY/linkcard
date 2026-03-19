@@ -77,7 +77,7 @@ export default function AboutScreen() {
           trailing={<SettingsChevron />}
           onPress={() => {
             haptic.light();
-            Linking.openURL("https://linkcard.app/terms");
+            Linking.openURL("https://linkcard.ai/terms");
           }}
         />
         <SettingsSeparator />
@@ -87,7 +87,7 @@ export default function AboutScreen() {
           trailing={<SettingsChevron />}
           onPress={() => {
             haptic.light();
-            Linking.openURL("https://linkcard.app/privacy");
+            Linking.openURL("https://linkcard.ai/privacy");
           }}
         />
         <SettingsSeparator />
@@ -97,7 +97,7 @@ export default function AboutScreen() {
           trailing={<SettingsChevron />}
           onPress={() => {
             haptic.light();
-            Linking.openURL("https://linkcard.app/licenses");
+            Linking.openURL("https://linkcard.ai/licenses");
           }}
         />
       </SettingsGroup>
@@ -112,7 +112,7 @@ export default function AboutScreen() {
           onPress={() => {
             haptic.light();
             Linking.openURL(
-              `mailto:feedback@linkcard.app?subject=LinkCard%20Feedback%20v${appVersion}&body=%0A%0A---%0AVersion: ${appVersion} (${buildNumber})%0APlatform: ${Platform.OS}`
+              `mailto:feedback@linkcard.ai?subject=LinkCard%20Feedback%20v${appVersion}&body=%0A%0A---%0AVersion: ${appVersion} (${buildNumber})%0APlatform: ${Platform.OS}`
             );
           }}
         />

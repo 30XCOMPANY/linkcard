@@ -14,6 +14,7 @@ import type {
     OnboardingPersonalityAxes,
 } from '@/src/types';
 import { createDefaultCardVersions } from '@/src/lib/card-presets';
+import { buildPublicCardUrl } from '@/src/lib/public-url';
 
 // ── Helpers ─────────────────────────────────────────────────────
 
@@ -164,7 +165,7 @@ const buildQrCodeData = (profile: LinkedInProfile, cardId: string): string => {
     if (profile.website) return profile.website;
     if (profile.url) return profile.url;
     if (profile.email) return `mailto:${profile.email}`;
-    return `https://linkcard.app/c/${slugify(profile.name) || cardId}`;
+    return buildPublicCardUrl(slugify(profile.username || profile.name) || cardId);
 };
 
 export const createNewCard = (

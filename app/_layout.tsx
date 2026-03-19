@@ -52,8 +52,10 @@ export default function RootLayout() {
     if (!fontsLoaded || !hasHydrated || !cloudReady) return;
 
     const inOnboarding = segments[0] === "onboarding";
+    const inPublicCard = segments[0] === "u";
+    const atRootIndex = segments.length === 0;
 
-    if (!card && !inOnboarding) {
+    if (!card && !inOnboarding && !inPublicCard && !atRootIndex) {
       router.replace("/onboarding" as any);
     } else if (card && inOnboarding) {
       router.replace("/(tabs)/(home)" as any);
@@ -65,7 +67,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
+        <Stack.Screen name="u" />
         <Stack.Screen name="(tabs)" />
       </Stack>
     </GestureHandlerRootView>

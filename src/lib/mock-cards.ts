@@ -26,9 +26,9 @@ export const MOCK_CARD: BusinessCard = {
         location: 'San Francisco, CA',
         city: 'San Francisco',
         photoUrl: null,
-        email: 'zihan@linkcard.app',
+        email: 'zihan@linkcard.ai',
         phone: '+1 (415) 555-0188',
-        website: 'https://linkcard.app',
+        website: 'https://linkcard.ai',
         character: 'Visionary Builder',
         socialLinks: [
             { platform: 'linkedin', url: 'https://linkedin.com/in/zihanhuang' },
@@ -57,8 +57,8 @@ export const MOCK_CARD: BusinessCard = {
     },
     versions: createDefaultCardVersions(),
     tagState: createEmptyTagState(),
-    contactAction: { type: 'email', label: 'Email Me', value: 'zihan@linkcard.app' },
-    qrCodeData: 'https://linkcard.app/c/zihanhuang',
+    contactAction: { type: 'email', label: 'Email Me', value: 'zihan@linkcard.ai' },
+    qrCodeData: 'https://linkcard.ai/u/zihanhuang',
     createdAt: new Date(),
     updatedAt: new Date(),
 };
@@ -79,7 +79,7 @@ export const MOCK_CARD_ESHAW: BusinessCard = {
     },
     versions: createDefaultCardVersions(),
     tagState: createEmptyTagState(),
-    qrCodeData: 'https://linkcard.app/c/eshaw',
+    qrCodeData: 'https://linkcard.ai/u/eshaw',
     createdAt: new Date(),
     updatedAt: new Date(),
 };

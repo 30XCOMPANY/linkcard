@@ -30,7 +30,7 @@ const p = (
   template, accentColor, background,
   visibleFields: ["photoUrl", "name", "jobTitle", "headline", "company", "location", "character", "email", "website", "qrCode"],
   contactAction: { type: actionType, label: actionLabel, value: actionValue },
-  qrCodeData: `https://linkcard.app/c/${username}`,
+  qrCodeData: `https://linkcard.ai/u/${username}`,
 });
 
 const MOCK_PROFILES: DiscoverProfile[] = [

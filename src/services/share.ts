@@ -1,15 +1,19 @@
 /**
- * [INPUT]: react-native Share/Platform, expo-linking, @/src/types
+ * [INPUT]: react-native Share/Platform, expo-linking, @/src/types, @/src/lib/public-url
  * [OUTPUT]: generateShareLink, shareCard, getShareHistory, trackShareEvent
- * [POS]: Card sharing utilities — server share link creation + native share sheet
+ * [POS]: Card sharing utilities — server share link creation + native share sheet with fixed `/u/` public URLs
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { Share, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { BusinessCard, CardVersion, ShareSession } from '@/src/types';
+import { buildPublicCardUrl, sanitizePublicSlug } from '@/src/lib/public-url';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.location?.origin) ||
+  process.env.EXPO_PUBLIC_API_URL ||
+  'http://localhost:3001';
 
 /**
  * Generate a unique shareable link for a card
@@ -43,11 +47,21 @@ export const generateShareLink = async (
   } catch (error) {
     // Fallback to local link generation
     console.warn('Server share failed, using local fallback');
+    const fallbackSlug = sanitizePublicSlug(card.profile.username || card.profile.name || card.id) || card.id;
     const params = new URLSearchParams({
+      name: card.profile.name,
+      headline: card.profile.headline || '',
+      company: card.profile.company || '',
+      jobTitle: card.profile.jobTitle || '',
+      location: card.profile.location || '',
+      profileUrl: card.profile.url || '',
+      website: card.profile.website || '',
+      photoUrl: card.profile.photoUrl || '',
+      qrCodeData: card.qrCodeData,
       v: version.id,
       f: selectedFields.join(','),
     });
-    return `https://linkcard.app/c/${card.id}?${params.toString()}`;
+    return `${buildPublicCardUrl(fallbackSlug)}?${params.toString()}`;
   }
 };
 
@@ -209,5 +223,4 @@ export const openLinkedInProfile = async (profileUrl: string) => {
     await Linking.openURL(profileUrl);
   }
 };
-
 

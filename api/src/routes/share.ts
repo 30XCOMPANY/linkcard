@@ -1,7 +1,7 @@
 /**
  * [INPUT]: express Router, zod, uuid
  * [OUTPUT]: Router — POST /create, GET /:shareId, POST /track, GET /history
- * [POS]: Share link CRUD + analytics, in-memory storage (demo)
+ * [POS]: Share link CRUD + analytics, in-memory storage (demo) with `/u/` public URL namespace
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -50,7 +50,7 @@ const createShareSchema = z.object({
   qrCodeData: z.string(),
 });
 
-const BASE_URL = process.env.SHARE_BASE_URL || 'https://linkcard.app';
+const BASE_URL = process.env.SHARE_BASE_URL || 'https://linkcard.ai';
 
 /**
  * POST /api/share/create
@@ -73,7 +73,7 @@ router.post('/create', async (req, res) => {
     
     res.json({
       shareId,
-      shareUrl: `${BASE_URL}/c/${shareId}`,
+      shareUrl: `${BASE_URL}/u/${shareId}`,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -190,5 +190,4 @@ router.get('/history', async (req, res) => {
 });
 
 export default router;
-
 
