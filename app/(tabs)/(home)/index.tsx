@@ -7,13 +7,14 @@
  *          @/src/components/shared/adaptive-glass,
  *          @/src/lib/theme,
  *          @/src/types CardVersion, local profile-header, local swipe-to-share
- * [OUTPUT]: HomeScreen — card preview with fixed share ritual overlay, direct edit entry in header, and version switching
- * [POS]: (home) module entrypoint, coordinating header, fixed overlay, backdrop, card preview, and share flow
+ * [OUTPUT]: HomeScreen — card preview with fixed share ritual overlay, direct edit entry in header, version switching, and post-share viewport refresh
+ * [POS]: (home) module entrypoint, coordinating header, fixed overlay, backdrop, card preview, and share flow reset
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Alert, Image, InteractionManager, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useRouter } from "expo-router";
@@ -37,31 +38,25 @@ import { HomeProfileHeader } from "./profile-header";
 import { COMMIT_THRESHOLD, SHARE_PREVIEW_ZONE, SwipeToShare, useShareOverscroll } from "./swipe-to-share";
 
 const SHARE_RITUAL_MS = 520;
-const SHARE_LOGO = require("../../../assets/icon.png");
+const SHARE_LOGO_LIGHT = require("@/assets/lc-logo-dark.png");  // dark logo on light bg
+const SHARE_LOGO_DARK = require("@/assets/lc-logo-light.png");  // white logo on dark bg
 const SHARE_TRIGGER_RUNWAY = COMMIT_THRESHOLD + 56;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-function waitForInteractions() {
-  return new Promise<void>((resolve) => {
-    InteractionManager.runAfterInteractions(() => resolve());
-  });
-}
-
 export default function HomeScreen() {
   const router = useRouter();
-  const scrollRef = useRef<ScrollView>(null);
   const resolvedTheme = useResolvedTheme();
   const card = useCardStore((state) => state.card);
   const nameFont = useCardStore((state) => state.nameFont) ?? "classic";
   const addVersion = useCardStore((state) => state.addVersion);
   const setNameFont = useCardStore((state) => state.setNameFont);
   const [selectedVersionId, setSelectedVersionId] = useState("");
-  const [restoreTick, setRestoreTick] = useState(0);
   const [shareOverlayVisible, setShareOverlayVisible] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [shareSessionKey, setShareSessionKey] = useState(0);
   const isDark = resolvedTheme === "dark";
 
   const defaultVersion = useMemo(
@@ -140,27 +135,12 @@ export default function HomeScreen() {
     );
   }, [handleShareScroll]);
 
-  const waitForViewportReset = useCallback(async () => {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => resolve());
-      });
-    });
-  }, []);
-
-  const resetShareViewport = useCallback(async () => {
-    scrollRef.current?.scrollTo({ y: 0, animated: false });
-    resetShareOverscroll();
-    await waitForViewportReset();
-  }, [resetShareOverscroll, waitForViewportReset]);
-
   const handleShareFlightComplete = useCallback(async () => {
     if (!card || !currentVersion) {
       return;
     }
 
     setShareOverlayVisible(true);
-    await resetShareViewport();
     await wait(SHARE_RITUAL_MS);
 
     try {
@@ -168,17 +148,11 @@ export default function HomeScreen() {
     } catch (error) {
       Alert.alert("Share failed", "Please try again.");
     } finally {
+      resetShareOverscroll();
+      setShareSessionKey((value) => value + 1);
       setShareOverlayVisible(false);
-      await waitForInteractions();
-      await wait(120);
-      await resetShareViewport();
-      setRestoreTick((value) => value + 1);
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: false });
-        resetShareOverscroll();
-      }, 180);
     }
-  }, [card, currentVersion, resetShareOverscroll, resetShareViewport]);
+  }, [card, currentVersion, resetShareOverscroll]);
 
   if (!card || !currentVersion) {
     return (
@@ -214,7 +188,7 @@ export default function HomeScreen() {
       />
 
       <ScrollView
-        ref={scrollRef}
+        key={shareSessionKey}
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scroll,
@@ -235,7 +209,6 @@ export default function HomeScreen() {
           onShareFlightComplete={handleShareFlightComplete}
           overscroll={overscroll}
           releaseTick={releaseTick}
-          restoreTick={restoreTick}
         >
           <ProfileCard
             nameFont={nameFont}
@@ -266,9 +239,9 @@ export default function HomeScreen() {
           style={styles.shareOverlay}
         >
           <Image
-            source={SHARE_LOGO}
-            resizeMode="contain"
-            style={[styles.shareLogo, { tintColor: isDark ? "rgba(255,255,255,0.22)" : "rgba(15,23,42,0.10)" }]}
+            source={isDark ? SHARE_LOGO_DARK : SHARE_LOGO_LIGHT}
+            contentFit="contain"
+            style={[styles.shareLogo, { opacity: isDark ? 0.22 : 0.10 }]}
           />
 
           <AdaptiveGlass
@@ -279,15 +252,15 @@ export default function HomeScreen() {
             tintColor={isDark ? "#FFFFFF1F" : "#FFFFFFCC"}
             fallbackColor={isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.78)"}
           >
-            <View style={[styles.shareIconWrap, { backgroundColor: `${currentVersion.accentColor}14` }]}>
+            <View style={[styles.shareIconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.12)" : `${currentVersion.accentColor}14` }]}>
               <SymbolView
                 name="square.and.arrow.up.fill"
                 resizeMode="scaleAspectFit"
                 style={styles.shareIcon}
-                tintColor={currentVersion.accentColor}
+                tintColor={isDark ? "#FFFFFF" : currentVersion.accentColor}
               />
             </View>
-            <Text style={[styles.shareTitle, { color: currentVersion.accentColor }]}>Choose how to share</Text>
+            <Text style={[styles.shareTitle, { color: isDark ? "#FFFFFF" : currentVersion.accentColor }]}>Choose how to share</Text>
           </AdaptiveGlass>
         </Animated.View>
       ) : null}

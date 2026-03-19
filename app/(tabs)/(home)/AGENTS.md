@@ -3,9 +3,9 @@
 
 成员清单
 `_layout.tsx`: Home stack 壳，提供大标题与原生导航行为。
-`index.tsx`: 首页编排器，管理版本选择、固定分享仪式层、分享背景渐变、ScrollView overscroll 与 store action 连接。
+`index.tsx`: 首页编排器，管理版本选择、固定分享仪式层、分享背景渐变、ScrollView overscroll 与 dismiss 后的视口刷新。
 `profile-header.tsx`: 导航头部，封装版本切换与快捷动作菜单。
-`swipe-to-share.tsx`: 卡片底部上拉分享手势层，消费 overscroll 并驱动阈值反馈、飞出动画与复位时机，不承担固定提示层。
+`swipe-to-share.tsx`: 卡片底部上拉分享手势层，消费 overscroll 并驱动阈值反馈与飞出动画，不承担固定提示层或分享后的页面复位。
 `profile-card-editor.tsx`: 可编辑卡片主体，组合 banner、文案、标签、链接与列表区块。
 `editable-text.tsx`: 行内文字编辑原语，统一 tap-edit-blur-save 流程。
 `editable-tag-list.tsx`: 标签编辑器，处理长按进入编辑、重命名、删除、添加。

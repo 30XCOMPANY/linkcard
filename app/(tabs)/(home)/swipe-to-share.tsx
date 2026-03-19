@@ -8,7 +8,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   Extrapolation,
@@ -32,8 +32,6 @@ import { platformColor } from "@/src/lib/platform-color";
 
 export const COMMIT_THRESHOLD = 80;  // px of overscroll to commit share
 export const SHARE_PREVIEW_ZONE = 140;  // px before bottom to start revealing share affordance
-const RESTORE_FADE_IN_MS = 720;
-const RESTORE_START_SCALE = 0.965;
 
 /* ------------------------------------------------------------------ */
 /*  useShareOverscroll                                                 */
@@ -75,7 +73,6 @@ interface SwipeToShareProps {
   accentColor: string;
   overscroll: SharedValue<number>;
   releaseTick: SharedValue<number>;
-  restoreTick: number;
 }
 
 export function SwipeToShare({
@@ -84,7 +81,6 @@ export function SwipeToShare({
   accentColor,
   overscroll,
   releaseTick,
-  restoreTick,
 }: SwipeToShareProps) {
   const reducedMotion = useReducedMotion();
   const flyState = useSharedValue(0);
@@ -138,20 +134,6 @@ export function SwipeToShare({
       }
     }
   );
-
-  useEffect(() => {
-    if (restoreTick === 0) {
-      return;
-    }
-
-    cardTranslateY.value = 0;
-    cardScale.value = RESTORE_START_SCALE;
-    cardOpacity.value = 0;
-    cardScale.value = withTiming(1, { duration: RESTORE_FADE_IN_MS });
-    cardOpacity.value = withTiming(1, { duration: RESTORE_FADE_IN_MS });
-    flyState.value = 0;
-    shareState.value = 0;
-  }, [cardOpacity, cardScale, cardTranslateY, flyState, restoreTick, shareState]);
 
   const cardStyle = useAnimatedStyle(() => {
     const p = progress.value;
