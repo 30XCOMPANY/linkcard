@@ -1,23 +1,25 @@
 /**
- * [INPUT]: react-native Image/PlatformColor/Pressable/ScrollView/StyleSheet/Text/View,
+ * [INPUT]: react-native Image/Pressable/ScrollView/StyleSheet/Text/View,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
- *          expo-router useRouter, @/assets/default-banner.jpg
+ *          expo-router useRouter, @/assets/default-banner.jpg,
+ *          @/src/lib/semantic-colors useSemanticColors
  * [OUTPUT]: EventsScreen — events placeholder with minimal empty-state guidance
  * [POS]: Events tab main screen — lightweight placeholder that points to the next best action
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { platformColor } from "@/src/lib/platform-color";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 
 export default function EventsScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const pageBg = scheme === "dark" ? "#000000" : "#F2F2F7";
+  const sc = useSemanticColors();
+  const pageBg = sc.pageBg;
 
   return (
     <ScrollView
@@ -61,11 +63,11 @@ export default function EventsScreen() {
           Nothing is scheduled yet. Save people in Discover or review your card before the next room you walk into.
         </Text>
         <View style={styles.actionStack}>
-          <Pressable style={styles.primaryAction} onPress={() => router.push("/(discover)" as any)}>
-            <Text style={styles.primaryActionLabel}>Open Discover</Text>
+          <Pressable style={[styles.primaryAction, { backgroundColor: sc.buttonPrimaryBg }]} onPress={() => router.push("/(discover)" as any)}>
+            <Text style={[styles.primaryActionLabel, { color: sc.buttonPrimaryLabel }]}>Open Discover</Text>
           </Pressable>
-          <Pressable style={styles.secondaryAction} onPress={() => router.push("/(home)" as any)}>
-            <Text style={styles.secondaryActionLabel}>Review My Card</Text>
+          <Pressable style={[styles.secondaryAction, { backgroundColor: sc.buttonSecondaryBg }]} onPress={() => router.push("/(home)" as any)}>
+            <Text style={[styles.secondaryActionLabel, { color: sc.buttonSecondaryLabel }]}>Review My Card</Text>
           </Pressable>
         </View>
       </View>
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 24,
     borderCurve: "continuous" as any,
-    backgroundColor: "#007AFF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -134,13 +135,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   secondaryAction: {
     minHeight: 48,
     borderRadius: 24,
     borderCurve: "continuous" as any,
-    backgroundColor: "rgba(0,122,255,0.12)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -148,6 +147,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "700",
-    color: "#007AFF",
   },
 });
