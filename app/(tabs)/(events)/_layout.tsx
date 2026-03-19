@@ -1,16 +1,19 @@
 /**
- * [INPUT]: expo-router Stack, react-native PlatformColor
+ * [INPUT]: expo-router Stack, @/src/lib/theme useResolvedTheme
  * [OUTPUT]: Events tab stack with native large title
  * [POS]: Events Stack — native iOS large title with collapse behavior
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import { Stack } from "expo-router/stack";
-import { PlatformColor } from "react-native";
+import { useResolvedTheme } from "@/src/lib/theme";
 
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
 export default function EventsLayout() {
+  const theme = useResolvedTheme();
+  const labelColor = theme === "dark" ? "#FFFFFF" : "#000000";
+
   return (
     <Stack
       screenOptions={{
@@ -18,10 +21,8 @@ export default function EventsLayout() {
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: {
-          color: PlatformColor("label") as unknown as string,
-        },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: PlatformColor("label") as unknown as string },
+        headerTitleStyle: { color: labelColor },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: labelColor },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",

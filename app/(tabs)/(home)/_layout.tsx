@@ -1,16 +1,19 @@
 /**
- * [INPUT]: expo-router Stack, react-native PlatformColor
+ * [INPUT]: expo-router Stack, @/src/lib/theme useResolvedTheme
  * [OUTPUT]: Home tab stack with large title, editor push, version management, and social links routes
  * [POS]: Home Stack — native iOS large title with collapse behavior and detail pushes
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
 import { Stack } from "expo-router/stack";
-import { PlatformColor } from "react-native";
+import { useResolvedTheme } from "@/src/lib/theme";
 
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
 export default function HomeStackLayout() {
+  const theme = useResolvedTheme();
+  const labelColor = theme === "dark" ? "#FFFFFF" : "#000000";
+
   return (
     <Stack
       screenOptions={{
@@ -18,8 +21,8 @@ export default function HomeStackLayout() {
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: PlatformColor("label") as unknown as string },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: PlatformColor("label") as unknown as string },
+        headerTitleStyle: { color: labelColor },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: labelColor },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
