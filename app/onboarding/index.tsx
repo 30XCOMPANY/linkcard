@@ -397,19 +397,20 @@ export default function OnboardingScreen() {
 
   /* ── Welcome ────────────────────────────────────────────── */
 
+  /* Welcome is ALWAYS dark — brand identity, not theme-dependent */
   if (step === "welcome") {
     return (
-      <View style={[styles.welcomeContainer, { backgroundColor: sc.welcomeBg }]}>
+      <View style={[styles.welcomeContainer, { backgroundColor: "#05070B" }]}>
         <Stack.Screen options={{ headerShown: false }} />
 
-        {/* Hero image — fills top, fades into the active theme */}
+        {/* Hero image — always dark variant */}
         <Image
-          source={dark ? require("@/assets/onboarding-hero.jpg") : require("@/assets/onboarding-banner.png")}
+          source={require("@/assets/onboarding-hero.jpg")}
           style={styles.welcomeHero}
           contentFit="cover"
         />
         <View style={[styles.welcomeHeroFade, {
-          experimental_backgroundImage: `linear-gradient(to bottom, transparent 0%, ${sc.welcomeFadeEnd} 100%)`,
+          experimental_backgroundImage: "linear-gradient(to bottom, transparent 0%, rgba(5,7,11,1) 100%)",
         } as any]} />
 
         {/* Content overlay */}
@@ -421,13 +422,13 @@ export default function OnboardingScreen() {
               source={require("@/assets/lc-logo.svg")}
               style={styles.welcomeLogo}
               contentFit="contain"
-              tintColor={sc.welcomeLogoTint}
+              tintColor="#FFFFFF"
             />
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.welcomeTextBlock}>
-            <Text style={[styles.welcomeTitle, { color: sc.welcomeTitle }]}>LinkCard</Text>
-            <Text style={[styles.welcomeSubtitle, { color: sc.welcomeSubtitle }]}>Your identity, amplified.</Text>
+            <Text style={[styles.welcomeTitle, { color: "#FFFFFF" }]}>LinkCard</Text>
+            <Text style={[styles.welcomeSubtitle, { color: "rgba(255,255,255,0.68)" }]}>Your identity, amplified.</Text>
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.welcomeCta}>
@@ -439,13 +440,13 @@ export default function OnboardingScreen() {
                 style={[
                   styles.welcomeButton,
                   {
-                    backgroundColor: sc.welcomeButtonBg,
-                    borderColor: sc.welcomeButtonBorder,
-                    boxShadow: sc.welcomeButtonShadow,
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    borderColor: "rgba(255,255,255,0.18)",
+                    boxShadow: "0 18px 56px rgba(0,0,0,0.40)",
                   },
                 ]}
               >
-                <Text style={[styles.welcomeButtonLabel, { color: sc.welcomeButtonLabel }]}>Get Started</Text>
+                <Text style={[styles.welcomeButtonLabel, { color: "#0A0A0A" }]}>Get Started</Text>
               </View>
             </Pressable>
           </Animated.View>

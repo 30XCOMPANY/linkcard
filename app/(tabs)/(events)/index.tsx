@@ -2,7 +2,7 @@
  * [INPUT]: react-native Image/Pressable/ScrollView/StyleSheet/Text/View,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
  *          expo-router useRouter, @/assets/default-banner.jpg,
- *          @/src/lib/semantic-colors useSemanticColors
+ *          @/src/lib/platform-color, @/src/lib/semantic-colors, @/src/lib/theme
  * [OUTPUT]: EventsScreen — events placeholder with minimal empty-state guidance
  * [POS]: Events tab main screen — lightweight placeholder that points to the next best action
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
@@ -15,20 +15,21 @@ import { BlurView } from "expo-blur";
 import { platformColor } from "@/src/lib/platform-color";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSemanticColors } from "@/src/lib/semantic-colors";
+import { useResolvedTheme } from "@/src/lib/theme";
 
 export default function EventsScreen() {
   const router = useRouter();
   const sc = useSemanticColors();
-  const pageBg = sc.pageBg;
+  const fadeBg = useResolvedTheme() === "dark" ? "#000000" : "#F2F2F7";
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
-      style={{ backgroundColor: pageBg }}
+      style={{ backgroundColor: platformColor("systemGroupedBackground") }}
     >
       {/* Hero banner — progressive blur + fade into page background */}
-      <View style={[styles.heroWrap, { backgroundColor: pageBg }]}>
+      <View style={styles.heroWrap}>
         <Image
           source={require("@/assets/default-banner.jpg")}
           style={styles.heroImage}
@@ -40,23 +41,24 @@ export default function EventsScreen() {
         <BlurView intensity={40}  tint="default" style={[styles.heroBlur, { top: "56%", opacity: 0.45 }]} />
         <BlurView intensity={60}  tint="default" style={[styles.heroBlur, { top: "64%", opacity: 0.6  }]} />
         <BlurView intensity={80}  tint="default" style={[styles.heroBlur, { top: "72%", opacity: 0.75 }]} />
-        <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "80%", opacity: 0.9  }]} />
-        <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "88%", opacity: 1.0  }]} />
-        {/* Fade — blurred image dissolves into page background */}
+        <BlurView intensity={100} tint="default" style={[styles.heroBlur, { top: "88%" }]} />
+        {/* Fade — blurred image dissolves into page background.
+            Uses semantic pageBg hex for gradient concat. The underlying
+            contentStyle already guarantees correct bg via platformColor. */}
         <LinearGradient
           colors={[
-            pageBg + "00",
-            pageBg + "30",
-            pageBg + "80",
-            pageBg + "CC",
-            pageBg,
+            fadeBg + "00",
+            fadeBg + "30",
+            fadeBg + "80",
+            fadeBg + "CC",
+            fadeBg,
           ]}
           locations={[0, 0.25, 0.55, 0.8, 1]}
           style={styles.fadeMask}
         />
       </View>
 
-      <View style={[styles.content, { backgroundColor: pageBg }]}>
+      <View style={[styles.content, { backgroundColor: platformColor("systemGroupedBackground") }]}>
         <Text style={styles.heading}>San Francisco</Text>
         <Text style={styles.subtitle}>No upcoming events yet</Text>
         <Text style={styles.body}>

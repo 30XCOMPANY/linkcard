@@ -28,7 +28,8 @@ import { cardService, userPreferencesService } from '@/src/services/supabase';
 /** Sync native Appearance immediately — no useEffect delay. */
 const applyNativeTheme = (mode: ThemeMode) => {
     if (Platform.OS === 'web') return;
-    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+    // null resets to system default; 'unspecified' may not restore dark on some devices
+    Appearance.setColorScheme((mode === 'system' ? null : mode) as any);
 };
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;

@@ -23,7 +23,6 @@ export default function SettingsLayout() {
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: platformColor("label") },
         headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: platformColor("label") },
         headerLargeTitle: true,
         headerBlurEffect: "none",

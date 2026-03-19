@@ -43,7 +43,8 @@ export function getResolvedTheme(): ResolvedTheme {
  */
 export function syncNativeTheme(themeMode: ThemeMode) {
   if (Platform.OS === "web") return;
-  Appearance.setColorScheme(themeMode === "system" ? "unspecified" : themeMode);
+  // null resets to system default; 'unspecified' may not restore dark on some devices
+  Appearance.setColorScheme((themeMode === "system" ? null : themeMode) as any);
 }
 
 export function syncThemeDom(resolvedTheme: ResolvedTheme) {
