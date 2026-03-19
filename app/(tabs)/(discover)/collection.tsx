@@ -26,6 +26,7 @@ import { ProfileCard } from "@/src/components/card/profile-card";
 import { executeContactAction } from "@/src/lib/contact-actions";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 import { springs } from "@/src/lib/springs";
 import {
   SettingsGroup,
@@ -110,6 +111,7 @@ function ContactRow({
 }
 
 export default function CollectionScreen() {
+  const sc = useSemanticColors();
   const router = useRouter();
   const savedContacts = useContactsStore((s) => s.savedContacts);
   const removeContact = useContactsStore((s) => s.removeContact);
@@ -144,8 +146,8 @@ export default function CollectionScreen() {
         <Text style={styles.emptySubtitle}>
           Browse Discover to find and save interesting people
         </Text>
-        <Pressable style={styles.emptyButton} onPress={() => router.back()}>
-          <Text style={styles.emptyButtonLabel}>Back to Discover</Text>
+        <Pressable style={[styles.emptyButton, { backgroundColor: sc.buttonPrimaryBg }]} onPress={() => router.back()}>
+          <Text style={[styles.emptyButtonLabel, { color: sc.buttonPrimaryLabel }]}>Back to Discover</Text>
         </Pressable>
       </View>
     );
@@ -203,7 +205,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 22,
     borderCurve: "continuous" as any,
-    backgroundColor: "#007AFF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -211,13 +212,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
   rowActionLabel: {
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "600",
-    color: "#007AFF",
+    color: platformColor("systemBlue"),
   },
   detail: {
     padding: 16,
