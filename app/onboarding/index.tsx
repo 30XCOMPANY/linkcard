@@ -20,6 +20,7 @@ import {
   Text,
   TextInput,
   View,
+  useColorScheme,
 } from "react-native";
 import Animated, {
   FadeIn, FadeInUp, FadeOut,
@@ -186,6 +187,7 @@ function CardPreview({ draft }: { draft: OnboardingDraft }) {
 export default function OnboardingScreen() {
   const setCard = useCardStore((s) => s.setCard);
   const sc = useSemanticColors();
+  const dark = useColorScheme() === "dark";
 
   const [step, setStep] = useState<StepKey>("welcome");
   const [vibeStage, setVibeStage] = useState(0);
@@ -369,7 +371,7 @@ export default function OnboardingScreen() {
                 <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
                   onChangeText={(v) => setField("name", v)} placeholder="Full name"
                   placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.name}
-                  returnKeyType="next" onSubmitEditing={() => { if (draft.name.trim() && draft.photoUrl) goNext(); else if (draft.name.trim()) handlePhotoPick(); }}
+                  returnKeyType="done"
                 />
               </View>
             </Animated.View>
@@ -574,7 +576,7 @@ export default function OnboardingScreen() {
       {/* ── Brand banner with progressive blur ────────────── */}
       <View style={styles.bannerWrap}>
         <Image
-          source={require("@/assets/onboarding-banner.png")}
+          source={dark ? require("@/assets/onboarding-hero.jpg") : require("@/assets/onboarding-banner.png")}
           style={styles.bannerImage}
           contentFit="cover"
         />
@@ -606,9 +608,13 @@ export default function OnboardingScreen() {
         key={`${step}-${vibeStage}`}
         style={[styles.stepZone, (step === "vibe" || step === "location") && styles.stepZoneExpanded]}
       >
-        <View style={[styles.stepContent, (step === "vibe" || step === "location") && { flex: 1, justifyContent: "center" }]}>
+        <KeyboardAvoidingView
+          style={[styles.stepContent, (step === "vibe" || step === "location") && { flex: 1, justifyContent: "center" }]}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={0}
+        >
           {renderStepContent()}
-        </View>
+        </KeyboardAvoidingView>
 
         <View style={styles.ctaBlock}>
           <View style={styles.dotsCenter}>
