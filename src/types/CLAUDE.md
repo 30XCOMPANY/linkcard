@@ -8,8 +8,9 @@ TypeScript interfaces and type definitions shared across the app.
 ```
 index.ts:            Core domain types — SocialPlatform, SocialLink, LinkedInProfile, OnboardingDraft,
                      OnboardingPersonalityAxes, CardVersion, CardBackground, BusinessCard,
-                     ContactAction, ContactActionType, SavedContact, DiscoverProfile, ShareSession,
-                     WalletPassData, FieldStyle, CardTemplate, Theme, RootStackParamList
+                     ContactAction, ContactActionType, UserProfile, PublicCard, SavedContact,
+                     DiscoverProfile, ShareSession, WalletPassData, FieldStyle, CardTemplate,
+                     Theme, RootStackParamList
 cardComponents.ts:   Card component system — ComponentType, CardComponent, ComponentContent,
                      ComponentStyle, extractComponentsFromProfile()
 ```

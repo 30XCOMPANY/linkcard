@@ -1,7 +1,8 @@
 /**
  * [INPUT]: @supabase/supabase-js, expo-secure-store, @/src/types, @/src/lib/card-presets
- * [OUTPUT]: supabase client, cardService, shareService, userPreferencesService, auth helpers
- * [POS]: Supabase client + CRUD — sole persistence layer for cards, settings, and share analytics
+ * [OUTPUT]: supabase client, cardService, shareService, userProfileService, publicCardService,
+ *           userPreferencesService, auth helpers
+ * [POS]: Supabase client + CRUD — sole persistence layer for user identity, cards, settings, and share analytics
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
@@ -13,11 +14,14 @@ import {
   CardTagState,
   LinkedInProfile,
   CardVersion,
+  PublicCard,
   ShareSession,
+  UserProfile,
   UserPreferences,
 } from '@/src/types';
 import { normalizeCardVersion } from '@/src/lib/card-presets';
 import type { NameFontKey } from '@/src/lib/name-fonts';
+import { sanitizePublicSlug } from '@/src/lib/public-url';
 
 // Supabase configuration
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
@@ -113,6 +117,27 @@ export interface DbUserPreferences {
   updated_at: string;
 }
 
+export interface DbUserProfile {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_url?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbPublicCard {
+  id: string;
+  user_id: string;
+  card_id: string;
+  version_id: string;
+  slug: string;
+  title?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const DEFAULT_USER_PREFERENCES: UserPreferences = {
   themeMode: 'system',
   nameFont: 'classic',
@@ -150,6 +175,32 @@ const fromDbUserPreferences = (row?: Partial<DbUserPreferences> | null): UserPre
     row?.notif_sync_reminders ?? DEFAULT_USER_PREFERENCES.notifSyncReminders,
 });
 
+const fromDbUserProfile = (row: DbUserProfile): UserProfile => ({
+  userId: row.user_id,
+  username: row.username,
+  displayName: row.display_name,
+  avatarUrl: row.avatar_url ?? null,
+  createdAt: new Date(row.created_at),
+  updatedAt: new Date(row.updated_at),
+});
+
+const fromDbPublicCard = (row: DbPublicCard): PublicCard => ({
+  id: row.id,
+  userId: row.user_id,
+  cardId: row.card_id,
+  versionId: row.version_id,
+  slug: row.slug,
+  title: row.title ?? undefined,
+  isActive: row.is_active,
+  createdAt: new Date(row.created_at),
+  updatedAt: new Date(row.updated_at),
+});
+
+const deriveUsername = (profile: LinkedInProfile): string => {
+  const candidate = sanitizePublicSlug(profile.username || profile.name || 'user');
+  return candidate || 'user';
+};
+
 const ensureAuthedUser = async () => {
   if (!SUPABASE_ENABLED) return null;
   const {
@@ -179,6 +230,12 @@ export const cardService = {
       console.warn('No authenticated user, skipping cloud sync');
       return null;
     }
+
+    await userProfileService.upsertProfile({
+      username: deriveUsername(card.profile),
+      displayName: card.profile.name || 'LinkCard User',
+      avatarUrl: card.profile.photoUrl,
+    });
 
     const dbCard = {
       id: card.id,
@@ -278,6 +335,111 @@ export const cardService = {
         }
       )
       .subscribe();
+  },
+};
+
+export const userProfileService = {
+  async getProfile(): Promise<UserProfile | null> {
+    const user = await ensureAuthedUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      if (error) console.error('Error fetching user profile:', error);
+      return null;
+    }
+
+    return fromDbUserProfile(data);
+  },
+
+  async upsertProfile(input: {
+    username: string;
+    displayName: string;
+    avatarUrl?: string | null;
+  }): Promise<UserProfile | null> {
+    const user = await ensureAuthedUser();
+    if (!user) return null;
+
+    const username = sanitizePublicSlug(input.username) || sanitizePublicSlug(user.id);
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          user_id: user.id,
+          username,
+          display_name: input.displayName.trim() || 'LinkCard User',
+          avatar_url: input.avatarUrl ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error upserting user profile:', error);
+      return null;
+    }
+
+    return fromDbUserProfile(data);
+  },
+};
+
+export const publicCardService = {
+  async listPublicCards(): Promise<PublicCard[]> {
+    const user = await ensureAuthedUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('public_cards')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+
+    if (error || !data) {
+      if (error) console.error('Error listing public cards:', error);
+      return [];
+    }
+
+    return data.map(fromDbPublicCard);
+  },
+
+  async createPublicCard(input: {
+    cardId: string;
+    versionId: string;
+    title?: string;
+    slugBase: string;
+  }): Promise<PublicCard | null> {
+    const user = await ensureAuthedUser();
+    if (!user) return null;
+
+    const base = sanitizePublicSlug(input.slugBase) || 'card';
+    const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+
+    const { data, error } = await supabase
+      .from('public_cards')
+      .insert({
+        user_id: user.id,
+        card_id: input.cardId,
+        version_id: input.versionId,
+        slug,
+        title: input.title ?? null,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating public card:', error);
+      return null;
+    }
+
+    return fromDbPublicCard(data);
   },
 };
 

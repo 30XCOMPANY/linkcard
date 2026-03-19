@@ -2,8 +2,8 @@
  * [INPUT]: none (pure type definitions)
  * [OUTPUT]: SocialPlatform, SocialLink, LinkedInProfile, OnboardingPersonalityAxes, OnboardingDraft,
  *           CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag, CardTagState, BusinessCard,
- *           ContactActionType, ContactAction, UserPreferences, SavedContact, DiscoverProfile, ShareSession,
- *           WalletPassData, RootStackParamList, ThemeMode, Theme
+ *           ContactActionType, ContactAction, UserProfile, PublicCard, UserPreferences, SavedContact,
+ *           DiscoverProfile, ShareSession, WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, components, and onboarding state builders
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -140,6 +140,27 @@ export interface ContactAction {
   type: ContactActionType;
   label: string;
   value: string;
+}
+
+export interface UserProfile {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface PublicCard {
+  id: string;
+  userId: string;
+  cardId: string;
+  versionId: string;
+  slug: string;
+  title?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface UserPreferences {
