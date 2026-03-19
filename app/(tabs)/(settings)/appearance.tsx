@@ -14,6 +14,7 @@ import { useCardStore } from "@/src/stores/cardStore";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
 import { haptic } from "@/src/lib/haptics";
 import { Icon } from "@/src/lib/icons";
+import { platformColor } from "@/src/lib/platform-color";
 import type { ThemeMode } from "@/src/types";
 import {
   SettingsGroup,
@@ -86,7 +87,7 @@ export default function AppearanceScreen() {
               }}
               trailing={
                 nameFont === key ? (
-                  <Icon web="checkmark" size={18} color="#007AFF" />
+                  <Icon web="checkmark" size={18} color={platformColor("systemBlue")} />
                 ) : null
               }
             />

@@ -26,6 +26,7 @@ import { accentColors } from "@/src/lib/accent-colors";
 import { CARD_BACKGROUND_OPTIONS } from "@/src/lib/card-presets";
 import { nameFonts, NAME_FONT_KEYS } from "@/src/lib/name-fonts";
 import type { LinkedInProfile, SocialLink } from "@/src/types";
+import { platformColor } from "@/src/lib/platform-color";
 import { getSocialPlatform } from "@/src/lib/social-platforms";
 import { SocialIcon } from "@/src/lib/social-icon";
 
@@ -438,16 +439,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
-    color: "#007AFF",
+    color: platformColor("systemBlue"),
   },
   segLabel: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "500",
-    color: "rgba(60,60,67,0.6)",
+    color: platformColor("secondaryLabel"),
   },
   segLabelSelected: {
     fontWeight: "600",
-    color: "#000000",
+    color: platformColor("label"),
   },
 });

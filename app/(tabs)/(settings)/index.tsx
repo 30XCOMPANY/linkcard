@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: platformColor("secondarySystemGroupedBackground"),
     alignItems: "center",
     justifyContent: "center",
   },

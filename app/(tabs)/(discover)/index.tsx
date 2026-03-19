@@ -172,7 +172,7 @@ export default function DiscoverScreen() {
     const action = current.contactAction;
     if (action?.type === "email") {
       Clipboard.setString(action.value);
-      setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: "#007AFF" });
+      setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: platformColor("systemBlue") });
       return;
     }
 
@@ -230,7 +230,7 @@ export default function DiscoverScreen() {
                 contactAction={current.contactAction}
                 onEmailPress={(email) => {
                   Clipboard.setString(email);
-                  setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: "#007AFF" });
+                  setToast({ icon: "doc.on.doc.fill", message: "Email copied", color: platformColor("systemBlue") });
                 }}
               />
               <Pressable style={styles.bookmarkBtn} onPress={handleSave}>
@@ -245,7 +245,7 @@ export default function DiscoverScreen() {
                   <Icon
                     web="bookmark"
                     size={18}
-                    color={saved ? "#FF9500" : "rgba(60,60,67,0.6)"}
+                    color={saved ? platformColor("systemOrange") : platformColor("secondaryLabel")}
                   />
                 </AdaptiveGlass>
               </Pressable>
