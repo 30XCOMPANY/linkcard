@@ -3,18 +3,19 @@
  *          react-native-reanimated FadeIn, expo-image-picker, expo-image Image,
  *          @/src/stores/cardStore, @/src/services/linkedin, @/src/components/shared/avatar,
  *          @/src/components/shared/adaptive-glass, @/src/lib/card-presets, @/src/lib/haptics,
- *          @/src/lib/platform-color, @/src/lib/name-fonts, @/src/types
+ *          @/src/lib/platform-color, @/src/lib/semantic-colors, @/src/lib/name-fonts, @/src/types
  * [OUTPUT]: OnboardingScreen — immersive single-screen identity builder with progressive card preview
  * [POS]: Onboarding entry — welcome splash → 6 steps → card creation, no scrolling
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -23,7 +24,7 @@ import {
 import Animated, {
   FadeIn, FadeInUp, FadeOut,
   runOnJS,
-  useAnimatedStyle, useSharedValue, withDelay, withTiming, withRepeat, withSequence, Easing,
+  useAnimatedStyle, useSharedValue, withDelay, withTiming,
 } from "react-native-reanimated";
 import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
@@ -40,6 +41,7 @@ import { createCardFromOnboardingDraft } from "@/src/lib/onboarding-card";
 import { fetchLinkedInProfile } from "@/src/services/linkedin";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 import type { ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPersonalityAxes } from "@/src/types";
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -95,10 +97,10 @@ function ChoiceCard({ label, selected, onPress }: { label: string; selected: boo
   );
 }
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+function Chip({ label, selected, chipBg, onPress }: { label: string; selected: boolean; chipBg: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
-      <View style={[styles.chip, { backgroundColor: selected ? "#007AFF" : "#FFFFFF" }]}>
+      <View style={[styles.chip, { backgroundColor: selected ? "#007AFF" : chipBg }]}>
         <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
       </View>
     </Pressable>
@@ -136,33 +138,6 @@ function BlurTitle({ text, key: k }: { text: string; key?: string }) {
         <BlurWord key={`${k}-${word}-${i}`} word={word} delay={i * 80} />
       ))}
     </View>
-  );
-}
-
-/* ── Allow Button Pulse ────────────────────────────────────── */
-
-function AllowPulse({ label = "Allow" }: { label?: string }) {
-  const opacity = useSharedValue(1);
-
-  React.useEffect(() => {
-    opacity.value = withDelay(
-      1200,
-      withRepeat(
-        withSequence(
-          withTiming(0.5, { duration: 500, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1
-      )
-    );
-  }, []);
-
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.Text style={[styles.permBtnLabel, style]}>
-      {label}
-    </Animated.Text>
   );
 }
 
@@ -210,6 +185,7 @@ function CardPreview({ draft }: { draft: OnboardingDraft }) {
 
 export default function OnboardingScreen() {
   const setCard = useCardStore((s) => s.setCard);
+  const sc = useSemanticColors();
 
   const [step, setStep] = useState<StepKey>("welcome");
   const [vibeStage, setVibeStage] = useState(0);
@@ -219,6 +195,7 @@ export default function OnboardingScreen() {
   const [importedProfile, setImportedProfile] = useState<LinkedInProfile | null>(null);
 
   const stepIndex = BUILDER_STEPS.indexOf(step);
+  const companyRef = useRef<TextInput>(null);
 
   const canContinue = useMemo(() => {
     switch (step) {
@@ -385,17 +362,18 @@ export default function OnboardingScreen() {
     switch (step) {
       case "claim":
         return (
-          <>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <BlurTitle text="Your name" />
             <Animated.View entering={FadeIn.delay(250).duration(200)} style={styles.stepContent}>
               <View style={styles.inputCard}>
                 <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
                   onChangeText={(v) => setField("name", v)} placeholder="Full name"
-                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.name}
+                  placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.name}
+                  returnKeyType="next" onSubmitEditing={() => { if (draft.name.trim() && draft.photoUrl) goNext(); else if (draft.name.trim()) handlePhotoPick(); }}
                 />
               </View>
             </Animated.View>
-          </>
+          </ScrollView>
         );
 
       case "location":
@@ -407,26 +385,26 @@ export default function OnboardingScreen() {
             </Text>
             <Animated.View entering={FadeIn.delay(300).duration(200)} style={styles.stepContent}>
               {/* Simulated iOS 26 permission sheet (display only) */}
-              <View style={styles.permSheet}>
+              <View style={[styles.permSheet, { backgroundColor: sc.permSheetBg, boxShadow: sc.permShadow } as any]}>
                 {/* Placeholder title bars */}
                 <View style={styles.permPlaceholders}>
-                  <View style={[styles.permBar, { width: "80%", height: 14 }]} />
-                  <View style={[styles.permBar, { width: "55%", height: 14 }]} />
+                  <View style={[styles.permBar, { width: "80%", height: 14, backgroundColor: sc.permBarBg }]} />
+                  <View style={[styles.permBar, { width: "55%", height: 14, backgroundColor: sc.permBarBg }]} />
                 </View>
                 {/* Placeholder description bars */}
                 <View style={styles.permPlaceholders}>
-                  <View style={[styles.permBar, { width: "90%", height: 10 }]} />
-                  <View style={[styles.permBar, { width: "65%", height: 10 }]} />
+                  <View style={[styles.permBar, { width: "90%", height: 10, backgroundColor: sc.permBarBg }]} />
+                  <View style={[styles.permBar, { width: "65%", height: 10, backgroundColor: sc.permBarBg }]} />
                 </View>
 
                 <View style={styles.permBtns}>
-                  <View style={styles.permBtn}>
+                  <View style={[styles.permBtn, { backgroundColor: sc.permBtnBg }]}>
                     <Text style={styles.permBtnLabel}>Allow Once</Text>
                   </View>
-                  <View style={[styles.permBtn, styles.permBtnHighlight]}>
+                  <View style={[styles.permBtn, { backgroundColor: sc.permBtnHighlightBg }]}>
                     <Text style={[styles.permBtnLabel, { color: platformColor("systemBlue") }]}>Allow While Using App</Text>
                   </View>
-                  <View style={styles.permBtn}>
+                  <View style={[styles.permBtn, { backgroundColor: sc.permBtnBg }]}>
                     <Text style={[styles.permBtnLabel, { fontWeight: "400" }]}>Don't Allow</Text>
                   </View>
                 </View>
@@ -437,43 +415,46 @@ export default function OnboardingScreen() {
 
       case "role":
         return (
-          <>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <BlurTitle text="What you do" />
             <Animated.View entering={FadeIn.delay(320).duration(200)} style={styles.stepContent}>
               <View style={styles.inputCard}>
                 <Text style={styles.fieldLabel}>Title</Text>
                 <TextInput autoCapitalize="words" autoCorrect={false} autoFocus
                   onChangeText={(v) => setField("jobTitle", v)} placeholder="Founder, Designer..."
-                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.jobTitle}
+                  placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.jobTitle}
+                  returnKeyType="next" onSubmitEditing={() => companyRef.current?.focus()}
                 />
               </View>
               <View style={styles.inputCard}>
                 <Text style={styles.fieldLabel}>Company</Text>
-                <TextInput autoCapitalize="words" autoCorrect={false}
+                <TextInput ref={companyRef} autoCapitalize="words" autoCorrect={false}
                   onChangeText={(v) => setField("company", v)} placeholder="Optional"
-                  placeholderTextColor="rgba(60,60,67,0.4)" style={styles.textInput} value={draft.company}
+                  placeholderTextColor={platformColor("placeholderText")} style={styles.textInput} value={draft.company}
+                  returnKeyType="next" onSubmitEditing={() => { if (draft.jobTitle.trim()) goNext(); }}
                 />
               </View>
             </Animated.View>
-          </>
+          </ScrollView>
         );
 
       case "signature":
         return (
-          <>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <BlurTitle text="One-liner" />
             <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.stepContent}>
               <View style={styles.inputCard}>
-                <TextInput autoCapitalize="sentences" autoFocus multiline
+                <TextInput autoCapitalize="sentences" autoFocus multiline blurOnSubmit
                   onChangeText={(v) => setField("headline", v)}
                   placeholder="What should people remember you for?"
-                  placeholderTextColor="rgba(60,60,67,0.4)"
+                  placeholderTextColor={platformColor("placeholderText")}
                   style={[styles.textInput, { minHeight: 72, textAlignVertical: "top" as any }]}
                   value={draft.headline}
+                  returnKeyType="next" onSubmitEditing={() => { if (draft.headline.trim()) goNext(); }}
                 />
               </View>
             </Animated.View>
-          </>
+          </ScrollView>
         );
 
       case "vibe": {
@@ -507,7 +488,7 @@ export default function OnboardingScreen() {
               <Text style={styles.stepEyebrow}>5 / {PERSONALITY_QUESTIONS.length + 2}</Text>
               <BlurTitle text="Pick 2 traits" />
               <Animated.View entering={FadeIn.delay(320).duration(200)} style={styles.chipsWrap}>
-                {TRAITS.map((t) => <Chip key={t} label={t} selected={draft.traits.includes(t)} onPress={() => toggleSelection("traits", t, 2)} />)}
+                {TRAITS.map((t) => <Chip key={t} label={t} chipBg={sc.chipBg} selected={draft.traits.includes(t)} onPress={() => toggleSelection("traits", t, 2)} />)}
               </Animated.View>
             </>
           );
@@ -517,7 +498,7 @@ export default function OnboardingScreen() {
             <Text style={styles.stepEyebrow}>6 / {PERSONALITY_QUESTIONS.length + 2}</Text>
             <BlurTitle text="Interests" />
             <Animated.View entering={FadeIn.delay(200).duration(200)} style={styles.chipsWrap}>
-              {INTERESTS.map((t) => <Chip key={t} label={t} selected={draft.interests.includes(t)} onPress={() => toggleSelection("interests", t, 99)} />)}
+              {INTERESTS.map((t) => <Chip key={t} label={t} chipBg={sc.chipBg} selected={draft.interests.includes(t)} onPress={() => toggleSelection("interests", t, 99)} />)}
             </Animated.View>
           </>
         );
@@ -526,7 +507,7 @@ export default function OnboardingScreen() {
       case "reach": {
         const active = CONTACT_METHODS.find((m) => m.type === draft.primaryContactAction);
         return (
-          <>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <BlurTitle text="How to find you" />
             <View style={styles.choicesCol}>
               {CONTACT_METHODS.map((m) => (
@@ -541,26 +522,28 @@ export default function OnboardingScreen() {
                 <TextInput autoCapitalize="none" autoCorrect={false} autoFocus
                   keyboardType={active.keyboardType ?? "default"}
                   onChangeText={(v) => setField("contactValue", v)}
-                  placeholder={active.placeholder} placeholderTextColor="rgba(60,60,67,0.4)"
+                  placeholder={active.placeholder} placeholderTextColor={platformColor("placeholderText")}
                   style={styles.textInput} value={draft.contactValue}
+                  returnKeyType="next" onSubmitEditing={() => { if (draft.contactValue.trim()) goNext(); }}
                 />
               </View>
             )}
-          </>
+          </ScrollView>
         );
       }
 
       case "review":
         return (
-          <>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <BlurTitle text="Ready" />
             <View style={styles.inputCard}>
               <Text style={styles.fieldLabel}>LinkedIn (optional)</Text>
               <View style={styles.inlineRow}>
                 <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="url"
                   onChangeText={setLinkedInInput} placeholder="linkedin.com/in/you"
-                  placeholderTextColor="rgba(60,60,67,0.4)" style={[styles.textInput, { flex: 1 }]}
+                  placeholderTextColor={platformColor("placeholderText")} style={[styles.textInput, { flex: 1 }]}
                   value={linkedInInput}
+                  returnKeyType="go" onSubmitEditing={() => { if (linkedInInput.trim()) handleImportLinkedIn(); }}
                 />
                 <Pressable disabled={isImporting} onPress={handleImportLinkedIn}>
                   <View style={[styles.inlineAction, isImporting && { opacity: 0.6 }]}>
@@ -572,7 +555,7 @@ export default function OnboardingScreen() {
                 <Text style={styles.importSuccess}>Imported successfully.</Text>
               )}
             </View>
-          </>
+          </ScrollView>
         );
 
       default: return null;
@@ -585,10 +568,7 @@ export default function OnboardingScreen() {
 
   return (
     <GestureDetector gesture={swipe}>
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* ── Brand banner with progressive blur ────────────── */}
@@ -607,7 +587,7 @@ export default function OnboardingScreen() {
         <BlurView intensity={100} tint="default" style={[styles.bannerBlur, { top: "78%", opacity: 0.90 }]} />
         <BlurView intensity={100} tint="default" style={[styles.bannerBlur, { top: "86%", opacity: 1.0  }]} />
         <LinearGradient
-          colors={["transparent", "rgba(242,242,247,0.3)", "rgba(242,242,247,0.8)", "#F2F2F7"] as const}
+          colors={["transparent", sc.bannerFadeStart, sc.bannerFadeMid, sc.bannerFadeEnd]}
           locations={[0, 0.4, 0.7, 1]}
           style={styles.bannerFade}
         />
@@ -665,7 +645,7 @@ export default function OnboardingScreen() {
           )}
         </View>
       </Animated.View>
-    </KeyboardAvoidingView>
+    </View>
     </GestureDetector>
   );
 }
@@ -732,20 +712,16 @@ const styles = StyleSheet.create({
   previewLocation: { color: platformColor("secondaryLabel"), fontSize: 14 },
 
   permSheet: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 24, borderCurve: "continuous" as any,
     padding: 20, gap: 16,
-    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
   },
   permPlaceholders: { gap: 6 },
-  permBar: { borderRadius: 99, backgroundColor: "rgba(60,60,67,0.12)" },
+  permBar: { borderRadius: 99 },
   permBtns: { gap: 8, paddingTop: 4 },
   permBtn: {
     alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(120,120,128,0.16)",
     borderRadius: 999, borderCurve: "continuous" as any, minHeight: 46,
   },
-  permBtnHighlight: { backgroundColor: "rgba(0,122,255,0.15)" },
   permBtnLabel: { color: platformColor("label"), fontSize: 17, fontWeight: "600" },
   permExplain: {
     color: platformColor("secondaryLabel"), fontSize: 14, lineHeight: 20,
@@ -762,7 +738,7 @@ const styles = StyleSheet.create({
 
   stepZone: { paddingHorizontal: 24, paddingBottom: 40, gap: 16, flex: 618 },
   stepZoneExpanded: { flex: 1 },
-  stepContent: { gap: 16 },
+  stepContent: { gap: 16, flex: 1 },
   blurTitleRow: { flexDirection: "row", flexWrap: "wrap" },
 
   stepEyebrow: {
