@@ -15,6 +15,7 @@ import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
+import { useSemanticColors } from "@/src/lib/semantic-colors";
 
 const settingsColors = {
   page: platformColor("systemGroupedBackground"),
@@ -27,7 +28,8 @@ export const settingsPageStyle = {
 } satisfies ViewStyle;
 
 export function SettingsChevron() {
-  return <Icon web="chevron-right" size={16} color="rgba(60,60,67,0.3)" />;
+  const sc = useSemanticColors();
+  return <Icon web="chevron-right" size={16} color={sc.chevronTint} />;
 }
 
 export function SettingsIconTile({
@@ -222,14 +224,19 @@ export function SettingsSegmented({
   onChange: (index: number) => void;
   renderLabel?: (value: string, index: number, selected: boolean) => React.ReactNode;
 }) {
+  const sc = useSemanticColors();
   return (
-    <View style={styles.segmentedContainer}>
+    <View style={[styles.segmentedContainer, { backgroundColor: sc.segmentedTrackBg }]}>
       {values.map((value, index) => {
         const selected = selectedIndex === index;
         return (
           <Pressable
             key={value}
-            style={[styles.segmentedItem, selected && styles.segmentedItemSelected]}
+            style={[
+              styles.segmentedItem,
+              selected && styles.segmentedItemSelected,
+              selected && { backgroundColor: sc.segmentedSelectedBg, boxShadow: `0 1px 2px ${sc.segmentedSelectedShadow}` },
+            ]}
             onPress={() => {
               haptic.selection();
               onChange(index);
@@ -259,6 +266,7 @@ export function SettingsColorGrid({
   selectedColor: string;
   onSelect: (color: string) => void;
 }) {
+  const sc = useSemanticColors();
   return (
     <View style={styles.colorGrid}>
       {colors.map((color) => (
@@ -271,7 +279,7 @@ export function SettingsColorGrid({
           style={[
             styles.colorChip,
             { backgroundColor: color },
-            selectedColor === color && styles.colorChipSelected,
+            selectedColor === color && { borderColor: sc.colorChipSelectedBorder },
           ]}
         />
       ))}
@@ -341,7 +349,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 3,
     borderRadius: 13,
-    backgroundColor: "rgba(120,120,128,0.12)",
   },
   segmentedItem: {
     flex: 1,
@@ -351,10 +358,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  segmentedItemSelected: {
-    backgroundColor: "#FFFFFF",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-  },
+  segmentedItemSelected: {},
   segmentedLabel: {
     fontSize: 13,
     lineHeight: 18,
@@ -374,9 +378,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 2,
     borderColor: "transparent",
-  },
-  colorChipSelected: {
-    borderColor: "#000000",
   },
   iconTile: {
     width: 30,
