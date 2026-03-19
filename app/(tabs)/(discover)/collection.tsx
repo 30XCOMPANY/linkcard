@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView,
+ * [INPUT]: react-native View/Text/Pressable/PlatformColor/StyleSheet/ScrollView, @/src/lib/semantic-colors,
  *          @/src/stores/contactsStore, @/src/components/shared/avatar Avatar,
  *          @/src/components/card/profile-card ProfileCard,
  *          @/src/design-system/settings primitives,

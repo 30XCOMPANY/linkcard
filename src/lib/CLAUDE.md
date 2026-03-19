@@ -19,6 +19,7 @@ Core utility library — platform primitives and pure constants consumed across 
 - `contact-actions.ts`: Contact action executor — opens email/linkedin/wechat/url based on action type
 - `name-fonts.ts`: Name font registry — family, label, key for card name typography
 - `profile-tags.ts`: Tag derivation and resolution from LinkedInProfile + CardTagState
-- `platform-color.ts`: Platform-adaptive color abstraction (PlatformColor on iOS, fallback on web/Android)
+- `platform-color.ts`: Platform-adaptive color abstraction (PlatformColor on iOS, light/dark web fallback)
+- `semantic-colors.ts`: Custom semantic color definitions + `useSemanticColors()` hook for reactive dark/light adaptation
 
 [PROTOCOL]: Update this header on change, then check CLAUDE.md

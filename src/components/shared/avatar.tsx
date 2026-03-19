@@ -1,5 +1,6 @@
 /**
- * [INPUT]: react-native View/Image/ViewStyle/StyleSheet, AdaptiveGlass, assets/avatars/*.png
+ * [INPUT]: react-native View/Image/ViewStyle/StyleSheet, AdaptiveGlass, assets/avatars/*.png,
+ *          @/src/lib/semantic-colors useSemanticColors
  * [OUTPUT]: Avatar component — photo or stable illustration fallback, optional Liquid Glass shell
  * [POS]: Shared avatar — reused across cards/settings, can wrap hero avatars in a soft transparent glass ring
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md

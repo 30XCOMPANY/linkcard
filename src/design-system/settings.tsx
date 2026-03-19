@@ -1,6 +1,7 @@
 /**
  * [INPUT]: react-native Platform/PlatformColor/StyleSheet/ViewStyle, @/src/tw View/Text/Pressable,
- *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/components/shared/avatar Avatar
+ *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/components/shared/avatar Avatar,
+ *          @/src/lib/semantic-colors useSemanticColors
  * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid,
  *           SettingsChevron, SettingsIconTile, SettingsAccountCard, settingsPageStyle
  * [POS]: design-system entry for iOS grouped settings surfaces, rows, account hero, inline controls, and page background
