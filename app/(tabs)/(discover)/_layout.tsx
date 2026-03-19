@@ -11,18 +11,21 @@ import { useResolvedTheme } from "@/src/lib/theme";
 const CLASSIC_FONT = "GoudyBookletter1911_400Regular";
 
 export default function DiscoverLayout() {
-  const theme = useResolvedTheme();
-  const labelColor = theme === "dark" ? "#FFFFFF" : "#000000";
+  const resolvedTheme = useResolvedTheme();
+  const isDark = resolvedTheme === "dark";
+  const titleColor = isDark ? "#F8FAFC" : "#0F172A";
+  const pageBg = isDark ? "#000000" : "#F7F7F5";
 
   return (
     <Stack
       screenOptions={{
+        contentStyle: { backgroundColor: pageBg },
         headerTransparent: true,
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: labelColor },
-        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: labelColor },
+        headerTitleStyle: { color: titleColor },
+        headerLargeTitleStyle: { fontFamily: CLASSIC_FONT, color: titleColor },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",

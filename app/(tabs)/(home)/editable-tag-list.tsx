@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react, react-native Alert/Pressable/Text/TextInput/View/PlatformColor/StyleSheet,
+ * [INPUT]: react, react-native Alert/Pressable/Text/TextInput/View/StyleSheet,
  *          react-native-reanimated, expo-symbols SymbolView, @/src/lib/haptics, @/src/types CardTag
  * [OUTPUT]: EditableTagList — animated tag row with rename/delete/add interactions
  * [POS]: (home) 模块 tag 编辑器，隔离 chip 交互与动画
@@ -23,29 +23,35 @@ import Animated, {
 import { SymbolView } from "expo-symbols";
 
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
-import { platformColor } from "@/src/lib/platform-color";
 import { haptic } from "@/src/lib/haptics";
 import type { CardTag } from "@/src/types";
 
+interface EditableTagPalette {
+  tagBg: string;
+  tagBorder: string;
+  tagLabel: string;
+  tagMuted: string;
+  actionBg: string;
+  actionLabel: string;
+}
+
 interface EditableTagItemProps {
+  palette: EditableTagPalette;
   tag: CardTag;
   editing: boolean;
-  isDark?: boolean;
   onDelete: (id: string) => void;
   onEditingChange: (editing: boolean) => void;
   onRename: (id: string, label: string) => void;
 }
 
 function EditableTagItem({
+  palette,
   tag,
   editing,
-  isDark,
   onDelete,
   onEditingChange,
   onRename,
 }: EditableTagItemProps) {
-  const darkTag = isDark ? { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" } : undefined;
-  const darkLabel = isDark ? { color: "#F9FAFB" } : undefined;
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(tag.label);
 
@@ -75,7 +81,7 @@ function EditableTagItem({
           setRenaming(true);
         }}
       >
-        <View style={[styles.tag, darkTag]}>
+        <View style={[styles.tag, { backgroundColor: palette.tagBg, borderColor: palette.tagBorder }]}>
           <Text style={styles.tagEmoji}>{tag.emoji}</Text>
           {renaming ? (
             <TextInput
@@ -90,11 +96,11 @@ function EditableTagItem({
               }}
               onChangeText={setDraft}
               returnKeyType="done"
-              style={[styles.tagLabel, styles.tagInput, darkLabel]}
+              style={[styles.tagLabel, styles.tagInput, { color: palette.tagLabel }]}
               value={draft}
             />
           ) : (
-            <Text style={[styles.tagLabel, darkLabel]}>{tag.label}</Text>
+            <Text style={[styles.tagLabel, { color: palette.tagLabel }]}>{tag.label}</Text>
           )}
           {editing && !renaming ? (
             <Animated.View
@@ -106,7 +112,7 @@ function EditableTagItem({
                   name="xmark.circle.fill"
                   resizeMode="scaleAspectFit"
                   style={styles.tagDelete}
-                  tintColor={platformColor("systemGray3")}
+                  tintColor={palette.tagMuted}
                 />
               </Pressable>
             </Animated.View>
@@ -118,8 +124,8 @@ function EditableTagItem({
 }
 
 interface EditableTagListProps {
+  palette: EditableTagPalette;
   editing: boolean;
-  isDark?: boolean;
   tags: CardTag[];
   onAdd: (input: string) => void;
   onDelete: (id: string) => void;
@@ -128,8 +134,8 @@ interface EditableTagListProps {
 }
 
 export function EditableTagList({
+  palette,
   editing,
-  isDark,
   tags,
   onAdd,
   onDelete,
@@ -142,8 +148,8 @@ export function EditableTagList({
         {tags.map((tag) => (
           <EditableTagItem
             key={tag.id}
+            palette={palette}
             editing={editing}
-            isDark={isDark}
             onDelete={onDelete}
             onEditingChange={onEditingChange}
             onRename={onRename}
@@ -167,12 +173,12 @@ export function EditableTagList({
               );
             }}
           >
-            <View style={[styles.addTagPill, isDark && { backgroundColor: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.12)" }]}>
+            <View style={[styles.addTagPill, { backgroundColor: palette.tagBg, borderColor: palette.tagBorder }]}>
               <SymbolView
                 name="plus"
                 resizeMode="scaleAspectFit"
                 style={styles.addTagIcon}
-                tintColor={isDark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel"))}
+                tintColor={palette.tagMuted}
               />
             </View>
           </Pressable>
@@ -199,12 +205,12 @@ export function EditableTagList({
             <AdaptiveGlass
               style={styles.doneButton}
               glassEffectStyle="regular"
-              tintColor="#007AFFCC"
+              tintColor={palette.actionBg}
               intensity={60}
               blurTint="default"
-              fallbackColor="#007AFF"
+              fallbackColor={palette.actionBg}
             >
-              <Text style={styles.doneButtonText}>Done</Text>
+              <Text style={[styles.doneButtonText, { color: palette.actionLabel }]}>Done</Text>
             </AdaptiveGlass>
           </Pressable>
         </Animated.View>
@@ -221,8 +227,6 @@ const styles = StyleSheet.create({
   },
   tag: {
     alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -235,7 +239,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   tagLabel: {
-    color: platformColor("label"),
     fontSize: 14,
     fontWeight: "500",
   },
@@ -251,8 +254,6 @@ const styles = StyleSheet.create({
   },
   addTagPill: {
     alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -277,7 +278,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   doneButtonText: {
-    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700" as const,
     letterSpacing: 0.2,

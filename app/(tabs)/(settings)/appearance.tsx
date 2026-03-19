@@ -23,6 +23,7 @@ import {
   SettingsSectionHeader,
   SettingsSeparator,
   SettingsSegmented,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 const THEME_OPTIONS = ["Light", "Dark", "System"] as const;
@@ -50,6 +51,7 @@ export default function AppearanceScreen() {
 
   return (
     <ScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >

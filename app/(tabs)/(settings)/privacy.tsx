@@ -30,6 +30,7 @@ import {
   SettingsSeparator,
   SettingsChevron,
   SettingsIconTile,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 const CONTACT_METHODS: { type: ContactActionType; label: string; placeholder: string }[] = [
@@ -132,6 +133,7 @@ export default function PrivacyScreen() {
 
   return (
     <ScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >

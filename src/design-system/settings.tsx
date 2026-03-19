@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react-native Platform/PlatformColor/StyleSheet/ViewStyle, @/src/tw View/Text/Pressable,
+ * [INPUT]: react-native StyleSheet/ViewStyle, @/src/tw View/Text/Pressable, @/src/lib/platform-color,
  *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/components/shared/avatar Avatar,
  *          @/src/lib/semantic-colors useSemanticColors
  * [OUTPUT]: SettingsSectionHeader, SettingsGroup, SettingsRow, SettingsSegmented, SettingsColorGrid,
@@ -55,7 +55,7 @@ export function SettingsIconTile({
 
 export function SettingsSectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-sf-text-2" style={styles.sectionHeader}>
+    <Text style={[styles.sectionHeader, { color: platformColor("secondaryLabel") }]}>
       {title}
     </Text>
   );
@@ -83,7 +83,7 @@ export function SettingsSeparator({ inset = 16 }: { inset?: number }) {
 
 export function SettingsGroupFooter({ text }: { text: string }) {
   return (
-    <Text className="text-sf-text-2" style={styles.groupFooter}>
+    <Text style={[styles.groupFooter, { color: platformColor("secondaryLabel") }]}>
       {text}
     </Text>
   );
@@ -111,13 +111,16 @@ export function SettingsRow({
       {leading ? <View style={styles.leading}>{leading}</View> : null}
       <View style={styles.textBlock}>
         <Text
-          className={destructive ? "text-sf-red" : "text-sf-text"}
-          style={[styles.rowTitle, titleStyle]}
+          style={[
+            styles.rowTitle,
+            { color: destructive ? platformColor("systemRed") : platformColor("label") },
+            titleStyle,
+          ]}
         >
           {title}
         </Text>
         {subtitle ? (
-          <Text className="text-sf-text-2" style={styles.rowSubtitle}>
+          <Text style={[styles.rowSubtitle, { color: platformColor("secondaryLabel") }]}>
             {subtitle}
           </Text>
         ) : null}
@@ -174,14 +177,14 @@ export function SettingsAccountCard({
         <View style={styles.accountPrimary}>
           <Avatar source={avatarSource} name={name} size={60} accentColor={accentColor} />
           <View style={styles.accountText}>
-            <Text className="text-sf-text" style={styles.accountName}>
+            <Text style={[styles.accountName, { color: platformColor("label") }]}>
               {name}
             </Text>
-            <Text className="text-sf-text-2" style={styles.accountSubtitle}>
+            <Text style={[styles.accountSubtitle, { color: platformColor("secondaryLabel") }]}>
               {subtitle}
             </Text>
             {detail ? (
-              <Text className="text-sf-text-2" style={styles.accountDetail}>
+              <Text style={[styles.accountDetail, { color: platformColor("secondaryLabel") }]}>
                 {detail}
               </Text>
             ) : null}
@@ -204,7 +207,7 @@ export function SettingsAccountCard({
           <View style={styles.accountFooterLeading}>
             {footerLeading}
           </View>
-          <Text className="text-sf-text" style={styles.accountFooterLabel}>
+          <Text style={[styles.accountFooterLabel, { color: platformColor("label") }]}>
             {footerLabel}
           </Text>
           {onFooterPress ? <SettingsChevron /> : null}
@@ -245,8 +248,11 @@ export function SettingsSegmented({
           >
             {renderLabel ? renderLabel(value, index, selected) : (
               <Text
-                className={selected ? "text-sf-text" : "text-sf-text-2"}
-                style={[styles.segmentedLabel, selected && styles.segmentedLabelSelected]}
+                style={[
+                  styles.segmentedLabel,
+                  { color: selected ? platformColor("label") : platformColor("secondaryLabel") },
+                  selected && styles.segmentedLabelSelected,
+                ]}
               >
                 {value}
               </Text>

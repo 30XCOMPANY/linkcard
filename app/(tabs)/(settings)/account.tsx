@@ -28,6 +28,7 @@ import {
   SettingsSectionHeader,
   SettingsSeparator,
   SettingsIconTile,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 export default function AccountScreen() {
@@ -99,6 +100,7 @@ export default function AccountScreen() {
 
   return (
     <ScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >

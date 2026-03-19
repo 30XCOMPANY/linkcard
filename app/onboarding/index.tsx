@@ -3,7 +3,7 @@
  *          react-native-reanimated FadeIn, expo-image-picker, expo-image Image,
  *          @/src/stores/cardStore, @/src/services/linkedin, @/src/components/shared/avatar,
  *          @/src/components/shared/adaptive-glass, @/src/lib/card-presets, @/src/lib/haptics,
- *          @/src/lib/platform-color, @/src/lib/semantic-colors, @/src/lib/name-fonts, @/src/types
+ *          @/src/lib/platform-color, @/src/lib/semantic-colors, @/src/lib/theme, @/src/lib/name-fonts, @/src/types
  * [OUTPUT]: OnboardingScreen — immersive single-screen identity builder with progressive card preview and focused-field reveal
  * [POS]: Onboarding entry — welcome splash → 6 steps → card creation, owns half-sheet keyboard avoidance and step-local scrolling
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -22,7 +22,6 @@ import {
   Text,
   TextInput,
   View,
-  useColorScheme,
 } from "react-native";
 import Animated, {
   FadeIn, FadeInUp, FadeOut,
@@ -45,6 +44,7 @@ import { fetchLinkedInProfile } from "@/src/services/linkedin";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
 import { useSemanticColors } from "@/src/lib/semantic-colors";
+import { useResolvedTheme } from "@/src/lib/theme";
 import type { ContactActionType, LinkedInProfile, OnboardingDraft, OnboardingPersonalityAxes } from "@/src/types";
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -106,7 +106,7 @@ function ChoiceCard({ label, selected, onPress }: { label: string; selected: boo
 function Chip({ label, selected, chipBg, onPress }: { label: string; selected: boolean; chipBg: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
-      <View style={[styles.chip, { backgroundColor: selected ? "#007AFF" : chipBg }]}>
+      <View style={[styles.chip, { backgroundColor: selected ? platformColor("systemBlue") : chipBg }]}>
         <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{label}</Text>
       </View>
     </Pressable>
@@ -192,7 +192,8 @@ function CardPreview({ draft }: { draft: OnboardingDraft }) {
 export default function OnboardingScreen() {
   const setCard = useCardStore((s) => s.setCard);
   const sc = useSemanticColors();
-  const dark = useColorScheme() === "dark";
+  const resolvedTheme = useResolvedTheme();
+  const dark = resolvedTheme === "dark";
 
   const [step, setStep] = useState<StepKey>("welcome");
   const [vibeStage, setVibeStage] = useState(0);
@@ -205,6 +206,8 @@ export default function OnboardingScreen() {
   const jobTitleRef = useRef<TextInput>(null);
   const companyRef = useRef<TextInput>(null);
   const roleScrollRef = useRef<ScrollView>(null);
+  const reachInputRef = useRef<TextInput>(null);
+  const reachScrollRef = useRef<ScrollView>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const canContinue = useMemo(() => {
@@ -250,6 +253,31 @@ export default function OnboardingScreen() {
     const runFallback = () => {
       if (typeof fallbackY !== "number") return;
       roleScrollRef.current?.scrollTo({ y: fallbackY, animated: true });
+    };
+
+    if (!scrollResponder || !inputHandle) {
+      runFallback();
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+          inputHandle,
+          FOCUS_SCROLL_MARGIN,
+          true
+        );
+        runFallback();
+      }, 80);
+    });
+  }, []);
+
+  const scrollReachInputIntoView = useCallback((input: TextInput | null, fallbackY?: number) => {
+    const scrollResponder = reachScrollRef.current?.getScrollResponder?.();
+    const inputHandle = input ? findNodeHandle(input) : null;
+    const runFallback = () => {
+      if (typeof fallbackY !== "number") return;
+      reachScrollRef.current?.scrollTo({ y: fallbackY, animated: true });
     };
 
     if (!scrollResponder || !inputHandle) {
@@ -371,17 +399,17 @@ export default function OnboardingScreen() {
 
   if (step === "welcome") {
     return (
-      <View style={styles.welcomeContainer}>
+      <View style={[styles.welcomeContainer, { backgroundColor: sc.welcomeBg }]}>
         <Stack.Screen options={{ headerShown: false }} />
 
-        {/* Hero image — fills top, fades to black */}
+        {/* Hero image — fills top, fades into the active theme */}
         <Image
-          source={require("@/assets/onboarding-hero.jpg")}
+          source={dark ? require("@/assets/onboarding-hero.jpg") : require("@/assets/onboarding-banner.png")}
           style={styles.welcomeHero}
           contentFit="cover"
         />
         <View style={[styles.welcomeHeroFade, {
-          experimental_backgroundImage: "linear-gradient(to bottom, transparent 0%, #0A0A0A 100%)",
+          experimental_backgroundImage: `linear-gradient(to bottom, transparent 0%, ${sc.welcomeFadeEnd} 100%)`,
         } as any]} />
 
         {/* Content overlay */}
@@ -389,12 +417,17 @@ export default function OnboardingScreen() {
           <View style={{ flex: 1 }} />
 
           <Animated.View entering={FadeIn.duration(600)} style={styles.welcomeLogoWrap}>
-            <Image source={require("@/assets/lc-logo.svg")} style={styles.welcomeLogo} contentFit="contain" tintColor="#FFFFFF" />
+            <Image
+              source={require("@/assets/lc-logo.svg")}
+              style={styles.welcomeLogo}
+              contentFit="contain"
+              tintColor={sc.welcomeLogoTint}
+            />
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.welcomeTextBlock}>
-            <Text style={styles.welcomeTitle}>LinkCard</Text>
-            <Text style={styles.welcomeSubtitle}>Your identity, amplified.</Text>
+            <Text style={[styles.welcomeTitle, { color: sc.welcomeTitle }]}>LinkCard</Text>
+            <Text style={[styles.welcomeSubtitle, { color: sc.welcomeSubtitle }]}>Your identity, amplified.</Text>
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.welcomeCta}>
@@ -402,8 +435,17 @@ export default function OnboardingScreen() {
               onPress={() => { haptic.medium(); setStep("claim"); }}
               style={({ pressed }) => [pressed && { opacity: 0.88 }]}
             >
-              <View style={styles.welcomeButton}>
-                <Text style={styles.welcomeButtonLabel}>Get Started</Text>
+              <View
+                style={[
+                  styles.welcomeButton,
+                  {
+                    backgroundColor: sc.welcomeButtonBg,
+                    borderColor: sc.welcomeButtonBorder,
+                    boxShadow: sc.welcomeButtonShadow,
+                  },
+                ]}
+              >
+                <Text style={[styles.welcomeButtonLabel, { color: sc.welcomeButtonLabel }]}>Get Started</Text>
               </View>
             </Pressable>
           </Animated.View>
@@ -534,13 +576,25 @@ export default function OnboardingScreen() {
                 <Pressable onPress={() => handleAxisSelect(q.key, q.left.value)} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
                   <View style={styles.vibeCard}>
                     <Text style={styles.vibeCardLabel}>{q.left.label}</Text>
-                    {sel === q.left.value && <Image source={"sf:checkmark" as any} style={styles.vibeCheck} tintColor="#007AFF" />}
+                    {sel === q.left.value && (
+                      <Image
+                        source={"sf:checkmark" as any}
+                        style={styles.vibeCheck}
+                        tintColor={platformColor("systemBlue")}
+                      />
+                    )}
                   </View>
                 </Pressable>
                 <Pressable onPress={() => handleAxisSelect(q.key, q.right.value)} style={({ pressed }) => [pressed && { opacity: 0.88 }]}>
                   <View style={styles.vibeCard}>
                     <Text style={styles.vibeCardLabel}>{q.right.label}</Text>
-                    {sel === q.right.value && <Image source={"sf:checkmark" as any} style={styles.vibeCheck} tintColor="#007AFF" />}
+                    {sel === q.right.value && (
+                      <Image
+                        source={"sf:checkmark" as any}
+                        style={styles.vibeCheck}
+                        tintColor={platformColor("systemBlue")}
+                      />
+                    )}
                   </View>
                 </Pressable>
               </Animated.View>
@@ -572,7 +626,14 @@ export default function OnboardingScreen() {
       case "reach": {
         const active = CONTACT_METHODS.find((m) => m.type === draft.primaryContactAction);
         return (
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            ref={reachScrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 16, paddingBottom: roleKeyboardPadding }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+          >
             <BlurTitle text="How to find you" />
             <View style={styles.choicesCol}>
               {CONTACT_METHODS.map((m) => (
@@ -584,11 +645,12 @@ export default function OnboardingScreen() {
             </View>
             {active && (
               <View style={styles.inputCard}>
-                <TextInput autoCapitalize="none" autoCorrect={false} autoFocus
+                <TextInput ref={reachInputRef} autoCapitalize="none" autoCorrect={false} autoFocus
                   keyboardType={active.keyboardType ?? "default"}
                   onChangeText={(v) => setField("contactValue", v)}
                   placeholder={active.placeholder} placeholderTextColor={platformColor("placeholderText")}
                   style={styles.textInput} value={draft.contactValue}
+                  onFocus={() => scrollReachInputIntoView(reachInputRef.current, ROLE_SCROLL_FALLBACK_Y)}
                   returnKeyType="next" onSubmitEditing={() => { if (draft.contactValue.trim()) goNext(); }}
                 />
               </View>
@@ -723,7 +785,7 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   /* Welcome */
-  welcomeContainer: { flex: 1, backgroundColor: "#0A0A0A" },
+  welcomeContainer: { flex: 1 },
   welcomeHero: {
     position: "absolute", top: 0, left: 0, right: 0, height: "70%",
   },
@@ -738,18 +800,18 @@ const styles = StyleSheet.create({
   welcomeLogo: { width: 80, height: 72 },
   welcomeTextBlock: { alignItems: "center", marginBottom: 40 },
   welcomeTitle: {
-    color: "#FFFFFF",
     fontFamily: "GoudyBookletter1911_400Regular",
     fontSize: 42, textAlign: "center",
   },
-  welcomeSubtitle: { color: "rgba(255,255,255,0.6)", fontSize: 17, textAlign: "center", marginTop: 8 },
+  welcomeSubtitle: { fontSize: 17, textAlign: "center", marginTop: 8 },
   welcomeCta: { width: "100%" },
   welcomeButton: {
-    alignItems: "center", backgroundColor: "#FFFFFF",
+    alignItems: "center",
     borderCurve: "continuous" as any, borderRadius: 16,
-    justifyContent: "center", minHeight: 50,
+    justifyContent: "center", minHeight: 52,
+    borderWidth: 1,
   },
-  welcomeButtonLabel: { color: "#0A0A0A", fontSize: 17, fontWeight: "600" },
+  welcomeButtonLabel: { fontSize: 17, fontWeight: "600" },
 
   /* Builder layout */
   container: { flex: 1, backgroundColor: platformColor("systemGroupedBackground") },
@@ -830,7 +892,7 @@ const styles = StyleSheet.create({
     color: platformColor("label"), fontSize: 17, lineHeight: 22, minHeight: 22, padding: 0,
   },
 
-  vibeChoices: { gap: 12 },
+  vibeChoices: { gap: 12, marginTop: 16 },
   vibeCard: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     backgroundColor: platformColor("secondarySystemGroupedBackground"),
@@ -849,12 +911,15 @@ const styles = StyleSheet.create({
     borderColor: "transparent", borderCurve: "continuous" as any,
     borderRadius: 16, borderWidth: 1.5, padding: 16,
   },
-  choiceCardSelected: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
+  choiceCardSelected: {
+    backgroundColor: platformColor("systemBlue"),
+    borderColor: platformColor("systemBlue"),
+  },
   choiceLabel: { color: platformColor("label"), fontSize: 17, fontWeight: "600" },
   choiceLabelSelected: { color: "#FFFFFF" },
   choiceCheck: { width: 18, height: 18 },
 
-  chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 16 },
   chip: {
     borderCurve: "continuous" as any, borderRadius: 999,
     justifyContent: "center", minHeight: 36, paddingHorizontal: 14,

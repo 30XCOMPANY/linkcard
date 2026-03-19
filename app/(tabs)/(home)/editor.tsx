@@ -2,7 +2,7 @@
  * [INPUT]: expo-router Stack/useRouter, react-native ScrollView/Pressable/Text/Switch/StyleSheet,
  *          @/src/tw View/Text, @/src/stores/cardStore, local profile-card-editor,
  *          @/src/design-system/settings primitives, @/src/lib/icons, @/src/lib/accent-colors,
- *          @/src/lib/card-presets, @/src/lib/profile-tags, @/src/lib/social-platforms,
+ *          @/src/lib/card-presets, @/src/lib/profile-tags, @/src/lib/social-platforms, @/src/lib/theme,
  *          @/src/lib/social-icon, expo-image-picker
  * [OUTPUT]: EditorScreen — edit hub aligned to the shared settings design system
  * [POS]: Push screen from home — root of the structured card-editing subtree
@@ -29,6 +29,7 @@ import type { LinkedInProfile, SocialLink } from "@/src/types";
 import { platformColor } from "@/src/lib/platform-color";
 import { getSocialPlatform } from "@/src/lib/social-platforms";
 import { SocialIcon } from "@/src/lib/social-icon";
+import { useResolvedTheme } from "@/src/lib/theme";
 
 import { ProfileCardEditor } from "./profile-card-editor";
 import {
@@ -40,6 +41,7 @@ import {
   SettingsSectionHeader,
   SettingsSegmented,
   SettingsSeparator,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 type ToggleableField = keyof LinkedInProfile | "qrCode" | "character";
@@ -97,7 +99,7 @@ function LabeledBody({
 }) {
   return (
     <View style={styles.groupBody}>
-      <Text className="text-sf-text-2" style={styles.helperLabel}>{label}</Text>
+      <Text style={[styles.helperLabel, { color: platformColor("secondaryLabel") }]}>{label}</Text>
       {children}
     </View>
   );
@@ -105,6 +107,7 @@ function LabeledBody({
 
 export default function EditorScreen() {
   const router = useRouter();
+  const resolvedTheme = useResolvedTheme();
   const { versionId } = useLocalSearchParams<{ versionId?: string }>();
   const card = useCardStore((s) => s.card);
   const nameFont = useCardStore((s) => s.nameFont) ?? "classic";
@@ -200,12 +203,12 @@ export default function EditorScreen() {
 
   const vis = new Set(version.visibleFields as string[]);
   const tags = resolveProfileTags(card.profile, card.tagState);
+  const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Edit Card",
           headerBackTitle: "Card",
           headerRight: () => (
             <RNPressable
@@ -217,8 +220,15 @@ export default function EditorScreen() {
           ),
         }}
       />
+      <Stack.Screen.Title
+        large={false}
+        style={{ color: titleColor, fontWeight: "700" }}
+      >
+        Edit Card
+      </Stack.Screen.Title>
 
       <RNScrollView
+        style={settingsPageStyle}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 48 }}
       >
@@ -249,7 +259,7 @@ export default function EditorScreen() {
             onPress={() => router.push("/(tabs)/(home)/versions" as any)}
             trailing={
               <View style={styles.rowValue}>
-                <Text className="text-sf-text-2" style={styles.rowValueText}>
+                <Text style={[styles.rowValueText, { color: platformColor("secondaryLabel") }]}>
                   {version.name}
                 </Text>
                 <SettingsChevron />
@@ -285,6 +295,7 @@ export default function EditorScreen() {
                 <RNText
                   style={[
                     styles.segLabel,
+                    { color: selected ? platformColor("label") : platformColor("secondaryLabel") },
                     selected && styles.segLabelSelected,
                     nameFonts[NAME_FONT_KEYS[index]].fontFamily
                       ? { fontFamily: nameFonts[NAME_FONT_KEYS[index]].fontFamily }
@@ -314,6 +325,7 @@ export default function EditorScreen() {
                 <RNText
                   style={[
                     styles.segLabel,
+                    { color: selected ? platformColor("label") : platformColor("secondaryLabel") },
                     selected && styles.segLabelSelected,
                     { fontWeight: (["400", "500", "700"] as const)[index] },
                   ]}
@@ -393,7 +405,7 @@ export default function EditorScreen() {
             onPress={() => router.push("/(tabs)/(home)/publications" as any)}
             trailing={
               <View style={styles.rowValue}>
-                <RNText style={styles.rowValueText}>
+                <RNText style={[styles.rowValueText, { color: platformColor("secondaryLabel") }]}>
                   {card.profile.publications?.length ?? 0}
                 </RNText>
                 <SettingsChevron />
@@ -445,10 +457,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "500",
-    color: platformColor("secondaryLabel"),
   },
   segLabelSelected: {
     fontWeight: "600",
-    color: platformColor("label"),
   },
 });

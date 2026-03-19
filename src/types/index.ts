@@ -2,8 +2,8 @@
  * [INPUT]: none (pure type definitions)
  * [OUTPUT]: SocialPlatform, SocialLink, LinkedInProfile, OnboardingPersonalityAxes, OnboardingDraft,
  *           CardTemplate, CardBackground, FieldStyle, CardVersion, CardTag, CardTagState, BusinessCard,
- *           ContactActionType, ContactAction, SavedContact, DiscoverProfile, ShareSession, WalletPassData,
- *           RootStackParamList, ThemeMode, Theme
+ *           ContactActionType, ContactAction, UserPreferences, SavedContact, DiscoverProfile, ShareSession,
+ *           WalletPassData, RootStackParamList, ThemeMode, Theme
  * [POS]: Core domain types — consumed by stores, services, components, and onboarding state builders
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -140,6 +140,16 @@ export interface ContactAction {
   type: ContactActionType;
   label: string;
   value: string;
+}
+
+export interface UserPreferences {
+  themeMode: ThemeMode;
+  nameFont: string;
+  autoSync: boolean;
+  includeQRCode: boolean;
+  notifProfileUpdates: boolean;
+  notifShareActivity: boolean;
+  notifSyncReminders: boolean;
 }
 
 // A saved contact in the user's card holder

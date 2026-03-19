@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react-native Image/Linking/Pressable/StyleSheet/Text/View/PlatformColor,
+ * [INPUT]: react-native Image/Linking/Pressable/StyleSheet/Text/View,
  *          expo-linear-gradient, expo-blur, @/src/components/shared/avatar Avatar,
  *          @/src/lib/haptics, @/src/lib/name-fonts, @/src/lib/card-presets,
  *          @/src/lib/social-icon SocialIcon,
@@ -24,7 +24,6 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
-import { platformColor } from "@/src/lib/platform-color";
 import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { nameFonts, type NameFontKey } from "@/src/lib/name-fonts";
@@ -73,13 +72,13 @@ export function ProfileCardEditor({
     : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
 
   const colors = {
-    label: dark ? "#F9FAFB" : (platformColor("label")),
-    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel")),
-    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (platformColor("tertiaryLabel")),
-    pillBg: dark ? "rgba(255,255,255,0.10)" : (platformColor("systemBackground")),
-    pillBorder: dark ? "rgba(255,255,255,0.12)" : (platformColor("separator")),
+    label: dark ? "#F9FAFB" : "#000000",
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : "rgba(60,60,67,0.6)",
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : "rgba(60,60,67,0.3)",
+    pillBg: dark ? "rgba(255,255,255,0.10)" : "#FFFFFF",
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : "rgba(60,60,67,0.29)",
     link: version.accentColor,
-    separator: dark ? "rgba(255,255,255,0.10)" : (platformColor("separator")),
+    separator: dark ? "rgba(255,255,255,0.10)" : "rgba(60,60,67,0.29)",
   };
 
   const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
@@ -175,8 +174,15 @@ export function ProfileCardEditor({
       )}
 
       <EditableTagList
+        palette={{
+          tagBg: colors.pillBg,
+          tagBorder: colors.pillBorder,
+          tagLabel: colors.label,
+          tagMuted: colors.secondaryLabel,
+          actionBg: version.accentColor,
+          actionLabel: "#FFFFFF",
+        }}
         editing={tagsEditing}
-        isDark={dark}
         onAdd={onTagAdd}
         onDelete={onTagDelete}
         onEditingChange={onTagsEditingChange}
@@ -270,7 +276,6 @@ export function ProfileCardEditor({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderColor: "rgba(255,255,255,0.40)",
     borderCurve: "continuous" as any,
     borderRadius: 24,
@@ -308,7 +313,6 @@ const styles = StyleSheet.create({
     right: 0,
   },
   profileName: {
-    color: platformColor("label"),
     fontSize: 32,
     letterSpacing: 0.2,
   },
@@ -326,21 +330,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   identityLinkText: {
-    color: platformColor("systemBlue"),
     fontSize: 15,
     fontWeight: "600",
   },
   identitySeparator: {
-    color: platformColor("secondaryLabel"),
     fontSize: 15,
   },
   identityRole: {
-    color: platformColor("label"),
     fontSize: 15,
   },
   statusBox: {
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -348,7 +347,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   statusText: {
-    color: platformColor("label"),
     fontSize: 15,
     lineHeight: 20,
   },
@@ -360,8 +358,6 @@ const styles = StyleSheet.create({
   },
   contactPill: {
     alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -374,7 +370,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   contactPillText: {
-    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   statsRow: {
@@ -382,16 +377,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   statNumber: {
-    color: platformColor("systemBlue"),
     fontSize: 15,
     fontWeight: "700",
   },
   statLabel: {
-    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   statsSeparator: {
-    backgroundColor: platformColor("separator"),
     flex: 1,
     height: StyleSheet.hairlineWidth,
     marginLeft: 8,
@@ -411,8 +403,6 @@ const styles = StyleSheet.create({
   },
   publicationCard: {
     alignItems: "center",
-    backgroundColor: platformColor("systemBackground"),
-    borderColor: platformColor("separator"),
     borderCurve: "continuous" as any,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -427,23 +417,19 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   publicationTitle: {
-    color: platformColor("label"),
     fontSize: 15,
     fontWeight: "600",
   },
   publicationMeta: {
-    color: platformColor("secondaryLabel"),
     fontSize: 13,
   },
   publicationVisit: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderCurve: "continuous" as any,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   publicationVisitText: {
-    color: platformColor("systemBlue"),
     fontSize: 13,
     fontWeight: "600",
   },

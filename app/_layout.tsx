@@ -1,13 +1,13 @@
 /**
- * [INPUT]: @/src/css/global.css, expo-router Stack, cardStore
- * [OUTPUT]: Root layout — gates between onboarding and tabs based on card state
- * [POS]: Root — entry point, imports global CSS, conditional navigation
+ * [INPUT]: @/src/css/global.css, expo-router Stack, cardStore, @/src/lib/theme, @/src/services/supabase
+ * [OUTPUT]: Root layout — gates between onboarding and tabs after local hydration and cloud sync bootstrap
+ * [POS]: Root — entry point, imports global CSS, syncs global theme, restores persisted state, and gates navigation
  * [PROTOCOL]: Update this header on change, then check CLAUDE.md
  */
 
 import "@/src/css/global.css";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -15,11 +15,17 @@ import { GoudyBookletter1911_400Regular } from "@expo-google-fonts/goudy-booklet
 import { DMSans_400Regular } from "@expo-google-fonts/dm-sans";
 import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono";
 import { useCardStore } from "@/src/stores/cardStore";
+import { useThemeSync } from "@/src/lib/theme";
+import { isSupabaseEnabled } from "@/src/services/supabase";
 
 export default function RootLayout() {
   const card = useCardStore((s) => s.card);
+  const hasHydrated = useCardStore((s) => s.hasHydrated);
+  const hydrateFromCloud = useCardStore((s) => s.hydrateFromCloud);
   const router = useRouter();
   const segments = useSegments();
+  useThemeSync();
+  const [cloudReady, setCloudReady] = useState(!isSupabaseEnabled);
 
   const [fontsLoaded] = useFonts({
     GoudyBookletter1911_400Regular,
@@ -28,7 +34,22 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsLoaded || !hasHydrated || cloudReady) return;
+
+    let cancelled = false;
+    hydrateFromCloud()
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setCloudReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cloudReady, fontsLoaded, hasHydrated, hydrateFromCloud]);
+
+  useEffect(() => {
+    if (!fontsLoaded || !hasHydrated || !cloudReady) return;
 
     const inOnboarding = segments[0] === "onboarding";
 
@@ -37,9 +58,9 @@ export default function RootLayout() {
     } else if (card && inOnboarding) {
       router.replace("/(tabs)/(home)" as any);
     }
-  }, [card, fontsLoaded, segments]);
+  }, [card, cloudReady, fontsLoaded, hasHydrated, router, segments]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !hasHydrated || !cloudReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

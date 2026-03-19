@@ -5,6 +5,7 @@
  *          expo-router useRouter, @/src/stores/cardStore,
  *          @/src/components/card/profile-card, @/src/services/share shareCard,
  *          @/src/components/shared/adaptive-glass,
+ *          @/src/lib/theme,
  *          @/src/types CardVersion, local profile-header, local swipe-to-share
  * [OUTPUT]: HomeScreen — card preview with fixed share ritual overlay, direct edit entry in header, and version switching
  * [POS]: (home) module entrypoint, coordinating header, fixed overlay, backdrop, card preview, and share flow
@@ -25,6 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { platformColor } from "@/src/lib/platform-color";
+import { useResolvedTheme } from "@/src/lib/theme";
 import { useCardStore } from "@/src/stores/cardStore";
 import { ProfileCard } from "@/src/components/card/profile-card";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
@@ -36,6 +38,7 @@ import { COMMIT_THRESHOLD, SwipeToShare, useShareOverscroll } from "./swipe-to-s
 
 const SHARE_RITUAL_MS = 520;
 const SHARE_LOGO = require("../../../assets/icon.png");
+const SHARE_RUNWAY_HEIGHT = 220;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -44,6 +47,7 @@ function wait(ms: number) {
 export default function HomeScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const resolvedTheme = useResolvedTheme();
   const card = useCardStore((state) => state.card);
   const nameFont = useCardStore((state) => state.nameFont) ?? "classic";
   const addVersion = useCardStore((state) => state.addVersion);
@@ -51,6 +55,8 @@ export default function HomeScreen() {
   const [selectedVersionId, setSelectedVersionId] = useState("");
   const [restoreTick, setRestoreTick] = useState(0);
   const [shareOverlayVisible, setShareOverlayVisible] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const isDark = resolvedTheme === "dark";
 
   const defaultVersion = useMemo(
     () => card?.versions.find((version) => version.isDefault) ?? card?.versions[0],
@@ -193,9 +199,15 @@ export default function HomeScreen() {
       <ScrollView
         ref={scrollRef}
         style={styles.scrollView}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          viewportHeight > 0 ? { minHeight: viewportHeight + SHARE_RUNWAY_HEIGHT } : null,
+        ]}
+        alwaysBounceVertical
+        bounces
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
         onMomentumScrollEnd={handleShareRelease}
         onScroll={handleScroll}
         onScrollEndDrag={handleShareRelease}
@@ -214,6 +226,8 @@ export default function HomeScreen() {
             version={currentVersion}
           />
         </SwipeToShare>
+
+        <View pointerEvents="none" style={styles.shareRunway} />
       </ScrollView>
 
       <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none">
@@ -239,7 +253,7 @@ export default function HomeScreen() {
           <Image
             source={SHARE_LOGO}
             resizeMode="contain"
-            style={styles.shareLogo}
+            style={[styles.shareLogo, { tintColor: isDark ? "rgba(255,255,255,0.22)" : "rgba(15,23,42,0.10)" }]}
           />
 
           <AdaptiveGlass
@@ -247,8 +261,8 @@ export default function HomeScreen() {
             glassEffectStyle="clear"
             blurTint="default"
             intensity={58}
-            tintColor="#FFFFFFCC"
-            fallbackColor="rgba(255,255,255,0.78)"
+            tintColor={isDark ? "#FFFFFF1F" : "#FFFFFFCC"}
+            fallbackColor={isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.78)"}
           >
             <View style={[styles.shareIconWrap, { backgroundColor: `${currentVersion.accentColor}14` }]}>
               <SymbolView
@@ -319,6 +333,9 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: 120,
     paddingHorizontal: 16,
+  },
+  shareRunway: {
+    height: SHARE_RUNWAY_HEIGHT,
   },
   empty: {
     alignItems: "center",

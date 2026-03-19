@@ -28,6 +28,7 @@ import {
   SettingsSeparator,
   SettingsChevron,
   SettingsIconTile,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 const appVersion = Constants.expoConfig?.version ?? "1.0.0";
@@ -39,6 +40,7 @@ const buildNumber =
 export default function AboutScreen() {
   return (
     <ScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >

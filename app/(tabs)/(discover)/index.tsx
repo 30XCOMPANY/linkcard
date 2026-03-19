@@ -4,7 +4,7 @@
  *          react-native-gesture-handler Gesture/GestureDetector,
  *          @/src/stores/contactsStore, @/src/components/card/profile-card ProfileCard,
  *          @/src/components/shared/adaptive-glass AdaptiveGlass,
- *          @/src/lib/haptics, @/src/lib/icons Icon,
+ *          @/src/lib/haptics, @/src/lib/icons Icon, @/src/lib/theme,
  *          @/src/lib/contact-actions, @/src/types CardVersion
  * [OUTPUT]: DiscoverScreen — discover feed with swipe gestures and saved-card entry
  * [POS]: Discover tab main screen — lightweight browsing loop with clear next actions
@@ -45,6 +45,7 @@ import { PillToast } from "@/src/components/shared/pill-toast";
 import { haptic } from "@/src/lib/haptics";
 import { platformColor } from "@/src/lib/platform-color";
 import { Icon } from "@/src/lib/icons";
+import { useResolvedTheme } from "@/src/lib/theme";
 import type { CardVersion, DiscoverProfile } from "@/src/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -64,6 +65,8 @@ function toCardVersion(p: DiscoverProfile): CardVersion {
 
 export default function DiscoverScreen() {
   const router = useRouter();
+  const resolvedTheme = useResolvedTheme();
+  const isDark = resolvedTheme === "dark";
   const batch = useContactsStore((s) => s.discoverBatch);
   const index = useContactsStore((s) => s.discoverIndex);
   const nextCard = useContactsStore((s) => s.nextCard);
@@ -73,6 +76,8 @@ export default function DiscoverScreen() {
   const resetDaily = useContactsStore((s) => s.resetDailyIfNeeded);
   const removeContact = useContactsStore((s) => s.removeContact);
   const current = index < batch.length ? batch[index] : null;
+  const titleColor = resolvedTheme === "dark" ? "#F8FAFC" : "#0F172A";
+  const pageBg = isDark ? "#000000" : "#F7F7F5";
 
   const saved = useContactsStore((s) =>
     current ? s.savedContacts.some((c) => c.id === current.id) : false
@@ -200,7 +205,13 @@ export default function DiscoverScreen() {
           onDismiss={() => setToast(null)}
         />
       )}
-      <Stack.Screen options={{ title: "Discover", headerLargeTitle: true }} />
+      <Stack.Screen options={{ headerLargeTitle: true }} />
+      <Stack.Screen.Title
+        large
+        largeStyle={{ fontFamily: "GoudyBookletter1911_400Regular", color: titleColor }}
+      >
+        Discover
+      </Stack.Screen.Title>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
           <Pressable
@@ -209,14 +220,15 @@ export default function DiscoverScreen() {
               router.push("/(discover)/collection" as any);
             }}
             accessibilityLabel="Open saved cards"
-            style={styles.toolbarBtn}
+            style={[styles.toolbarBtn, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.78)" }]}
           >
-            <Icon web="bookmark-outline" size={20} color={platformColor("label")} />
+            <Icon web="bookmark-outline" size={20} color={isDark ? "#F8FAFC" : "#0F172A"} />
           </Pressable>
         </Stack.Toolbar.View>
       </Stack.Toolbar>
 
       <ScrollView
+        style={{ backgroundColor: pageBg }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -317,6 +329,8 @@ const styles = StyleSheet.create({
     minWidth: 32,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 22,
+    borderCurve: "continuous" as any,
   },
   cardWrap: {
     position: "relative",

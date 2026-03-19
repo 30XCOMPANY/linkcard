@@ -18,6 +18,7 @@ import {
   SettingsSectionHeader,
   SettingsSeparator,
   SettingsIconTile,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 import { useCardStore } from "@/src/stores/cardStore";
 
@@ -31,6 +32,7 @@ export default function NotificationsScreen() {
 
   return (
     <ScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >

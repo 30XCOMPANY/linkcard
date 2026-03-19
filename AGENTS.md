@@ -12,6 +12,7 @@ src/stores/ - Zustand state and persistence
 src/tw/ - react-native-css wrappers for View/Text/ScrollView/Link/Image
 src/types/ - App domain types and card interfaces
 api/ - Express/Vercel API routes and backend services
+supabase/ - Supabase schema source-of-truth: migrations, RLS, and database functions
 </directory>
 
 <config>

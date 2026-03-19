@@ -1,9 +1,9 @@
 /**
  * [INPUT]: react-native Pressable/Text/StyleSheet, @/src/components/shared/adaptive-glass,
- *          @/src/lib/platform-color
+ *          @/src/lib/platform-color, @/src/lib/theme
  * [OUTPUT]: GlassButton — primary and secondary action buttons with Liquid Glass effect
  * [POS]: Shared primitive — consistent glass CTA across onboarding, modals, and action sheets
- * [PROTOCOL]: Update this header on change, then check CLAUDE.md
+ * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12,6 +12,7 @@ import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native";
 
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
 import { platformColor } from "@/src/lib/platform-color";
+import { useResolvedTheme } from "@/src/lib/theme";
 
 /* ── Primary Glass Button ──────────────────────────────────── */
 
@@ -23,32 +24,38 @@ interface GlassButtonProps {
   variant?: "dark" | "blue" | "white";
 }
 
-const VARIANTS = {
-  dark: {
-    tintColor: "#1C1C1ECC",
-    fallbackColor: "#1C1C1E",
-    disabledTint: "#8E8E93CC",
-    disabledFallback: "#C7C7CC",
+function getVariantPalette(variant: "dark" | "blue" | "white", isDark: boolean) {
+  const disabled = {
+    tintColor: isDark ? "#636366CC" : "#C7CDD8CC",
+    fallbackColor: isDark ? "#3A3A3C" : "#D7DCE5",
+    labelColor: isDark ? "#F3F4F6" : "#475569",
+  };
+
+  if (variant === "blue") {
+    return {
+      tintColor: isDark ? "#0A84FFCC" : "#007AFFCC",
+      fallbackColor: isDark ? "#0A84FF" : "#007AFF",
+      labelColor: "#FFFFFF",
+      disabled,
+    };
+  }
+
+  if (variant === "white") {
+    return {
+      tintColor: isDark ? "#FFFFFF1A" : "#FFFFFFCC",
+      fallbackColor: isDark ? "rgba(255,255,255,0.12)" : "#FFFFFF",
+      labelColor: isDark ? "#FFFFFF" : "#0F172A",
+      disabled,
+    };
+  }
+
+  return {
+    tintColor: isDark ? "#202127CC" : "#111827CC",
+    fallbackColor: isDark ? "#202127" : "#0F172A",
     labelColor: "#FFFFFF",
-    disabledLabelColor: "#FFFFFF",
-  },
-  blue: {
-    tintColor: "#007AFFCC",
-    fallbackColor: "#007AFF",
-    disabledTint: "#8E8E93CC",
-    disabledFallback: "#C7C7CC",
-    labelColor: "#FFFFFF",
-    disabledLabelColor: "#FFFFFF",
-  },
-  white: {
-    tintColor: "#FFFFFFCC",
-    fallbackColor: "#FFFFFF",
-    disabledTint: "#F2F2F7CC",
-    disabledFallback: "#F2F2F7",
-    labelColor: "#0A0A0A",
-    disabledLabelColor: "#8E8E93",
-  },
-};
+    disabled,
+  };
+}
 
 export function GlassButton({
   label,
@@ -57,7 +64,8 @@ export function GlassButton({
   style,
   variant = "dark",
 }: GlassButtonProps) {
-  const v = VARIANTS[variant];
+  const resolvedTheme = useResolvedTheme();
+  const palette = getVariantPalette(variant, resolvedTheme === "dark");
 
   return (
     <Pressable
@@ -68,12 +76,12 @@ export function GlassButton({
       <AdaptiveGlass
         style={StyleSheet.flatten([styles.button, style])}
         glassEffectStyle="regular"
-        tintColor={disabled ? v.disabledTint : v.tintColor}
+        tintColor={disabled ? palette.disabled.tintColor : palette.tintColor}
         intensity={60}
         blurTint="default"
-        fallbackColor={disabled ? v.disabledFallback : v.fallbackColor}
+        fallbackColor={disabled ? palette.disabled.fallbackColor : palette.fallbackColor}
       >
-        <Text style={[styles.label, { color: disabled ? v.disabledLabelColor : v.labelColor }]}>
+        <Text style={[styles.label, { color: disabled ? palette.disabled.labelColor : palette.labelColor }]}>
           {label}
         </Text>
       </AdaptiveGlass>

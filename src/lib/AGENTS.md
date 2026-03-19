@@ -10,6 +10,7 @@
 `name-fonts.ts`: 名称排版字族映射，控制卡片标题气质。
 `profile-tags.ts`: 从资料推导标签并解析用户自定义标签输入。
 `springs.ts`: 命名动画弹簧参数，避免随手硬编码物理值。
+`theme.ts`: 主题单一真相源，负责 light/dark/system 解析与 native/web 同步。
 
 法则: `lib/` 只放纯工具、常量、归一化逻辑；状态写入留在 `stores/`，副作用留在 `services/`
 

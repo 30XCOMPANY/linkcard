@@ -35,6 +35,7 @@ import {
   SettingsRow,
   SettingsSectionHeader,
   SettingsSeparator,
+  settingsPageStyle,
 } from "@/src/design-system/settings";
 
 export default function SettingsScreen() {
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
 
   return (
     <RNScrollView
+      style={settingsPageStyle}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
     >
