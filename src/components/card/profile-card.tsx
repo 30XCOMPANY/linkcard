@@ -1,5 +1,5 @@
 /**
- * [INPUT]: react-native View/Text/Image/Pressable/StyleSheet/PlatformColor/Linking,
+ * [INPUT]: react-native View/Text/Image/Pressable/StyleSheet/Linking,
  *          expo-blur BlurView, expo-linear-gradient LinearGradient,
  *          @/src/components/shared/avatar Avatar, @/src/lib/haptics,
  *          @/src/lib/profile-tags, @/src/lib/name-fonts, @/src/lib/card-presets,
@@ -16,16 +16,15 @@ import {
   Text,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Linking,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import MaskedView from "@react-native-masked-view/masked-view";
 
 import { Avatar } from "@/src/components/shared/avatar";
 import { AdaptiveGlass } from "@/src/components/shared/adaptive-glass";
-import { platformColor } from "@/src/lib/platform-color";
 import { SocialIcon } from "@/src/lib/social-icon";
 import { haptic } from "@/src/lib/haptics";
 import { deriveProfileTags } from "@/src/lib/profile-tags";
@@ -78,15 +77,19 @@ export function ProfileCard({
   const tags = deriveProfileTags(profile);
   const background = resolveCardBackground(version.background);
   const dark = background.isDark;
-  /* Dark/light adaptive palette */
+  const bannerFadeColors = dark
+    ? ["transparent", "rgba(17,24,39,0.3)", "rgba(17,24,39,0.8)", background.surface] as const
+    : ["transparent", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)", background.surface] as const;
+  /* Card-internal palette — driven by card background, NOT system theme.
+   * The card is its own color world: lightGlass stays light even in system dark mode. */
   const colors = {
-    label: dark ? "#F9FAFB" : (platformColor("label")),
-    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : (platformColor("secondaryLabel")),
-    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : (platformColor("tertiaryLabel")),
-    pillBg: dark ? "rgba(255,255,255,0.10)" : (platformColor("systemBackground")),
-    pillBorder: dark ? "rgba(255,255,255,0.12)" : (platformColor("separator")),
+    label: dark ? "#F9FAFB" : "#000000",
+    secondaryLabel: dark ? "rgba(255,255,255,0.60)" : "rgba(60,60,67,0.6)",
+    tertiaryLabel: dark ? "rgba(255,255,255,0.40)" : "rgba(60,60,67,0.3)",
+    pillBg: dark ? "rgba(255,255,255,0.10)" : "#FFFFFF",
+    pillBorder: dark ? "rgba(255,255,255,0.12)" : "rgba(60,60,67,0.29)",
     link: accent,
-    separator: dark ? "rgba(255,255,255,0.10)" : (platformColor("separator")),
+    separator: dark ? "rgba(255,255,255,0.10)" : "rgba(60,60,67,0.29)",
   };
 
   const nameWeightMap = { regular: "400", medium: "500", bold: "700" } as const;
@@ -108,18 +111,18 @@ export function ProfileCard({
           style={s.bannerImage}
           resizeMode="cover"
         />
-        {/* Blur sits under gradient — hard edge hidden by opacity */}
-        <BlurView intensity={100} tint="default" style={s.bannerBlurBottom} />
+        {/* Progressive blur — 8 layers */}
+        <BlurView intensity={15}  tint="default" style={[s.bannerBlurLayer, { top: "30%", opacity: 0.15 }]} />
+        <BlurView intensity={30}  tint="default" style={[s.bannerBlurLayer, { top: "38%", opacity: 0.25 }]} />
+        <BlurView intensity={50}  tint="default" style={[s.bannerBlurLayer, { top: "46%", opacity: 0.35 }]} />
+        <BlurView intensity={70}  tint="default" style={[s.bannerBlurLayer, { top: "54%", opacity: 0.50 }]} />
+        <BlurView intensity={85}  tint="default" style={[s.bannerBlurLayer, { top: "62%", opacity: 0.65 }]} />
+        <BlurView intensity={100} tint="default" style={[s.bannerBlurLayer, { top: "70%", opacity: 0.80 }]} />
+        <BlurView intensity={100} tint="default" style={[s.bannerBlurLayer, { top: "78%", opacity: 0.90 }]} />
+        <BlurView intensity={100} tint="default" style={[s.bannerBlurLayer, { top: "86%", opacity: 1.0  }]} />
         <LinearGradient
-          colors={[
-            "transparent",
-            background.surface + "10",
-            background.surface + "50",
-            background.surface + "A0",
-            background.surface + "E0",
-            background.surface,
-          ]}
-          locations={[0, 0.25, 0.42, 0.58, 0.75, 1]}
+          colors={bannerFadeColors}
+          locations={[0, 0.4, 0.7, 1]}
           style={s.bannerFade}
         />
       </Pressable>
@@ -236,8 +239,8 @@ export function ProfileCard({
         </View>
       )}
 
-      {/* Social icons — render from socialLinks, fallback to legacy profile.url */}
-      <View style={s.socialRow}>
+      {/* Social icons — horizontal scroll */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.socialScroll} contentContainerStyle={s.socialRow}>
         {(profile.socialLinks && profile.socialLinks.length > 0
           ? profile.socialLinks
           : profile.url
@@ -265,7 +268,7 @@ export function ProfileCard({
             </AdaptiveGlass>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       {/* Publications */}
       {profile.publications &&
@@ -296,8 +299,8 @@ export function ProfileCard({
                   )}
                 </View>
                 {pub.url && (
-                  <View style={[s.pubVisit, { backgroundColor: dark ? "rgba(255,255,255,0.15)" : undefined }]}>
-                    <Text style={[s.pubVisitText, { color: dark ? "#F9FAFB" : "#FFFFFF" }]}>Visit</Text>
+                  <View style={[s.pubVisit, { backgroundColor: dark ? "rgba(255,255,255,0.15)" : accent }]}>
+                    <Text style={[s.pubVisitText, { color: "#FFFFFF" }]}>Visit</Text>
                   </View>
                 )}
               </Pressable>
@@ -313,7 +316,6 @@ export function ProfileCard({
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: platformColor("secondarySystemGroupedBackground"),
     borderRadius: 24,
     borderCurve: "continuous" as any,
     paddingHorizontal: 20,
@@ -334,9 +336,8 @@ const s = StyleSheet.create({
     zIndex: 0,
   },
   bannerImage: { width: "100%", height: "100%" },
-  bannerBlurBottom: {
+  bannerBlurLayer: {
     position: "absolute",
-    top: "65%",
     left: 0,
     right: 0,
     bottom: 0,
@@ -351,7 +352,6 @@ const s = StyleSheet.create({
 
   profileName: {
     fontSize: 32,
-    color: platformColor("label"),
     letterSpacing: 0.2,
   },
 
@@ -360,19 +360,15 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 16,
     borderCurve: "continuous" as any,
-    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: platformColor("separator"),
   },
   statusText: {
     fontSize: 15,
     lineHeight: 20,
-    color: platformColor("label"),
   },
   statusPlaceholder: {
     fontSize: 15,
     lineHeight: 20,
-    color: platformColor("tertiaryLabel"),
   },
 
   identityLine: {
@@ -384,16 +380,13 @@ const s = StyleSheet.create({
   identityEmoji: { fontSize: 15 },
   identityLinkText: {
     fontSize: 15,
-    color: platformColor("systemBlue"),
     fontWeight: "600",
   },
   identitySep: {
     fontSize: 15,
-    color: platformColor("secondaryLabel"),
   },
   identityRole: {
     fontSize: 15,
-    color: platformColor("label"),
   },
 
   tagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -405,15 +398,12 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: platformColor("separator"),
   },
   tagEmoji: { fontSize: 14 },
   tagLabel: {
     fontSize: 14,
     fontWeight: "500",
-    color: platformColor("label"),
   },
 
   contactRow: {
@@ -430,35 +420,33 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: platformColor("separator"),
   },
   contactPillIcon: { fontSize: 14 },
   contactPillText: {
     fontSize: 13,
-    color: platformColor("secondaryLabel"),
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
   statNum: {
     fontSize: 15,
     fontWeight: "700",
-    color: platformColor("systemBlue"),
   },
   statLabel: {
     fontSize: 13,
-    color: platformColor("secondaryLabel"),
   },
   statsSeparator: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: platformColor("separator"),
     marginLeft: 8,
   },
 
+  socialScroll: {
+    marginHorizontal: -20,
+  },
   socialRow: {
     flexDirection: "row",
     gap: 10,
+    paddingHorizontal: 20,
   },
   socialIcon: {
     width: 40,
@@ -478,20 +466,16 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     borderCurve: "continuous" as any,
-    backgroundColor: platformColor("systemBackground"),
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: platformColor("separator"),
     minHeight: 50,
   },
   pubContent: { flex: 1, marginRight: 12 },
   pubTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: platformColor("label"),
   },
   pubMeta: {
     fontSize: 13,
-    color: platformColor("secondaryLabel"),
     marginTop: 2,
   },
   pubVisit: {
@@ -499,7 +483,6 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderCurve: "continuous" as any,
-    backgroundColor: platformColor("systemBlue"),
   },
-  pubVisitText: { fontSize: 14, fontWeight: "600", color: "#FFFFFF" },
+  pubVisitText: { fontSize: 14, fontWeight: "600" },
 });
